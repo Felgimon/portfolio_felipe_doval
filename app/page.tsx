@@ -1,6 +1,8 @@
 import { Section } from "@/components/ui";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
+import { Work } from "@/components/sections/Work";
+import { Timeline } from "@/components/sections/Timeline";
 
 /**
  * Home — single page con scroll narrativo. En esta fase (2) las secciones son
@@ -17,30 +19,10 @@ export default function Home() {
       <About />
 
       {/* ===================== OBRAS ===================== */}
-      <Section id="obras" eyebrow="Proyectos" title="Obras" size="wide">
-        <p className="lead max-w-2xl">
-          Dos grandes con case study —{" "}
-          <span className="text-chalk">Superlum</span> y{" "}
-          <span className="text-chalk">FutbolVision</span> — más una grid de
-          proyectos.
-        </p>
-        <div className="mt-10 rounded-xl border border-dashed border-line p-8">
-          <p className="data text-xs text-muted">
-            Destacados con pinning + grid secundaria (Fase 5)
-          </p>
-        </div>
-      </Section>
+      <Work />
 
       {/* ===================== RECORRIDO ===================== */}
-      <Section id="recorrido" eyebrow="Experiencia" title="Recorrido" size="wide">
-        <p className="lead max-w-2xl">
-          ORT TIC, competencias (NASA Space Apps, Sadosky) y la pasantía en
-          Taquion.
-        </p>
-        <div className="mt-10 rounded-xl border border-dashed border-line p-8">
-          <p className="data text-xs text-muted">Timeline numerado (Fase 4/5)</p>
-        </div>
-      </Section>
+      <Timeline />
 
       {/* ===================== CONTACTO ===================== */}
       <Section id="contacto" eyebrow="Hablemos" title="Contacto" size="wide">

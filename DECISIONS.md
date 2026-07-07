@@ -210,3 +210,23 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   Lighthouse (Fase 9); headless usa SwiftShader (software).
 - **Nota:** `scripts/_*.mjs` (capturas dev) están gitignoreados y fuera del lint;
   `/dev/poster` y `/dev/tokens` se borran en Fase 9.
+
+---
+
+## Proyectos y recorrido (Fase 5)
+
+- **Destacados con pinning:** `FeaturedProject` pinea la media con ScrollTrigger
+  (`pin`, `pinSpacing:false`) SOLO en desktop, vía `gsap.matchMedia()`, con
+  cleanup en `useGSAP` → sin triggers zombie al cambiar de ruta. En mobile /
+  reduced-motion se apila normal (sin pin).
+- **Grid secundaria:** `ProjectCard` con hover CSS (elevación + glow) + tilt JS
+  sutil (solo `pointerType==='mouse'`, sin reduced-motion, mutando el style por
+  ref sin setState). Si hay repo, toda la card enlaza; si no, es informativa.
+- **Placeholders honestos:** proyectos sin captura muestran el bloque punteado
+  "FALTA: ..."; los incompletos (PC Builder, Nindo, LOST) llevan badge "en
+  progreso". Nada inventado.
+- **Timeline:** marcadores numerados 01/02/03 — legítimos acá porque el orden
+  codifica una secuencia real (no decorativos). Íconos por tipo (educación /
+  competencia / trabajo).
+- Todo alimentado desde `content/proyectos.ts` y `content/perfil.ts`
+  (single source of truth).
