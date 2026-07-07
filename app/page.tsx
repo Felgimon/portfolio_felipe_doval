@@ -1,6 +1,6 @@
-import { perfil } from "@/content/perfil";
 import { Section } from "@/components/ui";
 import { Hero } from "@/components/sections/Hero";
+import { About } from "@/components/sections/About";
 
 /**
  * Home — single page con scroll narrativo. En esta fase (2) las secciones son
@@ -14,14 +14,7 @@ export default function Home() {
       <Hero />
 
       {/* ===================== SOBRE MÍ ===================== */}
-      <Section id="sobre" eyebrow="Perfil" title="Sobre mí" size="wide">
-        <p className="lead max-w-2xl">{perfil.bioCorta}</p>
-        <div className="mt-10 grid gap-4 rounded-xl border border-dashed border-line p-8 text-muted sm:grid-cols-2">
-          <p className="data text-xs">
-            Bio larga + foto tratada + stack (Fase 4)
-          </p>
-        </div>
-      </Section>
+      <About />
 
       {/* ===================== OBRAS ===================== */}
       <Section id="obras" eyebrow="Proyectos" title="Obras" size="wide">
