@@ -267,3 +267,24 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   cartelito estático. Verificado (28 pelotas). Pista sutil en el copy de
   contacto.
 - **Verificado por script:** copiar email OK, Konami OK, gating de cursor OK.
+
+---
+
+## Responsive y accesibilidad (Fase 8)
+
+- **Sin overflow horizontal** en 360 / 768 / 1440 (home y detalle), verificado por
+  script (scrollWidth vs innerWidth).
+- **Hero mobile:** el balón se escala/reposiciona según el ancho del canvas
+  (`useThree` size) y el scrim se reforzó (horizontal + fade inferior) para que el
+  texto quede legible sobre el 3D en pantallas chicas.
+- **frameloop pausado:** IntersectionObserver en el hero → `frameloop="never"`
+  cuando sale del viewport (ahorra GPU). Pin de proyectos solo en desktop
+  (matchMedia).
+- **Teclado:** verificado — sin trampa de foco (21 elementos únicos alcanzables),
+  **foco visible en el 100%** (0 sin outline), skip-link primero. Jerarquía de
+  headings correcta (un solo h1 por página). Canvas decorativo con `aria-hidden`.
+- **reduced-motion** respetado en todo (Lenis off, reveals off, cursor nativo,
+  preloader instantáneo, hero poster, Konami estático, sin pin).
+- Smoke en viewport mobile (390×844) sin errores de consola.
+- **Pendiente Felipe:** probar en su celular real
+  (`npm run dev -- -H 0.0.0.0` + su IP local).

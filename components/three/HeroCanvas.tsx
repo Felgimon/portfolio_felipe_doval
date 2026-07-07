@@ -7,7 +7,7 @@ import {
   type RefObject,
 } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { BalonGrafo, type MousePos } from "./BalonGrafo";
 import { heroBgVertex, heroBgFragment } from "./shaders";
@@ -79,22 +79,45 @@ function BgField() {
   );
 }
 
+/** Ajusta escala/posición del balón según el ancho del canvas (responsive). */
+function ResponsiveBall({
+  mouse,
+  baseScale,
+  basePosition,
+}: {
+  mouse: RefObject<MousePos>;
+  baseScale: number;
+  basePosition: [number, number, number];
+}) {
+  const width = useThree((s) => s.size.width);
+  const narrow = width < 700;
+  const scale = baseScale * (narrow ? 0.82 : 1);
+  const position: [number, number, number] = narrow
+    ? [basePosition[0] * 0.5, basePosition[1] + 0.15, basePosition[2]]
+    : basePosition;
+  return <BalonGrafo mouse={mouse} scale={scale} position={position} />;
+}
+
 export type HeroCanvasProps = {
   tier?: number;
   ballScale?: number;
   ballPosition?: [number, number, number];
+  /** true → pausa el render (hero fuera del viewport) */
+  paused?: boolean;
 };
 
 export default function HeroCanvas({
   tier = 3,
   ballScale = 2.05,
   ballPosition = [0, 0, 0],
+  paused = false,
 }: HeroCanvasProps) {
   const mouse = useMouseTracker();
   const dpr: [number, number] = tier >= 3 ? [1, 2] : [1, 1.5];
 
   return (
     <Canvas
+      frameloop={paused ? "never" : "always"}
       dpr={dpr}
       camera={{ position: [0, 0, 5.6], fov: 38 }}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
@@ -109,7 +132,11 @@ export default function HeroCanvas({
       <CursorLight mouse={mouse} />
       <Suspense fallback={null}>
         <BgField />
-        <BalonGrafo mouse={mouse} scale={ballScale} position={ballPosition} />
+        <ResponsiveBall
+          mouse={mouse}
+          baseScale={ballScale}
+          basePosition={ballPosition}
+        />
       </Suspense>
       <EffectComposer>
         <Bloom

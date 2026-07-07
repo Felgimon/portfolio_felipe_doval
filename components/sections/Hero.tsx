@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ArrowDown } from "lucide-react";
@@ -35,17 +36,40 @@ function PosterFallback() {
 export function Hero() {
   const reduced = useReducedMotion();
   const { tier, loading } = useGpuTier();
+  const sectionRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(true);
+
+  // Pausa el render del canvas cuando el hero sale del viewport (ahorra GPU).
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // 3D solo en GPU capaz y sin reduced-motion; si no, poster estático.
   const usarCanvas = !reduced && !loading && tier >= 2;
   const mostrarPoster = reduced || (!loading && tier < 2);
 
   return (
-    <section id="inicio" className="relative min-h-dvh overflow-hidden">
+    <section
+      ref={sectionRef}
+      id="inicio"
+      className="relative min-h-dvh overflow-hidden"
+    >
       {/* Capa de fondo: canvas 3D, poster estático, o ink mientras detecta GPU */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" aria-hidden>
         {usarCanvas ? (
-          <HeroCanvas tier={tier} ballScale={1.5} ballPosition={[1.15, 0, 0]} />
+          <HeroCanvas
+            tier={tier}
+            ballScale={1.5}
+            ballPosition={[1.15, 0, 0]}
+            paused={!visible}
+          />
         ) : mostrarPoster ? (
           <PosterFallback />
         ) : null}
@@ -58,7 +82,7 @@ export function Hero() {
         aria-hidden
         style={{
           background:
-            "linear-gradient(90deg, var(--ink) 0%, var(--ink) 26%, transparent 72%)",
+            "linear-gradient(90deg, var(--ink) 0%, var(--ink) 28%, rgba(11,18,32,0.55) 60%, transparent 88%), linear-gradient(0deg, var(--ink), transparent 28%)",
         }}
       />
 
