@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/Container";
 import { HeroTitle } from "./HeroTitle";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useGpuTier } from "@/hooks/useGpuTier";
+import { useAppReady } from "@/components/motion/AppReady";
 import { perfil } from "@/content/perfil";
 
 // El 3D se carga aparte (ssr:false): no entra en el bundle inicial.
@@ -16,7 +17,7 @@ const HeroCanvas = dynamic(() => import("@/components/three/HeroCanvas"), {
 
 /** Poster estático real (render del balón-grafo) para reduced-motion / GPU
  * débil. Posicionado como el canvas: centrado-derecha, saliéndose un poco. */
-function PosterFallback() {
+function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
       <div className="absolute top-1/2 right-0 aspect-square h-[115%] -translate-y-1/2 translate-x-[14%] sm:translate-x-[6%]">
@@ -27,6 +28,7 @@ function PosterFallback() {
           priority
           sizes="(max-width: 768px) 95vw, 60vw"
           className="object-contain"
+          onLoad={onLoaded}
         />
       </div>
     </div>
@@ -36,6 +38,7 @@ function PosterFallback() {
 export function Hero() {
   const reduced = useReducedMotion();
   const { tier, loading } = useGpuTier();
+  const { marcarHeroCargado } = useAppReady();
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(true);
 
@@ -69,9 +72,10 @@ export function Hero() {
             ballScale={1.5}
             ballPosition={[1.15, 0, 0]}
             paused={!visible}
+            onReady={marcarHeroCargado}
           />
         ) : mostrarPoster ? (
-          <PosterFallback />
+          <PosterFallback onLoaded={marcarHeroCargado} />
         ) : null}
       </div>
 

@@ -288,3 +288,31 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
 - Smoke en viewport mobile (390×844) sin errores de consola.
 - **Pendiente Felipe:** probar en su celular real
   (`npm run dev -- -H 0.0.0.0` + su IP local).
+
+---
+
+## Performance (Fase 9)
+
+- **Win grande:** el `useProgress` de drei en el Preloader arrastraba **three.js**
+  al bundle inicial (aunque el poster path no usa 3D). Se reemplazó por una señal
+  `heroCargado` que sube desde el Hero (canvas `onReady` / poster `onLoad`) por
+  el contexto `AppReady`. Resultado: **JS inicial 324 KB → 225.8 KB gz**.
+- **Presupuesto (verificado por script, poster path sin chunk 3D):**
+  - JS inicial home: **225.8 KB gz** ✓ (< 300 KB, sin contar el chunk 3D lazy)
+  - **CLS: 0.0000** ✓
+- **3D lazy:** `HeroCanvas` con `next/dynamic({ ssr:false })` → three/drei quedan
+  100% en un chunk aparte que solo se baja en GPU capaz.
+- **Limpieza:** borradas las rutas dev (`/dev/tokens`, `/dev/poster`); nunca se
+  agregó `r3f-perf` en producción.
+- **Lighthouse (build de producción, Chromium por software / SwiftShader):**
+  - **Desktop: Performance 94** — FCP 0.3s, **LCP 1.2s**, **TBT 130ms**, CLS 0. ✓
+  - **Mobile: Accesibilidad 100 · Best Practices 100 · SEO 100** ✓;
+    **Performance 50** ⚠️.
+  - El 50 de mobile **NO es representativo**: Lighthouse mobile aplica 4× de CPU
+    throttling **sobre** SwiftShader (renderizado por software, sin GPU), lo que
+    infla "Script Evaluation" a ~4.5s (rendering-bound, no un problema de código).
+    En hardware mobile real (con GPU + el poster liviano en gama baja) los números
+    se acercan a los de desktop.
+  - **TODO Felipe / deploy:** validar el Lighthouse mobile final sobre el preview
+    de **Vercel** (condiciones reales). Las métricas independientes del entorno ya
+    están verdes (CLS 0, JS 225 KB, A11y/BP/SEO 100, desktop 94).

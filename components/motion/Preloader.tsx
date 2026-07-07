@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useProgress } from "@react-three/drei";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { useAppReady } from "./AppReady";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -10,13 +9,13 @@ const MIN_MS = 700; // tiempo mínimo visible (evita parpadeo si está cacheado)
 const MAX_MS = 2400; // techo: nunca supera los ~2.4s percibidos
 
 /**
- * Preloader con progreso REAL de assets (useProgress de drei) y salida
- * orquestada con GSAP. Respeta reduced-motion (salida instantánea) y tiene un
- * techo de tiempo para no colgarse si el 3D no llega a cargar (poster).
+ * Preloader con salida orquestada con GSAP. Completa cuando el hero avisa que su
+ * fondo (canvas 3D o poster) terminó de cargar (`heroCargado`, señal que sube
+ * desde el Hero), con un techo de tiempo. Así NO importa drei/three: el 3D queda
+ * 100% en el chunk lazy y no entra al bundle inicial. Respeta reduced-motion.
  */
 export function Preloader() {
-  const { progress, active } = useProgress();
-  const { marcarListo } = useAppReady();
+  const { marcarListo, heroCargado } = useAppReady();
   const reduced = useReducedMotion();
   const pathname = usePathname();
   // El preloader es solo para la home (donde vive el hero 3D). En deep-links a
@@ -36,30 +35,28 @@ export function Preloader() {
     inicio.current = Date.now();
   }, []);
 
-  // Contador visual: lerp hacia el progreso real (o un piso por tiempo).
+  // Contador visual: sube por tiempo hasta el piso, salta a 100 al estar listo.
   useEffect(() => {
     const id = window.setInterval(() => {
       setShown((prev) => {
         const elapsed = Date.now() - inicio.current;
-        const piso = Math.min(88, (elapsed / MAX_MS) * 100);
-        const listo = saliendo || (progress >= 100 && !active);
-        const target = listo ? 100 : Math.max(progress, piso);
+        const piso = Math.min(90, (elapsed / MAX_MS) * 120);
+        const target = saliendo || heroCargado ? 100 : piso;
         const next = prev + (target - prev) * 0.2;
         return next > 99.5 ? 100 : next;
       });
     }, 70);
     return () => clearInterval(id);
-  }, [progress, active, saliendo]);
+  }, [heroCargado, saliendo]);
 
-  // Disparar salida cuando cargó (respetando el mínimo) — vía timeout para no
-  // hacer setState sincrónico en el cuerpo del effect.
+  // Disparar salida cuando el hero cargó (respetando el mínimo) — vía timeout
+  // para no hacer setState sincrónico en el cuerpo del effect.
   useEffect(() => {
-    if (saliendo) return;
-    if (!(progress >= 100 && !active)) return;
+    if (saliendo || !heroCargado) return;
     const wait = Math.max(0, MIN_MS - (Date.now() - inicio.current));
     const t = window.setTimeout(() => setSaliendo(true), wait);
     return () => clearTimeout(t);
-  }, [progress, active, saliendo]);
+  }, [heroCargado, saliendo]);
 
   // Safety: salir sí o sí antes del techo.
   useEffect(() => {

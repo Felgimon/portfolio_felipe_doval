@@ -98,12 +98,22 @@ function ResponsiveBall({
   return <BalonGrafo mouse={mouse} scale={scale} position={position} />;
 }
 
+/** Avisa cuando el contenido del Suspense (glb) ya montó = terminó de cargar. */
+function SignalReady({ onReady }: { onReady?: () => void }) {
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
+  return null;
+}
+
 export type HeroCanvasProps = {
   tier?: number;
   ballScale?: number;
   ballPosition?: [number, number, number];
   /** true → pausa el render (hero fuera del viewport) */
   paused?: boolean;
+  /** se llama cuando el glb terminó de cargar */
+  onReady?: () => void;
 };
 
 export default function HeroCanvas({
@@ -111,6 +121,7 @@ export default function HeroCanvas({
   ballScale = 2.05,
   ballPosition = [0, 0, 0],
   paused = false,
+  onReady,
 }: HeroCanvasProps) {
   const mouse = useMouseTracker();
   const dpr: [number, number] = tier >= 3 ? [1, 2] : [1, 1.5];
@@ -137,6 +148,7 @@ export default function HeroCanvas({
           baseScale={ballScale}
           basePosition={ballPosition}
         />
+        <SignalReady onReady={onReady} />
       </Suspense>
       <EffectComposer>
         <Bloom
