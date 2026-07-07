@@ -7,3 +7,4 @@ export * from "./Tag";
 export * from "./DeviceFrame";
 export * from "./Placeholder";
 export * from "./BrandIcon";
+export * from "./EmailLink";

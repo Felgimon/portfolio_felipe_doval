@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { fontClassNames } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { SiteNav } from "@/components/layout/SiteNav";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
 
 const url = "https://felipedoval.com"; // TODO(FELI): dominio final de deploy
@@ -24,7 +27,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es-AR" className={`${fontClassNames} h-full`}>
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="min-h-full antialiased">
+        <a
+          href="#inicio"
+          className="sr-only rounded-full bg-celeste px-4 py-2 font-mono text-xs text-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
+        >
+          Saltar al contenido
+        </a>
+        <SmoothScroll>
+          <SiteNav />
+          {children}
+          <SiteFooter />
+        </SmoothScroll>
+      </body>
     </html>
   );
 }

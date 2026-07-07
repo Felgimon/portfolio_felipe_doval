@@ -146,3 +146,29 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   (solo 2 íconos, no la colección) y se renderizan con `<BrandIcon>` (SVG desde
   data, RSC-safe, sin runtime de Iconify). No hay SVG dibujado a mano.
 - `/dev/tokens` es temporal (se borra en Fase 9) y tiene `robots: noindex`.
+
+---
+
+## Layout, navegación y scroll (Fase 2)
+
+- **Lenis ↔ ScrollTrigger** cableados según los pitfalls: `lenis.on("scroll",
+  ScrollTrigger.update)`, Lenis driveado desde `gsap.ticker` con
+  `lagSmoothing(0)` y `autoRaf:false` (para no tener doble RAF). Todo en
+  `components/motion/SmoothScroll.tsx`, que además provee `useSmoothScroll()`.
+- **Reduced motion:** si el usuario lo prefiere, NO se instancia Lenis (scroll
+  nativo) y el sitio queda 100% usable.
+- **Nav activa** con IntersectionObserver (`useActiveSection`, rootMargin que
+  marca activa la sección que cruza el centro). Config de secciones única en
+  `lib/navigation.ts` (nav y anclas nunca se desincronizan).
+- **Offset de ancla:** en vez del `offset` relativo de Lenis (que quedaba
+  impreciso, ~176px), la nav calcula la posición absoluta del target menos la
+  altura de la nav (92px) y hace `scrollTo(number)`. Verificado: la sección
+  aterriza a 92px, hash y estado activo correctos.
+- **`react-hooks/set-state-in-effect`** (regla nueva del ESLint de Next 16):
+  `useReducedMotion` se reescribió con `useSyncExternalStore` (SSR-safe, sin
+  setState en el cuerpo del effect).
+- **Nota de estructura:** los componentes de chrome (Nav, Footer) viven en
+  `components/layout/` (además de ui/sections/three/motion).
+- **Email ofuscado:** `EmailLink` arma la dirección en el cliente desde partes;
+  el HTML/RSC servido no la contiene en texto plano (anti-scraping, como pidió
+  Felipe).
