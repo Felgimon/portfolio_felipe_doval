@@ -121,3 +121,28 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   gate de todas las fases.
 - Se corre como `node scripts/smoke.ts` (Node 26 ejecuta TypeScript nativo, sin
   necesidad de `tsx`).
+- **Nota Windows/Git Bash:** pasar `SMOKE_ROUTES="/..."` desde Git Bash rompe por
+  la conversión de paths de MSYS (convierte `/` en una ruta de Windows). Usar
+  **PowerShell** para correr el smoke con env vars: `$env:SMOKE_ROUTES="/,/ruta";
+  npm run smoke`.
+
+---
+
+## Design system (Fase 1)
+
+- **Tokens** como CSS variables en `globals.css`, mapeados a utilidades de
+  Tailwind v4 con `@theme inline`. Escala tipográfica con clamps
+  (`.type-hero/h1/h2/h3`, `.lead`, `.eyebrow`, `.data`).
+- **Componentes base** en `components/ui/`: Container, Section, Eyebrow, Heading,
+  Button (polimórfico botón/enlace), Tag, DeviceFrame (browser/phone/terminal),
+  Placeholder (honesto), BrandIcon. Barrel en `index.ts`. Helper `cn`
+  (clsx + tailwind-merge) en `lib/utils.ts`.
+- **Contraste AA verificado** por script: todos los pares de texto pasan ≥ 4.5:1
+  (el más ajustado, muted/panel, da 5.57; chalk/ink da 15.2; celeste/ink 7.8;
+  ink sobre botón celeste 7.8).
+- **Íconos de marca:** lucide-react 1.x **removió los íconos de marca**
+  (GitHub/LinkedIn/etc.) por trademark. El brief autoriza Iconify para lo que
+  falte → se extraen offline de **Simple Icons (CC0)** a `lib/brand-icons.ts`
+  (solo 2 íconos, no la colección) y se renderizan con `<BrandIcon>` (SVG desde
+  data, RSC-safe, sin runtime de Iconify). No hay SVG dibujado a mano.
+- `/dev/tokens` es temporal (se borra en Fase 9) y tiene `robots: noindex`.

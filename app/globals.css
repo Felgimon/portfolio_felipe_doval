@@ -111,6 +111,121 @@ body {
   line-height: 0.92;
 }
 
+/* ============================================================================
+   ESCALA TIPOGRÁFICA
+   Display = Archivo expandida. Titulares fluidos con clamp. Eyebrows y datos en
+   mono. La escala se muestra completa en /dev/tokens.
+   ========================================================================== */
+
+.type-hero {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 900;
+  font-variation-settings: "wght" 900, "wdth" 120;
+  font-size: clamp(3.25rem, 12vw, 11rem);
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.type-h1 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 800;
+  font-variation-settings: "wght" 800, "wdth" 115;
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.type-h2 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 800;
+  font-variation-settings: "wght" 800, "wdth" 112;
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+.type-h3 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 700;
+  font-variation-settings: "wght" 700, "wdth" 105;
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  line-height: 1.5;
+  color: var(--chalk-dim);
+}
+
+/* Eyebrow / kicker: label de sección en mono, tracking amplio, celeste */
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--celeste);
+}
+
+/* Dato/etiqueta numérica tipo telemetría */
+.data {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================================
+   UTILIDADES DEL SISTEMA
+   ========================================================================== */
+
+/* Hairline divisor (primitiva trivial permitida) */
+.hairline {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--line) 15%,
+    var(--line) 85%,
+    transparent
+  );
+  border: 0;
+}
+
+/* Malla de nodos de fondo — el motivo firma en 2D (dots = nodos del grafo).
+   No es SVG dibujado a mano: es un radial-gradient repetido. */
+.node-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--line) 1px,
+    transparent 0
+  );
+  background-size: 34px 34px;
+}
+
+/* Superficie "papel" — el único momento cálido (About). Invierte el esquema. */
+.surface-paper {
+  background-color: var(--paper);
+  color: var(--paper-ink);
+}
+
+/* Enlace con subrayado animado (micro-interacción base) */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1.5px;
+  transition: background-size 0.35s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.link-underline:hover,
+.link-underline:focus-visible {
+  background-size: 100% 1.5px;
+}
+
 /* Respeto real de reduced-motion: apaga animaciones y scroll suave */
 @media (prefers-reduced-motion: reduce) {
   *,

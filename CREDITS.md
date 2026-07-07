@@ -30,7 +30,11 @@ Sketchfab), se documenta acá y se agrega el crédito visible.
 
 ## Íconos
 
-- **Lucide** (`lucide-react`) — ISC License.
+- **Lucide** (`lucide-react`) — ISC License. Íconos de UI.
+- **Simple Icons** (vía Iconify) — CC0. Solo los íconos de marca **GitHub** y
+  **LinkedIn** (lucide ya no incluye íconos de marca). Extraídos offline y
+  mínimos a `lib/brand-icons.ts` con `scripts/gen-brand-icons.mjs` (no se
+  bundlea la colección completa).
 
 ## Fotos
 
