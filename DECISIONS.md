@@ -316,3 +316,32 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   - **TODO Felipe / deploy:** validar el Lighthouse mobile final sobre el preview
     de **Vercel** (condiciones reales). Las métricas independientes del entorno ya
     están verdes (CLS 0, JS 225 KB, A11y/BP/SEO 100, desktop 94).
+
+---
+
+## SEO, metadata y cierre (Fase 10)
+
+- **Metadata** completa en `app/layout.tsx`: title template, description, keywords,
+  `openGraph` y `twitter` (summary_large_image). URL centralizada en `lib/site.ts`.
+- **Imagen OG** generada con `next/og` (`app/opengraph-image.tsx`) desde los
+  tokens: Archivo Black + celeste sobre ink, texto + color, **sin ilustración**.
+  1200×630, aplica a todas las rutas.
+- **`sitemap.xml`** (home + 2 casos) y **`robots.txt`** (allow all + sitemap).
+- **Favicons** derivados del logo de Felipe (no dibujados): `favicon.ico` (PNG del
+  logo embebido en contenedor ICO), `icon.png` (512), `apple-icon.png` (180).
+
+### Checklist maestro de QA (Fase 10)
+
+- [x] Gate mínimo verde (tsc, lint, build, smoke) sobre producción.
+- [x] Cero `any`, cero `@ts-ignore`, cero `console.log` residuales (auditado por grep).
+- [x] Ningún `TODO(` crudo renderizado (solo en comentarios). Placeholders usan "FALTA:".
+- [x] Reduced motion: sitio 100% usable y entendible con animaciones apagadas.
+- [x] Teclado: sin trampa de foco, foco visible al 100%, skip-link.
+- [x] 360 → 1920 sin overflow horizontal.
+- [x] **Ningún SVG complejo autorado a mano** (`grep 'path d='` → 0 hits). Íconos de
+      lucide + Simple Icons (Iconify). Modelos 3D, logo, foto: assets provistos.
+- [x] `CREDITS.md` completo (todo CC0 / OFL / ISC; sin CC-BY pendiente).
+- [x] `README.md` con setup, comandos, estructura, cómo editar `content/`, deploy.
+- [~] Lighthouse mobile ≥ 90: desktop 94 y A11y/BP/SEO 100 ✓; Performance mobile a
+      validar en Vercel (SwiftShader local infla el score). Presupuesto JS y CLS ✓.
+- [x] Links funcionan; TODO(FELI) restantes listados en `TODO-FELI.md`.

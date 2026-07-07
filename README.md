@@ -91,9 +91,23 @@ Lo que falta completar está listado en [`TODO-FELI.md`](./TODO-FELI.md).
 1. Subí el repo a GitHub.
 2. En [vercel.com](https://vercel.com) → *New Project* → importá el repo.
    Vercel detecta Next.js solo (build `next build`, sin config extra).
-3. Configurá tu dominio y actualizá la URL en `app/layout.tsx`
-   (`metadataBase`) y en el `sitemap`/`robots` (Fase 10).
+3. **Cambiá el dominio** en un solo lugar: [`lib/site.ts`](./lib/site.ts)
+   (`siteUrl`). De ahí lo toman metadata, OG, `sitemap.xml` y `robots.txt`.
 4. Deploy.
+5. **Validá el Lighthouse mobile** sobre el preview de Vercel (condiciones reales
+   con GPU). Las métricas ya verificadas: CLS 0, JS inicial 225 KB, Accesibilidad
+   / Best Practices / SEO 100, y Performance desktop 94. Ver `DECISIONS.md` (Fase
+   9) para el detalle del entorno.
+
+### SEO / metadata
+
+- Metadata completa (title template, OG/Twitter) en `app/layout.tsx`.
+- Imagen OG generada dinámicamente desde los tokens en
+  [`app/opengraph-image.tsx`](./app/opengraph-image.tsx) (Archivo + celeste,
+  sin ilustración).
+- `sitemap.xml` y `robots.txt` en `app/sitemap.ts` / `app/robots.ts`.
+- Favicons (derivados del logo de Felipe): `app/favicon.ico`, `app/icon.png`,
+  `app/apple-icon.png`.
 
 ## Documentos
 

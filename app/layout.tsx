@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fontClassNames } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
+import { siteUrl } from "@/lib/site";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { AppReadyProvider } from "@/components/motion/AppReady";
 import { Preloader } from "@/components/motion/Preloader";
@@ -10,18 +11,43 @@ import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
 
-const url = "https://felipedoval.com"; // TODO(FELI): dominio final de deploy
+const titulo = `${perfil.nombre} — ${perfil.rol}`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(url),
+  metadataBase: new URL(siteUrl),
   title: {
-    default: `${perfil.nombre} — ${perfil.rol}`,
+    default: titulo,
     template: `%s · ${perfil.nombre}`,
   },
   description: perfil.metaDescripcion,
   applicationName: `${perfil.nombre} · Portfolio`,
   authors: [{ name: perfil.nombre }],
   creator: perfil.nombre,
+  keywords: [
+    "Felipe Doval",
+    "portfolio",
+    "desarrollador",
+    "machine learning",
+    "fútbol",
+    "Next.js",
+    "React",
+    "Three.js",
+    "Buenos Aires",
+    "ORT",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    url: siteUrl,
+    siteName: `${perfil.nombre} · Portfolio`,
+    title: titulo,
+    description: perfil.metaDescripcion,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: titulo,
+    description: perfil.metaDescripcion,
+  },
 };
 
 export default function RootLayout({

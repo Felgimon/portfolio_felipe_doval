@@ -65,8 +65,12 @@ y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
 - [ ] **Form de contacto:** no hay form (no configuraste Formspree/Resend). El
   contacto es email (con "copiar") + GitHub + LinkedIn. Si querés un form real,
   configurá Formspree o Resend y avisá.
-- [ ] **Dominio:** el sitio asume `felipedoval.com` en la metadata. Cambialo por
-  tu dominio real en `app/layout.tsx` (y en Fase 10, sitemap/robots).
+- [ ] **Dominio:** el sitio asume `felipedoval.com`. Cambialo por tu dominio real
+  en **un solo lugar**: `lib/site.ts` (`siteUrl`). De ahí lo toman metadata, OG,
+  sitemap y robots.
+- [ ] **Lighthouse mobile:** validalo sobre el preview de Vercel (ver
+  DECISIONS.md, Fase 9). En local con Chromium por software da bajo el
+  Performance mobile, pero desktop da 94 y A11y/BP/SEO 100.
 - [ ] **Figma de Superlum:** dejaste acceso a los diseños/logos en Figma. Si
   querés que use algún asset específico de ahí (un logo, una captura), pasame el
   nodo puntual y lo integro.
