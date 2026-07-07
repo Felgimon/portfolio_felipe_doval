@@ -230,3 +230,23 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   competencia / trabajo).
 - Todo alimentado desde `content/proyectos.ts` y `content/perfil.ts`
   (single source of truth).
+
+---
+
+## Páginas de detalle y transiciones (Fase 6)
+
+- **Rutas** `/proyectos/[slug]` **SSG** (`generateStaticParams` con los 2
+  destacados, `dynamicParams=false` → otros slugs 404). Deep-link safe (SSR/SSG).
+  `generateMetadata` por proyecto.
+- **Case study:** problema → solución → decisiones/features → capturas →
+  aprendizajes → siguiente caso, alimentado desde content. El acento del proyecto
+  (ej. violeta aurora de Superlum) se usa en los marcadores — cita la marca DENTRO
+  de su propio caso.
+- **Transición** con `motion` en `template.tsx` (fade + slide up), respeta
+  reduced-motion. Se eligió motion sobre un morph de View Transitions
+  (shared-element) por robustez; el morph queda como mejora futura.
+- **Preloader** solo en la home (`usePathname`): deep-link a un detalle no espera.
+- **Verificado:** navegación ida y vuelta 10× → **heap plano (x1.00), 0 errores,
+  sin leaks** (la limpieza de useGSAP/matchMedia evita ScrollTriggers zombie).
+  La verificación de dispose del canvas WebGL queda para hardware real (headless
+  usa poster).

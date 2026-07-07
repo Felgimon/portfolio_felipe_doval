@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useProgress } from "@react-three/drei";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { useAppReady } from "./AppReady";
@@ -17,6 +18,10 @@ export function Preloader() {
   const { progress, active } = useProgress();
   const { marcarListo } = useAppReady();
   const reduced = useReducedMotion();
+  const pathname = usePathname();
+  // El preloader es solo para la home (donde vive el hero 3D). En deep-links a
+  // páginas de detalle no tiene sentido esperar.
+  const soloHome = pathname === "/";
 
   const root = useRef<HTMLDivElement>(null);
   const barra = useRef<HTMLDivElement>(null);
@@ -92,7 +97,7 @@ export function Preloader() {
     { dependencies: [saliendo, reduced] },
   );
 
-  if (oculto) return null;
+  if (oculto || !soloHome) return null;
 
   const pct = Math.round(shown);
   return (
