@@ -250,3 +250,20 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   sin leaks** (la limpieza de useGSAP/matchMedia evita ScrollTriggers zombie).
   La verificación de dispose del canvas WebGL queda para hardware real (headless
   usa poster).
+
+---
+
+## Contacto, micro-interacciones y easter egg (Fase 7)
+
+- **Contacto:** email con micro-interacción de "copiado" (`EmailLink` modo copy,
+  arma la dirección en cliente) + GitHub/LinkedIn. **Sin formulario** (Felipe no
+  configuró Formspree/Resend → no ponemos un form falso).
+- **Cursor custom:** aro celeste + punto que siguen al puntero (lerp), crecen
+  sobre interactivos. Gating por CSS: solo `pointer: fine` **y** sin
+  reduced-motion; en touch/reduced-motion queda el cursor nativo. Verificado:
+  activo en desktop, inactivo en mobile.
+- **Easter egg Konami:** ↑↑↓↓←→←→ B A → lluvia de ⚽🏀 con física simple (guiño
+  deportivo). Costo cero salvo al activarse; en reduced-motion muestra un
+  cartelito estático. Verificado (28 pelotas). Pista sutil en el copy de
+  contacto.
+- **Verificado por script:** copiar email OK, Konami OK, gating de cursor OK.

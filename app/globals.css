@@ -255,6 +255,55 @@ body {
   background-size: 100% 1.5px;
 }
 
+/* ============================================================================
+   CURSOR CUSTOM — solo desktop (pointer fino) y sin reduced-motion.
+   El gating es por CSS; el JS solo agrega .has-custom-cursor y mueve los divs.
+   ========================================================================== */
+.cursor-el {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: none;
+  will-change: transform;
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1.5px solid var(--celeste);
+  border-radius: 9999px;
+  transition:
+    width 0.2s ease,
+    height 0.2s ease,
+    margin 0.2s ease,
+    background-color 0.2s ease;
+}
+.cursor-ring.cursor-grow {
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  background-color: rgba(116, 172, 223, 0.12);
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background-color: var(--celeste);
+  border-radius: 9999px;
+}
+
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :root.has-custom-cursor,
+  :root.has-custom-cursor * {
+    cursor: none !important;
+  }
+  .cursor-el {
+    display: block;
+  }
+}
+
 /* Respeto real de reduced-motion: apaga animaciones y scroll suave */
 @media (prefers-reduced-motion: reduce) {
   *,
