@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { fontClassNames } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { AppReadyProvider } from "@/components/motion/AppReady";
+import { Preloader } from "@/components/motion/Preloader";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
@@ -34,11 +36,14 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
-        <SmoothScroll>
-          <SiteNav />
-          {children}
-          <SiteFooter />
-        </SmoothScroll>
+        <AppReadyProvider>
+          <Preloader />
+          <SmoothScroll>
+            <SiteNav />
+            {children}
+            <SiteFooter />
+          </SmoothScroll>
+        </AppReadyProvider>
       </body>
     </html>
   );

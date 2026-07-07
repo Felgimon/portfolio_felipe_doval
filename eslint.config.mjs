@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scripts de captura/dev throwaway (no se commitean).
+    "scripts/_*.mjs",
   ]),
 ]);
 

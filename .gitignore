@@ -18,6 +18,9 @@
 /playwright-report/
 /test-results/
 
+# scripts de captura/dev throwaway (helpers locales)
+/scripts/_*.mjs
+
 # analizador de bundle
 /.next/analyze/
 

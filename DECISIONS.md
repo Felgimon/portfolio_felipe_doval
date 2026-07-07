@@ -172,3 +172,41 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
 - **Email ofuscado:** `EmailLink` arma la dirección en el cliente desde partes;
   el HTML/RSC servido no la contiene en texto plano (anti-scraping, como pidió
   Felipe).
+
+---
+
+## Hero 3D — elemento firma (Fase 3)
+
+- **Modelo:** `pelota-estructura.glb` procesado con `gltfjsx --transform`
+  (142KB → 12.6KB, 91%). Una sola malla mergeada (`geometry_0`) →
+  `public/models/`. Material celeste emisivo + bloom = balón-grafo glow.
+- **Escena** (`components/three/`): shader de fondo GLSL (ruido celeste sutil,
+  `<shaderMaterial>` nativo, sin extend), luz que persigue al puntero, parallax
+  por lerp sobre refs (nunca setState en useFrame), bloom con EffectComposer.
+  Sin `<Environment>` de drei (evita fetch de HDRI externo → self-contained).
+- **Carga:** `HeroCanvas` se importa con `next/dynamic({ ssr:false })` → no entra
+  al bundle inicial.
+- **Degradación:**
+  - reduced-motion → **poster estático** (render real del balón).
+  - GPU tier < 2 / sin WebGL (detect-gpu) → poster.
+  - mientras detecta GPU → ink (no se carga el poster en dispositivos capaces).
+  - dpr capado a `[1,2]` (tier 3) / `[1,1.5]` (menor).
+  - Override de debug `?forcegl=1` para forzar el 3D en testing/headless.
+- **Poster:** generado screenshoteando el render real (ruta temporal
+  `/dev/poster`) → `public/assets/hero-poster.png`, servido con `next/image`.
+- **Preloader** (`useProgress` de drei): progreso real de assets, mínimo 700ms,
+  techo 2.4s (nunca se cuelga si no hay 3D), salida GSAP que solapa con la
+  entrada del hero (`onStart` → `marcarListo`). Respeta reduced-motion.
+- **Entrada del nombre:** SplitText (GSAP, gratis) por caracteres, disparada al
+  terminar el preloader (`AppReady` context). Tras animar, `split.revert()`
+  (DOM limpio para el resize). Con reduced-motion se muestra estático — **bug
+  arreglado:** una render de hidratación previa lo escondía; el branch reduced
+  ahora restaura `autoAlpha:1`.
+- **Reglas React Compiler (ESLint Next 16):** `Date.now()` fuera del render
+  (Preloader), y mutar uniforms vía ref del material (no el objeto de useMemo)
+  en HeroCanvas.
+- **FPS:** el diseño es leak-safe y sin allocs por frame (refs, delta clamp,
+  malla única). La medición real de ~60 FPS queda para hardware real de Felipe /
+  Lighthouse (Fase 9); headless usa SwiftShader (software).
+- **Nota:** `scripts/_*.mjs` (capturas dev) están gitignoreados y fuera del lint;
+  `/dev/poster` y `/dev/tokens` se borran en Fase 9.
