@@ -4,11 +4,12 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type RefObject,
 } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, Text, Billboard } from "@react-three/drei";
+import { useGLTF, Text, Billboard, PerformanceMonitor } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
 import { heroBgVertex, heroBgFragment } from "./shaders";
@@ -224,11 +225,14 @@ function NodeProjector({
       _nd.copy(_v).normalize();
       const front = _nd.dot(_cam) > 0.12;
       _v.project(camera);
-      b[i] = {
-        x: ((_v.x + 1) / 2) * size.width,
-        y: (1 - (_v.y + 1) / 2) * size.height,
-        front,
-      };
+      let e = b[i];
+      if (!e) {
+        e = { x: 0, y: 0, front: false };
+        b[i] = e;
+      }
+      e.x = ((_v.x + 1) / 2) * size.width;
+      e.y = (1 - (_v.y + 1) / 2) * size.height;
+      e.front = front;
     }
     onProject(b);
   });
@@ -288,35 +292,53 @@ export default function GraphCanvas({
   onReady,
   onProject,
 }: GraphCanvasProps) {
-  const dpr =
-    typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 2) : 1.5;
+  // DPR adaptivo: arranca conservador (1) y sube hasta el techo solo si la
+  // máquina lo banca (PerformanceMonitor). Antialias OFF (el bloom disimula) →
+  // gran ahorro. Así es smooth en cualquier GPU sin perder nitidez en las buenas.
+  const maxDpr =
+    typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 1.5) : 1.25;
+  // Arranca nítido (maxDpr); si la GPU no sostiene el framerate, baja a 1.
+  const [dpr, setDpr] = useState(maxDpr);
 
   return (
     <Canvas
       frameloop={paused ? "never" : "always"}
-      dpr={[1, dpr]}
+      dpr={dpr}
       camera={{ position: [0, 0, 6], fov: 40 }}
-      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+      gl={{
+        alpha: true,
+        antialias: false,
+        stencil: false,
+        depth: true,
+        powerPreference: "high-performance",
+      }}
       style={{ pointerEvents: "none" }}
     >
-      <Suspense fallback={null}>
-        <Scene
-          camRef={camRef}
-          activeIndex={activeIndex}
-          reduced={reduced}
-          onReady={onReady}
-          onProject={onProject}
-        />
-      </Suspense>
-      <EffectComposer>
-        <Bloom
-          intensity={0.8}
-          luminanceThreshold={0.22}
-          luminanceSmoothing={0.4}
-          mipmapBlur
-          radius={0.7}
-        />
-      </EffectComposer>
+      <PerformanceMonitor
+        onIncline={() => setDpr(maxDpr)}
+        onDecline={() => setDpr(1)}
+        onFallback={() => setDpr(1)}
+        flipflops={3}
+      >
+        <Suspense fallback={null}>
+          <Scene
+            camRef={camRef}
+            activeIndex={activeIndex}
+            reduced={reduced}
+            onReady={onReady}
+            onProject={onProject}
+          />
+        </Suspense>
+        <EffectComposer>
+          <Bloom
+            intensity={0.8}
+            luminanceThreshold={0.22}
+            luminanceSmoothing={0.4}
+            mipmapBlur
+            radius={0.7}
+          />
+        </EffectComposer>
+      </PerformanceMonitor>
     </Canvas>
   );
 }

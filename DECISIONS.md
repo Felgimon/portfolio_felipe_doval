@@ -40,6 +40,22 @@ Iteración sobre la v2.0 con feedback de Felipe. Cambios de fondo:
 - **Nota:** el warning `THREE.Clock deprecated` en consola viene de
   `@react-three/fiber` (interno), es inofensivo y no es un error.
 
+### Performance (v2.1.1)
+Síntoma: ~15 fps al mover el mouse incluso en una máquina potente. Causa:
+render GPU-bound (DPR alto en pantalla hi-DPI × bloom × shader fullscreen) +
+un *layout thrash* en el scroll. Sin tocar UX ni bajar calidad visible:
+
+- **DPR adaptivo** (`PerformanceMonitor` de drei): arranca nítido (techo
+  `min(devicePixelRatio, 1.5)`) y **baja a 1 solo si la GPU no sostiene el
+  framerate** → smooth en cualquier máquina, crisp en las buenas.
+- **`antialias: false`** (+ `stencil: false`): el bloom disimula el aliasing;
+  gran ahorro de GPU. Se sacó `detect-gpu` del gate (ya reemplazado por WebGL).
+- **Shader de fondo más barato:** un solo `fbm` de 3 octavas (era 2× de 4) —
+  mismo look, ~½ del costo por pixel.
+- **Scroll sin thrash:** los offsets de sección se **cachean** (mount/resize/
+  carga); el handler de scroll usa `scrollY` y no llama `getBoundingClientRect`
+  por frame → scroll fluido. Loop de proyección de nodos sin allocations.
+
 ---
 
 ## v2.0.0 — Rediseño «verde agua» + navegación por grafo

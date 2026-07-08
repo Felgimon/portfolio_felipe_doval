@@ -37,7 +37,7 @@ export const heroBgFragment = /* glsl */ `
   float fbm(vec2 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
       v += a * noise(p);
       p *= 2.0;
       a *= 0.5;
@@ -47,10 +47,10 @@ export const heroBgFragment = /* glsl */ `
 
   void main() {
     vec2 uv = vUv;
-    float flow = fbm(uv * 2.6 + vec2(uTime * 0.03, uTime * 0.015));
-    flow += 0.4 * fbm(uv * 5.0 - vec2(uTime * 0.02, 0.0));
+    // Un solo fbm (3 octavas): mismo look, mucho más barato por pixel/frame.
+    float flow = fbm(uv * 3.0 + vec2(uTime * 0.03, uTime * 0.015));
 
-    float glow = smoothstep(0.55, 1.05, flow);
+    float glow = smoothstep(0.45, 1.0, flow);
 
     // Viñeta suave centrada en el balón (uFocus)
     float d = distance(uv, uFocus);

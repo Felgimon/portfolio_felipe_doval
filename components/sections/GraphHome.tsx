@@ -178,21 +178,34 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const [activeIdx, setActiveIdx] = useState(-1); // -1 = portada; 0..4 = nodos
 
   // Scroll → estado de cámara (active/dive) + índice activo (para HUD y glow).
+  // Los offsets de sección se CACHEAN (en mount / resize / tras la carga): así el
+  // handler de scroll NO fuerza layout por frame (nada de getBoundingClientRect
+  // en cada scroll) → scroll fluido, sin thrash de layout.
   useEffect(() => {
     const ids = seccionIds; // [inicio, perfil, ..., contacto]
     let raf = 0;
     let last = -99;
+    let boxes: { top: number; height: number }[] = [];
+
+    const measure = () => {
+      const sy = window.scrollY;
+      boxes = ids.map((id) => {
+        const el = document.getElementById(id);
+        if (!el) return { top: 0, height: 1 };
+        const r = el.getBoundingClientRect();
+        return { top: r.top + sy, height: r.height };
+      });
+    };
+
     const update = () => {
-      const center = window.innerHeight * 0.5;
+      const center = window.scrollY + window.innerHeight * 0.5;
       let sec = 0;
       let dive = 0;
-      for (let i = 0; i < ids.length; i++) {
-        const el = document.getElementById(ids[i]);
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (r.top <= center && r.bottom > center) {
+      for (let i = 0; i < boxes.length; i++) {
+        const b = boxes[i];
+        if (center >= b.top && center < b.top + b.height) {
           sec = i;
-          const local = (center - r.top) / Math.max(1, r.height);
+          const local = (center - b.top) / Math.max(1, b.height);
           dive = i === 0 ? 0 : Math.min(1, Math.max(0, local / 0.42));
           break;
         }
@@ -205,17 +218,29 @@ export function GraphHome({ children }: { children: ReactNode }) {
         setActiveIdx(ai);
       }
     };
+
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(update);
     };
+    const onResize = () => {
+      measure();
+      onScroll();
+    };
+
+    measure();
     raf = requestAnimationFrame(update);
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
+    // Re-medir tras la carga (fuentes/imágenes desplazan el layout).
+    const t1 = setTimeout(measure, 600);
+    const t2 = setTimeout(measure, 1800);
     return () => {
       cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
