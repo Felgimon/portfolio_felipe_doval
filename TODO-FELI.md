@@ -13,8 +13,10 @@ entrás clickeando un nodo o scrolleando), paleta verde agua, tipografía Bricol
 sin bullets. Lo que tenés que completar sigue siendo lo de abajo (contenido de
 proyectos, capturas, confirmaciones, dominio). Novedades a tener en cuenta:
 
-- **Preview del 3D:** si en tu máquina ves el poster en vez del balón animado,
-  abrí `/?gl=1` para forzar el canvas.
+- **Navegación (v2.1):** clickeás un nodo (o el HUD, o scrolleás) y la **cámara
+  se mete al nodo**; el scroll maneja esa animación frame por frame. El balón ya
+  se ve animado en cualquier navegador con WebGL (se arregló el bug de Chrome).
+  `/?gl=1` sigue existiendo por si querés forzar el canvas.
 - **Foto:** ahora se usa `foto_frente.png` en el nodo Perfil con un tratamiento
   verde agua (duotono + grano). Si querés otra, reemplazala en
   `public/assets/foto/` (ver punto "Tu foto" más abajo).

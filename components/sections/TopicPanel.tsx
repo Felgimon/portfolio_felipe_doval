@@ -10,14 +10,12 @@ import { cn } from "@/lib/utils";
  */
 export function TopicPanel({
   id,
-  indice,
   kicker,
   children,
   contentClassName,
   scrim = "edge",
 }: {
   id: string;
-  indice: string;
   kicker: string;
   children: ReactNode;
   contentClassName?: string;
@@ -40,9 +38,11 @@ export function TopicPanel({
         style={{ background: bg }}
       />
       <Container size="wide" className="relative">
-        <p className="eyebrow flex items-center gap-3">
-          <span className="tabular-nums text-agua">{indice}</span>
-          <span aria-hidden className="h-px w-8 bg-jade" />
+        <p className="eyebrow flex items-center gap-2.5">
+          <span
+            aria-hidden
+            className="size-1.5 rounded-full bg-agua shadow-[0_0_8px_-1px_var(--agua)]"
+          />
           <span>{kicker}</span>
         </p>
         <div className={cn("mt-8", contentClassName)}>{children}</div>

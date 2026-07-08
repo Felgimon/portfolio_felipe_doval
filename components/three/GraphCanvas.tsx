@@ -8,19 +8,24 @@ import {
 } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { GraphNodes, useBallRadius, nodePositions } from "./GraphNodes";
+import { GraphNodes } from "./GraphNodes";
 import { heroBgVertex, heroBgFragment } from "./shaders";
+import { nodos } from "@/lib/navigation";
 
 const MODEL = "/models/pelota-estructura-transformed.glb";
+const LOGO_FONT = "/fonts/logo.ttf";
+
+/** Escala del grafo. El balón queda centrado; la cámara hace todo el movimiento. */
+const S = 1.4;
 
 type MousePos = { x: number; y: number };
-
-/** Proyección 2D de un nodo (px de viewport) + si mira a la cámara. */
+/** Estado de cámara derivado del scroll: nodo activo (0 = overview) + cuánto
+ * "buceó" hacia él (0..1). */
+export type CamState = { active: number; dive: number };
 export type NodeProj = { x: number; y: number; front: boolean };
 
-/** Puntero normalizado (-1..1) desde `window` (el canvas es pointer-none). */
 function useMouseTracker(): RefObject<MousePos> {
   const mouse = useRef<MousePos>({ x: 0, y: 0 });
   useEffect(() => {
@@ -34,7 +39,6 @@ function useMouseTracker(): RefObject<MousePos> {
   return mouse;
 }
 
-/** Luz verde agua que persigue al puntero: enciende los struts cercanos. */
 function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
   const light = useRef<THREE.PointLight>(null);
   useFrame(() => {
@@ -49,21 +53,20 @@ function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
     <pointLight
       ref={light}
       color="#b7f0da"
-      intensity={22}
+      intensity={20}
       distance={9}
-      position={[0, 0, 2.6]}
+      position={[0, 0, 3]}
     />
   );
 }
 
-/** Campo shader de fondo (ruido verde agua sutil con viñeta hacia el balón). */
 function BgField() {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uColor: { value: new THREE.Color("#8fe3c6") },
-      uFocus: { value: new THREE.Vector2(0.58, 0.52) },
+      uFocus: { value: new THREE.Vector2(0.5, 0.5) },
     }),
     [],
   );
@@ -72,7 +75,7 @@ function BgField() {
     if (m) m.uniforms.uTime.value += Math.min(delta, 0.05);
   });
   return (
-    <mesh position={[0, 0, -3]} scale={[20, 20, 1]}>
+    <mesh position={[0, 0, -4]} scale={[24, 24, 1]}>
       <planeGeometry args={[1, 1]} />
       <shaderMaterial
         ref={mat}
@@ -86,143 +89,150 @@ function BgField() {
   );
 }
 
-/** Malla del balón (icosaedro truncado): verde agua emisivo. */
-function BalonMesh() {
+function useBallRadius(): number {
+  const { nodes } = useGLTF(MODEL) as unknown as {
+    nodes: Record<string, THREE.Mesh>;
+  };
+  const geometry = nodes.geometry_0.geometry;
+  return useMemo(() => {
+    if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+    return geometry.boundingSphere?.radius ?? 1;
+  }, [geometry]);
+}
+
+/** Malla del balón + el logo FD flotando en el centro 3D + los nodos. Grupo
+ * ESTÁTICO (sin rotación): así las direcciones de los nodos son fijas en el
+ * mundo y la cámara los encara con precisión. */
+function GraphGroup({ activeIndex }: { activeIndex: number }) {
   const { nodes } = useGLTF(MODEL) as unknown as {
     nodes: Record<string, THREE.Mesh>;
   };
   return (
-    <mesh geometry={nodes.geometry_0.geometry}>
-      <meshStandardMaterial
-        color="#123028"
-        emissive="#59c9a6"
-        emissiveIntensity={0.5}
-        metalness={0.5}
-        roughness={0.4}
-      />
-    </mesh>
-  );
-}
-
-// Temporales reutilizados en la proyección (sin allocs por frame).
-const _v = new THREE.Vector3();
-const _dir = new THREE.Vector3();
-const _center = new THREE.Vector3();
-const _q = new THREE.Quaternion();
-const _zAxis = new THREE.Vector3(0, 0, 1);
-
-/**
- * Grupo del grafo. `sway` (exterior) hace parallax + sway; `aim` (interior)
- * ROTA para encarar el nodo activo a la cámara (según el scroll). Además
- * proyecta las posiciones 2D de los nodos a `projRef` para los labels
- * clickeables del overlay.
- */
-function GraphGroup({
-  mouse,
-  activeIndex,
-  scale,
-  position,
-  onProject,
-}: {
-  mouse: RefObject<MousePos>;
-  activeIndex: number;
-  scale: number;
-  position: [number, number, number];
-  onProject?: (p: NodeProj[]) => void;
-}) {
-  const sway = useRef<THREE.Group>(null);
-  const aim = useRef<THREE.Group>(null);
-  const buf = useRef<NodeProj[]>([]);
-  const radius = useBallRadius();
-  const positions = useMemo(() => nodePositions(radius), [radius]);
-  const { camera, size } = useThree();
-
-  useFrame((state, delta) => {
-    const t = state.clock.elapsedTime;
-    const d = Math.min(delta, 0.05);
-
-    const s = sway.current;
-    if (s) {
-      const mx = mouse.current?.x ?? 0;
-      const my = mouse.current?.y ?? 0;
-      const ty = mx * 0.22 + Math.sin(t * 0.25) * 0.04;
-      const tx = -my * 0.14 + Math.sin(t * 0.2) * 0.03;
-      s.rotation.y += (ty - s.rotation.y) * 0.06;
-      s.rotation.x += (tx - s.rotation.x) * 0.06;
-      s.position.y = position[1] + Math.sin(t * 0.5) * 0.03;
-    }
-
-    const a = aim.current;
-    if (!a) return;
-
-    // Encarar el nodo activo (o identidad en la portada).
-    if (activeIndex >= 0 && activeIndex < positions.length) {
-      _dir.copy(positions[activeIndex]).normalize();
-      _q.setFromUnitVectors(_dir, _zAxis);
-    } else {
-      _q.identity();
-    }
-    a.quaternion.slerp(_q, 1 - Math.pow(0.0016, d));
-
-    // Proyección 2D de cada nodo para el overlay clickeable. Se muta un ref
-    // PROPIO (permitido) y se entrega por callback.
-    if (onProject) {
-      a.updateWorldMatrix(true, false);
-      a.getWorldPosition(_center);
-      const b = buf.current;
-      for (let i = 0; i < positions.length; i++) {
-        _v.copy(positions[i]).applyMatrix4(a.matrixWorld);
-        const front = _v.z > _center.z;
-        _v.project(camera);
-        b[i] = {
-          x: ((_v.x + 1) / 2) * size.width,
-          y: (1 - (_v.y + 1) / 2) * size.height,
-          front,
-        };
-      }
-      onProject(b);
-    }
-  });
-
-  return (
-    <group ref={sway} scale={scale} position={position}>
-      <group ref={aim}>
-        <BalonMesh />
-        <GraphNodes activeIndex={activeIndex} />
-      </group>
+    <group scale={S}>
+      <mesh geometry={nodes.geometry_0.geometry}>
+        <meshStandardMaterial
+          color="#123028"
+          emissive="#59c9a6"
+          emissiveIntensity={0.5}
+          metalness={0.5}
+          roughness={0.4}
+        />
+      </mesh>
+      <GraphNodes activeIndex={activeIndex} />
+      <Billboard>
+        <Text
+          font={LOGO_FONT}
+          fontSize={0.42}
+          color="#c7f5e2"
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={-0.02}
+          material-toneMapped={false}
+        >
+          FD
+        </Text>
+        <mesh position={[0.46, -0.13, 0]}>
+          <sphereGeometry args={[0.07, 20, 20]} />
+          <meshStandardMaterial
+            color="#c7f5e2"
+            emissive="#8fe3c6"
+            emissiveIntensity={3}
+            toneMapped={false}
+          />
+        </mesh>
+      </Billboard>
     </group>
   );
 }
 
-/** Escala/posición del grafo según el ancho del canvas (responsive). */
-function ResponsiveGraph({
+// Temporales
+const _dir = new THREE.Vector3();
+const _node = new THREE.Vector3();
+const _target = new THREE.Vector3();
+const _v = new THREE.Vector3();
+const _nd = new THREE.Vector3();
+const _cam = new THREE.Vector3();
+const _z = new THREE.Vector3(0, 0, 1);
+const ORIGIN = new THREE.Vector3(0, 0, 0);
+
+/**
+ * Rig de cámara scroll-driven: siempre mira al centro; su dirección y distancia
+ * salen de (active, dive). En overview ve el balón entero; al "bucear" hacia un
+ * nodo, se acerca por su dirección hasta encararlo de cerca ("meterse al nodo").
+ */
+function CameraRig({
+  camRef,
   mouse,
-  activeIndex,
-  baseScale,
-  basePosition,
-  onProject,
+  reduced,
+  radius,
 }: {
+  camRef: RefObject<CamState>;
   mouse: RefObject<MousePos>;
-  activeIndex: number;
-  baseScale: number;
-  basePosition: [number, number, number];
-  onProject?: (p: NodeProj[]) => void;
+  reduced: boolean;
+  radius: number;
 }) {
-  const width = useThree((s) => s.size.width);
-  const narrow = width < 820;
-  const scale = baseScale * (narrow ? 0.82 : 1);
-  const position: [number, number, number] = narrow
-    ? [0, basePosition[1] + 0.1, basePosition[2]]
-    : basePosition;
-  return (
-    <GraphGroup
-      mouse={mouse}
-      activeIndex={activeIndex}
-      scale={scale}
-      position={position}
-      onProject={onProject}
-    />
-  );
+  const { camera } = useThree();
+  const rBall = radius * S;
+  const OVER = rBall * 3.6; // overview: balón entero
+  const CLOSE = rBall * 1.7; // pegado al nodo
+
+  useFrame((_, delta) => {
+    const st = camRef.current;
+    const active = reduced ? 0 : st.active;
+    const dive = reduced ? 0 : st.dive;
+
+    if (active <= 0) {
+      _dir.copy(_z);
+      _target.copy(_dir).multiplyScalar(OVER);
+    } else {
+      const nd = nodos[active - 1].dir;
+      _node.set(nd[0], nd[1], nd[2]).normalize();
+      _dir.copy(_z).lerp(_node, dive).normalize();
+      _target.copy(_dir).multiplyScalar(THREE.MathUtils.lerp(OVER, CLOSE, dive));
+    }
+
+    // parallax sutil
+    _target.x += (mouse.current?.x ?? 0) * 0.22;
+    _target.y += (mouse.current?.y ?? 0) * 0.22;
+
+    const k = reduced ? 1 : 1 - Math.pow(0.0009, Math.min(delta, 0.05));
+    camera.position.lerp(_target, k);
+    camera.lookAt(ORIGIN);
+  });
+  return null;
+}
+
+/** Proyecta los nodos a 2D para el overlay clickeable; "front" según si el nodo
+ * mira a la cámara (que ahora orbita). */
+function NodeProjector({
+  onProject,
+  radius,
+}: {
+  onProject?: (p: NodeProj[]) => void;
+  radius: number;
+}) {
+  const { camera, size } = useThree();
+  const buf = useRef<NodeProj[]>([]);
+  const rNode = radius * 1.02 * S;
+  useFrame(() => {
+    if (!onProject) return;
+    _cam.copy(camera.position).normalize();
+    const b = buf.current;
+    for (let i = 0; i < nodos.length; i++) {
+      const d = nodos[i].dir;
+      _v.set(d[0], d[1], d[2]).normalize().multiplyScalar(rNode);
+      _nd.copy(_v).normalize();
+      const front = _nd.dot(_cam) > 0.12;
+      _v.project(camera);
+      b[i] = {
+        x: ((_v.x + 1) / 2) * size.width,
+        y: (1 - (_v.y + 1) / 2) * size.height,
+        front,
+      };
+    }
+    onProject(b);
+  });
+  return null;
 }
 
 function SignalReady({ onReady }: { onReady?: () => void }) {
@@ -232,53 +242,75 @@ function SignalReady({ onReady }: { onReady?: () => void }) {
   return null;
 }
 
+function Scene({
+  camRef,
+  activeIndex,
+  reduced,
+  onReady,
+  onProject,
+}: {
+  camRef: RefObject<CamState>;
+  activeIndex: number;
+  reduced: boolean;
+  onReady?: () => void;
+  onProject?: (p: NodeProj[]) => void;
+}) {
+  const mouse = useMouseTracker();
+  const radius = useBallRadius();
+  return (
+    <>
+      <ambientLight intensity={0.45} />
+      <directionalLight position={[3, 4, 5]} intensity={0.8} color="#dff7ec" />
+      <CursorLight mouse={mouse} />
+      <BgField />
+      <GraphGroup activeIndex={activeIndex} />
+      <CameraRig camRef={camRef} mouse={mouse} reduced={reduced} radius={radius} />
+      <NodeProjector onProject={onProject} radius={radius} />
+      <SignalReady onReady={onReady} />
+    </>
+  );
+}
+
 export type GraphCanvasProps = {
-  tier?: number;
+  camRef: RefObject<CamState>;
   activeIndex?: number;
-  ballScale?: number;
-  ballPosition?: [number, number, number];
+  reduced?: boolean;
   paused?: boolean;
   onReady?: () => void;
   onProject?: (p: NodeProj[]) => void;
 };
 
 export default function GraphCanvas({
-  tier = 3,
+  camRef,
   activeIndex = -1,
-  ballScale = 1.6,
-  ballPosition = [0.72, 0, 0],
+  reduced = false,
   paused = false,
   onReady,
   onProject,
 }: GraphCanvasProps) {
-  const mouse = useMouseTracker();
-  const dpr: [number, number] = tier >= 3 ? [1, 2] : [1, 1.5];
+  const dpr =
+    typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 2) : 1.5;
 
   return (
     <Canvas
       frameloop={paused ? "never" : "always"}
-      dpr={dpr}
-      camera={{ position: [0, 0, 5.6], fov: 38 }}
+      dpr={[1, dpr]}
+      camera={{ position: [0, 0, 6], fov: 40 }}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       style={{ pointerEvents: "none" }}
     >
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[3, 4, 5]} intensity={0.9} color="#dff7ec" />
-      <CursorLight mouse={mouse} />
       <Suspense fallback={null}>
-        <BgField />
-        <ResponsiveGraph
-          mouse={mouse}
+        <Scene
+          camRef={camRef}
           activeIndex={activeIndex}
-          baseScale={ballScale}
-          basePosition={ballPosition}
+          reduced={reduced}
+          onReady={onReady}
           onProject={onProject}
         />
-        <SignalReady onReady={onReady} />
       </Suspense>
       <EffectComposer>
         <Bloom
-          intensity={0.82}
+          intensity={0.8}
           luminanceThreshold={0.22}
           luminanceSmoothing={0.4}
           mipmapBlur
@@ -288,3 +320,5 @@ export default function GraphCanvas({
     </Canvas>
   );
 }
+
+useGLTF.preload(MODEL);

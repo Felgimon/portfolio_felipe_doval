@@ -118,14 +118,16 @@ async function main() {
 
       const url = `${BASE}${ruta}`;
       console.log(`[smoke] → ${url}`);
+      // "load" (no "networkidle"): la home tiene un canvas 3D que mantiene la
+      // red/animación activas, así que networkidle no se alcanza.
       const resp = await page.goto(url, {
-        waitUntil: "networkidle",
+        waitUntil: "load",
         timeout: 45_000,
       });
       if (!resp || !resp.ok()) {
         erroresRuta.push(`HTTP ${resp?.status()} en ${ruta}`);
       }
-      await page.waitForTimeout(600); // margen para hidratación/efectos
+      await page.waitForTimeout(2500); // margen para hidratación / canvas / efectos
 
       const nombre = ruta === "/" ? "home" : ruta.replace(/\W+/g, "-").replace(/^-|-$/g, "");
       const shot = path.join(OUT_DIR, `${nombre}--${vw}x${vh}.png`);

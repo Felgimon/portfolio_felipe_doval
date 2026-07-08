@@ -1,32 +1,29 @@
-import { Bricolage_Grotesque, Spline_Sans_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
 /**
- * Sistema tipográfico del portfolio (v2 — "verde agua").
+ * Sistema tipográfico (v2.1) — 100% self-hosted (cero dependencia de red en
+ * build; la fuente nunca "desaparece" por un fetch fallido a Google Fonts).
  *
- * - sans (display + body): Bricolage Grotesque — grotesca VARIABLE con carácter
- *   (ejes `opsz` + `wght`). Cortes editoriales, nada "default de IA". Se usa para
- *   todo el texto: en display se aprieta el interlineado y se ESTIRA con
- *   `transform: scaleX/scaleY` + tracking (Bricolage no tiene eje `wdth`); en
- *   body queda tranquila. Una sola familia = coherencia.
- * - mono: Spline Sans Mono — labels de nodo, índices y datos tipo telemetría.
+ * - sans (display + body): Bricolage Grotesque variable (eje wght), woff2.
+ * - mono: Spline Sans Mono variable (eje wght), woff2 — labels de nodo y datos.
  *
- * globals.css mapea `--font-sans`/`--font-mono` a los tokens de Tailwind
- * (`--font-display`, `--font-body`, `--font-mono`).
+ * globals.css mapea `--font-sans`/`--font-mono` a los tokens de Tailwind.
  */
 
-export const fontSans = Bricolage_Grotesque({
-  subsets: ["latin"],
+export const fontSans = localFont({
+  src: "../app/fonts/Bricolage-wght.woff2",
   variable: "--font-sans",
   display: "swap",
-  axes: ["opsz"],
+  weight: "200 800",
   fallback: ["system-ui", "sans-serif"],
 });
 
-export const fontMono = Spline_Sans_Mono({
-  subsets: ["latin"],
+export const fontMono = localFont({
+  src: "../app/fonts/SplineSansMono-wght.woff2",
   variable: "--font-mono",
   display: "swap",
-  weight: ["400", "500", "600"],
+  weight: "300 700",
+  fallback: ["ui-monospace", "monospace"],
 });
 
 export const fontClassNames = `${fontSans.variable} ${fontMono.variable}`;

@@ -118,7 +118,6 @@ body {
 .type-display {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 800;
-  font-variation-settings: "opsz" 14;
   letter-spacing: -0.03em;
   line-height: 0.92;
 }
@@ -132,7 +131,6 @@ body {
 .type-hero {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 800;
-  font-variation-settings: "opsz" 40;
   font-size: clamp(2.75rem, 10vw, 8.5rem);
   line-height: 0.84;
   letter-spacing: -0.04em;
@@ -142,7 +140,6 @@ body {
 .type-h1 {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 800;
-  font-variation-settings: "opsz" 32;
   font-size: clamp(2rem, 5.5vw, 4rem);
   line-height: 0.9;
   letter-spacing: -0.03em;
@@ -152,7 +149,6 @@ body {
 .type-h2 {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 700;
-  font-variation-settings: "opsz" 24;
   font-size: clamp(1.6rem, 3.6vw, 2.75rem);
   line-height: 0.98;
   letter-spacing: -0.02em;
@@ -161,7 +157,6 @@ body {
 .type-h3 {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 600;
-  font-variation-settings: "opsz" 18;
   font-size: clamp(1.2rem, 2.2vw, 1.6rem);
   line-height: 1.1;
   letter-spacing: -0.01em;

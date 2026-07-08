@@ -3,8 +3,42 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v2.0.0** es la vigente. Lo que sigue debajo ("Noche de estadio",
-> etc.) queda como **registro histórico** de la v1 (tag `v1.0.0`).
+> La sección **v2.1** es la vigente. Debajo quedan v2.0.0 y la v1 como registro.
+
+---
+
+## v2.1 — Cámara scroll-driven + fixes cross-browser
+
+Iteración sobre la v2.0 con feedback de Felipe. Cambios de fondo:
+
+- **Fix cross-browser (el bug clave):** el canvas 3D se gateaba por `detect-gpu`
+  (`tier >= 2`); en Chrome con GPU integrada daba tier bajo → **poster estático**
+  (sin rotación ni nodos clickeables), mientras que el navegador de VS Code daba
+  tier alto → canvas. Ahora el gate es **WebGL disponible** (`hooks/useWebGL.ts`),
+  no el tier. DPR desde `window.devicePixelRatio`. Se eliminó `useGpuTier` del
+  home. El poster queda solo para navegadores sin WebGL.
+- **Fuentes 100% self-hosted** (`app/fonts/*.woff2`, vía `next/font/local`):
+  Bricolage Grotesque + Spline Sans Mono (fontsource). Cero dependencia de Google
+  Fonts en build → la fuente no "desaparece" por un fetch fallido.
+- **Navegación = cámara que se mete al nodo (scroll-driven):** se reemplazó la
+  rotación del balón por un **rig de cámara** (`CameraRig`) que siempre mira al
+  centro y cuya dirección+distancia salen del scroll: en overview ve el balón
+  entero; al entrar a un tópico la cámara **bucea** por la dirección del nodo
+  (`dive` = progreso de scroll dentro de la sección, primeros ~42%). Click en un
+  nodo/HUD = `scrollTo` → misma animación (Lenis la hace suave/rápida). El balón
+  queda **estático y centrado** (todas las direcciones de nodo fijas en el mundo →
+  la cámara las encara con precisión y todos los nodos son clickeables).
+- **Logo FD flotando en el centro 3D** del balón (`Billboard` + `Text` de drei,
+  fuente `public/fonts/logo.ttf`), visible a través del wireframe.
+- **UI autoexplicativa:** la portada muestra solo el balón + el logo + "Felipe
+  Doval — Portfolio" (sin la línea grande ni el "tocá un nodo"). Los 5 nodos con
+  su label alrededor del balón (overlay, solo desktop) dicen solos que son
+  clickeables. En mobile la nav es el HUD.
+- **Sin numeración ni look de slides:** HUD y eyebrows de sección muestran solo el
+  label (Perfil, Enfoque…), sin `01/02` ni `0X/05`. Enfoque/Recorrido/detalle:
+  bloques separados por hairlines, sin números.
+- **Nota:** el warning `THREE.Clock deprecated` en consola viene de
+  `@react-three/fiber` (interno), es inofensivo y no es un error.
 
 ---
 

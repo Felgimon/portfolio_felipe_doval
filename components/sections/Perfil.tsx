@@ -32,7 +32,7 @@ export function Perfil() {
   const grupos = agruparStack();
 
   return (
-    <TopicPanel id="perfil" indice="01" kicker="Perfil" contentClassName="max-w-4xl">
+    <TopicPanel id="perfil" kicker="Perfil" contentClassName="max-w-4xl">
       <div className="grid gap-10 md:grid-cols-[0.7fr_1.3fr] md:gap-12">
         {/* Foto tratada */}
         <Reveal>

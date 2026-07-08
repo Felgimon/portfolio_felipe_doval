@@ -18,7 +18,6 @@ export function Trabajo() {
   return (
     <TopicPanel
       id="trabajo"
-      indice="03"
       kicker="Trabajo"
       scrim="strong"
       contentClassName="max-w-6xl"

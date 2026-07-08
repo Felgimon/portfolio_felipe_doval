@@ -11,7 +11,7 @@ import { TopicPanel } from "./TopicPanel";
  */
 export function Contacto() {
   return (
-    <TopicPanel id="contacto" indice="05" kicker="Contacto" contentClassName="max-w-3xl">
+    <TopicPanel id="contacto" kicker="Contacto" contentClassName="max-w-3xl">
       <Reveal>
         <h2 className="type-h1 text-chalk">
           ¿Tenés algo para <span className="text-agua">construir</span>?

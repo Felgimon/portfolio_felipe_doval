@@ -6,13 +6,17 @@ así que no hace falta una línea de atribución obligatoria en el footer. Si en
 futuro se agrega un asset CC-BY (ej. un HDRI de Poly Haven o un modelo de
 Sketchfab), se documenta acá y se agrega el crédito visible.
 
-## Tipografías (v2)
+## Tipografías (v2.1 — self-hosted)
 
-| Fuente | Uso | Origen | Licencia |
+Todas locales (`next/font/local`, `app/fonts/*.woff2`) — cero dependencia de red
+en build. Los variable woff2 salen de [Fontsource](https://fontsource.org) (mismos
+archivos que Google Fonts, OFL).
+
+| Fuente | Uso | Archivo | Licencia |
 |---|---|---|---|
-| **Bricolage Grotesque** (variable, opsz+wght) | Display + body (títulos, logo, texto) | Google Fonts (`next/font`) | SIL OFL 1.1 |
-| **Spline Sans Mono** | Datos / labels de nodo / eyebrows | Google Fonts (`next/font`) | SIL OFL 1.1 |
-| **Archivo Black** | Solo la imagen OG (`app/opengraph-image.tsx`) | Omnibus-Type vía Google Fonts | SIL OFL 1.1 (ver `app/fonts/OFL.txt`) |
+| **Bricolage Grotesque** (variable wght) | Display + body | `Bricolage-wght.woff2` | SIL OFL 1.1 |
+| **Spline Sans Mono** (variable wght) | Datos / labels de nodo / eyebrows | `SplineSansMono-wght.woff2` | SIL OFL 1.1 |
+| **Archivo Black** | Imagen OG + logo 3D (`public/fonts/logo.ttf`) | `ArchivoBlack-Regular.ttf` | SIL OFL 1.1 (ver `app/fonts/OFL.txt`) |
 
 ## Modelos 3D
 

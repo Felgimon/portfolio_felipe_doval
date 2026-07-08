@@ -156,19 +156,16 @@ export default async function ProyectoDetalle({
         )}
         {p.destacados && (
           <Bloque titulo="Decisiones y features" acento={p.acento}>
-            <ol className="flex flex-col">
-              {p.destacados.map((d, i) => (
-                <li
+            <div className="flex flex-col">
+              {p.destacados.map((d) => (
+                <p
                   key={d}
-                  className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-line-soft py-4 first:border-t-0 first:pt-0"
+                  className="border-t border-line-soft py-4 leading-relaxed text-chalk-dim first:border-t-0 first:pt-0"
                 >
-                  <span className="data pt-0.5 text-sm text-agua tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="leading-relaxed text-chalk-dim">{d}</span>
-                </li>
+                  {d}
+                </p>
               ))}
-            </ol>
+            </div>
           </Bloque>
         )}
 
