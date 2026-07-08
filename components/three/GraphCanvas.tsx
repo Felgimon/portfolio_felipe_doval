@@ -8,12 +8,16 @@ import {
 } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { BalonGrafo, type MousePos } from "./BalonGrafo";
+import { GraphNodes } from "./GraphNodes";
 import { heroBgVertex, heroBgFragment } from "./shaders";
 
-/** Puntero normalizado (-1..1) desde `window` — funciona aunque el canvas
- * tenga pointer-events:none (el texto queda seleccionable por encima). */
+const MODEL = "/models/pelota-estructura-transformed.glb";
+
+type MousePos = { x: number; y: number };
+
+/** Puntero normalizado (-1..1) desde `window` (el canvas es pointer-none). */
 function useMouseTracker(): RefObject<MousePos> {
   const mouse = useRef<MousePos>({ x: 0, y: 0 });
   useEffect(() => {
@@ -27,7 +31,7 @@ function useMouseTracker(): RefObject<MousePos> {
   return mouse;
 }
 
-/** Luz agua que persigue al puntero: enciende los nodos cercanos. */
+/** Luz verde agua que persigue al puntero: enciende los struts cercanos. */
 function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
   const light = useRef<THREE.PointLight>(null);
   useFrame(() => {
@@ -49,14 +53,14 @@ function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
   );
 }
 
-/** Campo shader de fondo (ruido agua sutil). */
+/** Campo shader de fondo (ruido verde agua sutil con viñeta hacia el balón). */
 function BgField() {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uColor: { value: new THREE.Color("#8fe3c6") },
-      uFocus: { value: new THREE.Vector2(0.6, 0.55) },
+      uFocus: { value: new THREE.Vector2(0.58, 0.52) },
     }),
     [],
   );
@@ -65,7 +69,7 @@ function BgField() {
     if (m) m.uniforms.uTime.value += Math.min(delta, 0.05);
   });
   return (
-    <mesh position={[0, 0, -3]} scale={[18, 18, 1]}>
+    <mesh position={[0, 0, -3]} scale={[20, 20, 1]}>
       <planeGeometry args={[1, 1]} />
       <shaderMaterial
         ref={mat}
@@ -79,26 +83,91 @@ function BgField() {
   );
 }
 
-/** Ajusta escala/posición del balón según el ancho del canvas (responsive). */
-function ResponsiveBall({
+/** Malla del balón (icosaedro truncado): verde agua emisivo. */
+function BalonMesh() {
+  const { nodes } = useGLTF(MODEL) as unknown as {
+    nodes: Record<string, THREE.Mesh>;
+  };
+  return (
+    <mesh geometry={nodes.geometry_0.geometry}>
+      <meshStandardMaterial
+        color="#14352c"
+        emissive="#8fe3c6"
+        emissiveIntensity={0.9}
+        metalness={0.55}
+        roughness={0.32}
+      />
+    </mesh>
+  );
+}
+
+/**
+ * El grafo completo (balón + nodos) en un grupo que rota. En esta fase el grupo
+ * oscila alrededor del frente (parallax al mouse + sway) para que los 5 nodos
+ * queden siempre de cara a la cámara; la rotación dirigida al nodo activo según
+ * el scroll llega en la Fase D.
+ */
+function GraphGroup({
   mouse,
+  activeIndex,
+  scale,
+  position,
+}: {
+  mouse: RefObject<MousePos>;
+  activeIndex: number;
+  scale: number;
+  position: [number, number, number];
+}) {
+  const group = useRef<THREE.Group>(null);
+  useFrame((state, delta) => {
+    const g = group.current;
+    if (!g) return;
+    const t = state.clock.elapsedTime;
+    const d = Math.min(delta, 0.05);
+    const mx = mouse.current?.x ?? 0;
+    const my = mouse.current?.y ?? 0;
+    const targetY = mx * 0.35 + Math.sin(t * 0.3) * 0.06;
+    const targetX = -my * 0.2 + Math.sin(t * 0.24) * 0.04;
+    g.rotation.y += (targetY - g.rotation.y) * 0.05 * (d / 0.016);
+    g.rotation.x += (targetX - g.rotation.x) * 0.05 * (d / 0.016);
+    g.position.y = position[1] + Math.sin(t * 0.5) * 0.04;
+  });
+  return (
+    <group ref={group} scale={scale} position={position}>
+      <BalonMesh />
+      <GraphNodes activeIndex={activeIndex} />
+    </group>
+  );
+}
+
+/** Escala/posición del grafo según el ancho del canvas (responsive). */
+function ResponsiveGraph({
+  mouse,
+  activeIndex,
   baseScale,
   basePosition,
 }: {
   mouse: RefObject<MousePos>;
+  activeIndex: number;
   baseScale: number;
   basePosition: [number, number, number];
 }) {
   const width = useThree((s) => s.size.width);
-  const narrow = width < 700;
+  const narrow = width < 820;
   const scale = baseScale * (narrow ? 0.82 : 1);
   const position: [number, number, number] = narrow
-    ? [basePosition[0] * 0.5, basePosition[1] + 0.15, basePosition[2]]
+    ? [0, basePosition[1] + 0.1, basePosition[2]]
     : basePosition;
-  return <BalonGrafo mouse={mouse} scale={scale} position={position} />;
+  return (
+    <GraphGroup
+      mouse={mouse}
+      activeIndex={activeIndex}
+      scale={scale}
+      position={position}
+    />
+  );
 }
 
-/** Avisa cuando el contenido del Suspense (glb) ya montó = terminó de cargar. */
 function SignalReady({ onReady }: { onReady?: () => void }) {
   useEffect(() => {
     onReady?.();
@@ -106,23 +175,23 @@ function SignalReady({ onReady }: { onReady?: () => void }) {
   return null;
 }
 
-export type HeroCanvasProps = {
+export type GraphCanvasProps = {
   tier?: number;
+  activeIndex?: number;
   ballScale?: number;
   ballPosition?: [number, number, number];
-  /** true → pausa el render (hero fuera del viewport) */
   paused?: boolean;
-  /** se llama cuando el glb terminó de cargar */
   onReady?: () => void;
 };
 
-export default function HeroCanvas({
+export default function GraphCanvas({
   tier = 3,
-  ballScale = 2.05,
-  ballPosition = [0, 0, 0],
+  activeIndex = -1,
+  ballScale = 1.9,
+  ballPosition = [0.55, 0, 0],
   paused = false,
   onReady,
-}: HeroCanvasProps) {
+}: GraphCanvasProps) {
   const mouse = useMouseTracker();
   const dpr: [number, number] = tier >= 3 ? [1, 2] : [1, 1.5];
 
@@ -135,16 +204,13 @@ export default function HeroCanvas({
       style={{ pointerEvents: "none" }}
     >
       <ambientLight intensity={0.4} />
-      <directionalLight
-        position={[3, 4, 5]}
-        intensity={0.9}
-        color="#dff7ec"
-      />
+      <directionalLight position={[3, 4, 5]} intensity={0.9} color="#dff7ec" />
       <CursorLight mouse={mouse} />
       <Suspense fallback={null}>
         <BgField />
-        <ResponsiveBall
+        <ResponsiveGraph
           mouse={mouse}
+          activeIndex={activeIndex}
           baseScale={ballScale}
           basePosition={ballPosition}
         />

@@ -1,31 +1,23 @@
-import { Hero } from "@/components/sections/Hero";
-import { About } from "@/components/sections/About";
-import { Work } from "@/components/sections/Work";
-import { Timeline } from "@/components/sections/Timeline";
-import { Contact } from "@/components/sections/Contact";
+import { GraphHome } from "@/components/sections/GraphHome";
+import { Perfil } from "@/components/sections/Perfil";
+import { Enfoque } from "@/components/sections/Enfoque";
+import { Trabajo } from "@/components/sections/Trabajo";
+import { Recorrido } from "@/components/sections/Recorrido";
+import { Contacto } from "@/components/sections/Contacto";
 
 /**
- * Home — single page con scroll narrativo. En esta fase (2) las secciones son
- * andamiaje con títulos reales y anclas funcionando; el hero 3D y el contenido
- * real llegan en las fases 3–7.
+ * Home = hub del grafo. El balón + los 5 nodos son la navegación (viven en la
+ * capa fija de GraphHome); cada tópico se recorre clickeando un nodo/el HUD o
+ * simplemente scrolleando en orden. Contenido real, en el DOM (SEO + a11y).
  */
 export default function Home() {
   return (
-    <>
-      {/* ===================== HERO / INICIO ===================== */}
-      <Hero />
-
-      {/* ===================== SOBRE MÍ ===================== */}
-      <About />
-
-      {/* ===================== OBRAS ===================== */}
-      <Work />
-
-      {/* ===================== RECORRIDO ===================== */}
-      <Timeline />
-
-      {/* ===================== CONTACTO ===================== */}
-      <Contact />
-    </>
+    <GraphHome>
+      <Perfil />
+      <Enfoque />
+      <Trabajo />
+      <Recorrido />
+      <Contacto />
+    </GraphHome>
   );
 }

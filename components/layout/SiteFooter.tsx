@@ -11,7 +11,7 @@ const anio = new Date().getFullYear();
 /** Footer mínimo: marca, contacto y créditos. */
 export function SiteFooter() {
   return (
-    <footer className="relative border-t border-line bg-ink-2">
+    <footer className="relative z-10 border-t border-line bg-ink-2">
       <Container size="wide" className="py-16">
         <div className="flex flex-col gap-12 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">

@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tag } from "@/components/ui/Tag";
@@ -9,16 +10,24 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Proyecto } from "@/content/types";
 
 /**
- * Card de proyecto secundario con hover rico: elevación + glow agua (CSS) e
- * inclinación sutil hacia el puntero (JS, solo pointer fino / sin reduced-motion).
- * Si hay repo, toda la card enlaza; si no, es informativa (proyecto sin link).
+ * Card de proyecto con hover rico: elevación + glow agua (CSS) e inclinación
+ * sutil hacia el puntero (JS, solo pointer fino / sin reduced-motion).
+ * `href` interno (case study) tiene prioridad; si no, enlaza al repo; si no hay
+ * ninguno, es informativa.
  */
-export function ProjectCard({ proyecto }: { proyecto: Proyecto }) {
+export function ProjectCard({
+  proyecto,
+  href,
+}: {
+  proyecto: Proyecto;
+  href?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const cap = proyecto.capturas[0];
   const tieneCaptura = Boolean(cap && !cap.falta && cap.src);
   const repo = proyecto.enlaces.find((e) => e.tipo === "repo" || e.tipo === "demo");
+  const linkable = Boolean(href || repo);
 
   const onMove = (e: React.PointerEvent) => {
     const el = ref.current;
@@ -39,7 +48,7 @@ export function ProjectCard({ proyecto }: { proyecto: Proyecto }) {
       onPointerLeave={onLeave}
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-panel transition-[transform,border-color,box-shadow] duration-300 will-change-transform",
-        repo && "hover:border-agua/50 hover:shadow-[0_0_40px_-12px_rgba(143,227,198,0.4)]",
+        linkable && "hover:border-agua/50 hover:shadow-[0_0_40px_-12px_rgba(143,227,198,0.4)]",
       )}
     >
       {/* Media */}
@@ -66,7 +75,7 @@ export function ProjectCard({ proyecto }: { proyecto: Proyecto }) {
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-3">
           <h3 className="type-h3 text-chalk">{proyecto.nombre}</h3>
-          {repo && (
+          {linkable && (
             <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-agua" />
           )}
         </div>
@@ -86,6 +95,17 @@ export function ProjectCard({ proyecto }: { proyecto: Proyecto }) {
     </div>
   );
 
+  if (href) {
+    return (
+      <Link
+        href={href}
+        aria-label={`${proyecto.nombre} — ver el caso`}
+        className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      >
+        {contenido}
+      </Link>
+    );
+  }
   if (repo) {
     return (
       <a
