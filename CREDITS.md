@@ -6,13 +6,13 @@ así que no hace falta una línea de atribución obligatoria en el footer. Si en
 futuro se agrega un asset CC-BY (ej. un HDRI de Poly Haven o un modelo de
 Sketchfab), se documenta acá y se agrega el crédito visible.
 
-## Tipografías
+## Tipografías (v2)
 
 | Fuente | Uso | Origen | Licencia |
 |---|---|---|---|
-| **Archivo** (Black + Variable) | Display (títulos, logo) | Omnibus-Type (Buenos Aires) vía Google Fonts | SIL OFL 1.1 (ver `app/fonts/OFL.txt`) |
-| **Hanken Grotesk** | Body / UI | Google Fonts (`next/font`) | SIL OFL 1.1 |
-| **Spline Sans Mono** | Datos / labels / eyebrows | Google Fonts (`next/font`) | SIL OFL 1.1 |
+| **Bricolage Grotesque** (variable, opsz+wght) | Display + body (títulos, logo, texto) | Google Fonts (`next/font`) | SIL OFL 1.1 |
+| **Spline Sans Mono** | Datos / labels de nodo / eyebrows | Google Fonts (`next/font`) | SIL OFL 1.1 |
+| **Archivo Black** | Solo la imagen OG (`app/opengraph-image.tsx`) | Omnibus-Type vía Google Fonts | SIL OFL 1.1 (ver `app/fonts/OFL.txt`) |
 
 ## Modelos 3D
 
@@ -22,11 +22,16 @@ Sketchfab), se documenta acá y se agrega el crédito visible.
 | `pelota-facetada.glb` | Balón facetado sólido | Generado proceduralmente por Felipe | CC0 (propio) |
 | `esfera-lowpoly.glb` | Icoesfera facetada | Generado proceduralmente por Felipe | CC0 (propio) |
 
-## Logo y marca
+## Logo y marca (v2)
 
-- Logo **FD_** (monograma, wordmark, favicons): diseñados por/para Felipe,
-  compuestos con Archivo Black. Color de marca celeste `#74ACDF` (celeste
-  bandera). Propios.
+- Logo **FD·** (monograma + nodo, wordmark): el guión bajo de terminal
+  evolucionó a un nodo verde agua con glow (`components/ui/Logo.tsx`), atando la
+  marca al balón-grafo. Compuesto con Bricolage Grotesque. Propio.
+- Color de marca **verde agua `#8FE3C6`** (seafoam sólido). Propio.
+- **Favicons**: micro-grafo de nodos generado con solo primitivas circle/line
+  (`scripts/gen-favicons.mjs`). Propio.
+- **Poster de fallback** (`public/assets/hero-poster.png`): render propio del
+  balón, recoloreado a verde agua con `sharp` (rotación de matiz).
 
 ## Íconos
 

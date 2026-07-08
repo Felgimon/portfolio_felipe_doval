@@ -6,6 +6,25 @@ esto; completarlo lo hace pasar de "muy bueno" a "tuyo de verdad".
 
 Formato: `[ ]` pendiente · `[x]` hecho.
 
+## 🆕 v2 — rediseño «verde agua» + navegación por grafo
+
+El sitio se rediseñó: la home ahora ES el balón-grafo (cada nodo = un tópico;
+entrás clickeando un nodo o scrolleando), paleta verde agua, tipografía Bricolage,
+sin bullets. Lo que tenés que completar sigue siendo lo de abajo (contenido de
+proyectos, capturas, confirmaciones, dominio). Novedades a tener en cuenta:
+
+- **Preview del 3D:** si en tu máquina ves el poster en vez del balón animado,
+  abrí `/?gl=1` para forzar el canvas.
+- **Foto:** ahora se usa `foto_frente.png` en el nodo Perfil con un tratamiento
+  verde agua (duotono + grano). Si querés otra, reemplazala en
+  `public/assets/foto/` (ver punto "Tu foto" más abajo).
+- **La sección "Obras" ahora es el nodo "Trabajo".** Superlum quedó como caso
+  principal; FutbolVision pasó a la grilla, presentado como proyecto anterior.
+- **Mobile:** validado sin overflow horizontal (360/390/768). El HUD colapsa a
+  índices.
+- **OG:** la imagen social usa Archivo Black (grotesca bold). Si querés que use
+  Bricolage como el resto, avisá (hay que bundlear un TTF estático).
+
 ## 🔴 Contenido faltante (genera placeholders visibles)
 
 - [ ] **PC Builder** — falta TODO: descripción de una línea, qué hace, stack y

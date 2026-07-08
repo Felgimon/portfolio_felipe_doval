@@ -1,20 +1,27 @@
 # Portfolio — Felipe Doval
 
-Sitio personal de **Felipe "Feli" Doval** — estudiante y builder de Buenos Aires
-(fútbol × ML). Single-page con scroll narrativo, hero 3D interactivo y páginas de
-detalle por proyecto.
+Sitio personal de **Felipe "Feli" Doval** — desarrollador y builder de Buenos
+Aires. **La navegación ES el balón-grafo**: cada nodo del modelo 3D es un tópico
+(Perfil · Enfoque · Trabajo · Recorrido · Contacto). Se entra clickeando un nodo
+o simplemente scrolleando (orden por defecto), y el balón rota para encarar el
+nodo activo. Un HUD de consola marca el progreso y es el fallback accesible
+(teclado / mobile / sin-WebGL), más páginas de detalle por proyecto.
 
-**Dirección de diseño:** "Noche de estadio" — lienzo dark azulado, celeste
-bandera como señal, tipografía Archivo (argentina, la del logo) en cut expandido.
-El elemento firma es el **balón-grafo** 3D (una pelota de fútbol que también se
-lee como red de pases / red neuronal). Detalle completo en
-[`DECISIONS.md`](./DECISIONS.md).
+**Dirección de diseño (v2 — "verde agua"):** base verde-noche (pino profundo),
+verde agua sólido como señal, chispa terracota puntual; tipografía Bricolage
+Grotesque con estiramientos de firma. Colores sólidos (sin alpha bajado). El
+elemento firma es el **balón-grafo** 3D (pelota de fútbol × red de nodos).
+Detalle completo en [`DECISIONS.md`](./DECISIONS.md).
 
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
-Three.js + React Three Fiber v9 + drei · GSAP (ScrollTrigger + SplitText) ·
-Lenis · Motion · lucide-react.
+Three.js + React Three Fiber v9 + drei (Bloom) · GSAP (ScrollTrigger) · Lenis ·
+Bricolage Grotesque + Spline Sans Mono (`next/font`) · lucide-react.
+
+> **Preview del 3D:** en una máquina sin GPU capaz se ve el poster estático. Para
+> forzar el canvas 3D en cualquier equipo, agregá `?gl=1` a la URL
+> (`/?gl=1`).
 
 Las versiones exactas y el porqué de cada una están en
 [`DECISIONS.md`](./DECISIONS.md).

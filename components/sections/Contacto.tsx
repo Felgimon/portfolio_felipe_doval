@@ -28,7 +28,7 @@ export function Contacto() {
           <p className="mb-3 font-mono text-xs tracking-wide text-muted">Email</p>
           <EmailLink
             mode="copy"
-            className="type-h2 text-chalk transition-colors hover:text-agua"
+            className="type-h2 break-all text-chalk transition-colors hover:text-agua"
           />
         </div>
 

@@ -162,10 +162,7 @@ export default async function ProyectoDetalle({
                   key={d}
                   className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-line-soft py-4 first:border-t-0 first:pt-0"
                 >
-                  <span
-                    className="data pt-0.5 text-sm tabular-nums"
-                    style={{ color: p.acento }}
-                  >
+                  <span className="data pt-0.5 text-sm text-agua tabular-nums">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="leading-relaxed text-chalk-dim">{d}</span>

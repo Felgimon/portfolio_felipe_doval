@@ -4,10 +4,17 @@ import { join } from "node:path";
 import { perfil } from "@/content/perfil";
 
 // Imagen OG generada desde los tokens del design system (texto + color, sin
-// ilustración). Aplica a todas las rutas que no definan la suya.
+// ilustración dibujada). El "_" de la marca es un nodo verde agua. Tipografía
+// Archivo Black para la tarjeta social (bold grotesco; el sitio usa Bricolage).
 export const alt = `${perfil.nombre} — ${perfil.rol}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+const INK = "#0f1e1b";
+const AGUA = "#8fe3c6";
+const HUESO = "#ece7db";
+const SALVIA = "#a6bab0";
+const NIEBLA = "#83978d";
 
 export default async function OpengraphImage() {
   const archivo = await readFile(
@@ -23,7 +30,7 @@ export default async function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#0b1220",
+          backgroundColor: INK,
           padding: "72px",
           fontFamily: "Archivo",
         }}
@@ -34,13 +41,23 @@ export default async function OpengraphImage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            color: "#8a93a6",
+            color: NIEBLA,
             fontSize: 26,
           }}
         >
-          <span style={{ color: "#ece7dc" }}>
-            FD<span style={{ color: "#74acdf" }}>_</span>
-          </span>
+          <div style={{ display: "flex", alignItems: "flex-end", color: HUESO }}>
+            FD
+            <div
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 7,
+                backgroundColor: AGUA,
+                marginLeft: 6,
+                marginBottom: 6,
+              }}
+            />
+          </div>
           <span style={{ fontSize: 22, letterSpacing: 4 }}>
             {perfil.ubicacion.toUpperCase()}
           </span>
@@ -53,7 +70,7 @@ export default async function OpengraphImage() {
               display: "flex",
               fontSize: 150,
               lineHeight: 0.9,
-              color: "#ece7dc",
+              color: HUESO,
               letterSpacing: -4,
             }}
           >
@@ -62,13 +79,24 @@ export default async function OpengraphImage() {
           <div
             style={{
               display: "flex",
+              alignItems: "flex-end",
               fontSize: 150,
               lineHeight: 0.9,
-              color: "#ece7dc",
+              color: HUESO,
               letterSpacing: -4,
             }}
           >
-            DOVAL<span style={{ color: "#74acdf" }}>_</span>
+            DOVAL
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: AGUA,
+                marginLeft: 10,
+                marginBottom: 22,
+              }}
+            />
           </div>
         </div>
 
@@ -79,13 +107,11 @@ export default async function OpengraphImage() {
             alignItems: "center",
             gap: 20,
             fontSize: 30,
-            color: "#b9b3a6",
+            color: SALVIA,
           }}
         >
-          <div
-            style={{ width: 46, height: 6, backgroundColor: "#74acdf" }}
-          />
-          builder · fútbol × ML · full-stack + machine learning
+          <div style={{ width: 46, height: 6, backgroundColor: AGUA }} />
+          desarrollador · full-stack &amp; datos · builder de producto
         </div>
       </div>
     ),

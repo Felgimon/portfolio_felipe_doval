@@ -63,6 +63,42 @@ coordenadas 3D (accesibles, tab-order natural). Nav = **HUD** (rail de 5 nodos c
 progreso `03/05`) que reemplaza la pill-nav y es el fallback de teclado/mobile/
 sin-WebGL. 5 tópicos: Perfil · Enfoque · Trabajo · Recorrido · Contacto.
 
+### Implementación (Fases C–F) y decisiones finas
+- **Layout home:** capa 3D FIJA (`fixed inset-0 z-0`) detrás del contenido
+  (`z-10`); footer `z-10` opaco tapa el balón al final. Secciones-panel con scrim
+  direccional (`TopicPanel`) para leer sobre el 3D; Trabajo usa scrim "strong".
+- **Rotación al nodo (Fase D):** grupos anidados `sway` (parallax/idle) + `aim`
+  (slerp de quaternion que lleva la dirección del nodo activo a la cámara). El
+  `activeIndex` sale del scroll (IntersectionObserver, `useActiveSection`), así
+  scroll y click comparten una sola fuente de verdad.
+- **Nodos clickeables:** overlay HTML proyectado (`camera.project` cada frame,
+  entregado por callback para cumplir `react-hooks/immutability`). Son azúcar de
+  puntero (`tabIndex -1`, `aria-hidden`); la nav accesible es el HUD. Overlay con
+  `overflow-hidden` para no generar scroll horizontal con labels fuera de pantalla.
+- **Estética del grafo:** estructura del balón atenuada (jade, emissive 0.5) para
+  que los 5 nodos brillen (constelación); bloom moderado. Poster de fallback
+  recoloreado a agua con `sharp`.
+- **`?gl=1`:** fuerza el canvas (preview en cualquier máquina) vía
+  `useSyncExternalStore` (sin mismatch de hidratación).
+- **Detalle:** "Decisiones y features" pasó a lista numerada (sin viñetas); los
+  números van en `--agua` (el acento de Superlum `#6D5BFF` da 3.76:1 sobre ink,
+  por debajo de AA, así que no se usa para texto — solo para barras decorativas).
+
+### Verificación v2
+- **Contraste AA:** todos los pares de texto pasan (script node; muted/panel 4.55
+  el más justo). Acentos de proyecto que quedaban como texto → movidos a agua.
+- **Responsive:** 0 overflow horizontal en 360 / 390 / 768 (bug del email largo y
+  del overlay corregidos).
+- **Teclado:** skip-link, logo, links de proyecto, copiar-email, redes y los 5
+  nodos del HUD alcanzables por Tab, todos con foco visible; sin trampa; overlay
+  3D excluido.
+- **Gate:** `tsc` 0 · `eslint` 0 · `build` ok · smoke sin errores de consola, en
+  cada fase. three.js va en chunk dinámico (no en el bundle inicial).
+- **QA regla de oro:** 0 `<path>` dibujado a mano, 0 `console.log`, 0 `any`, 0
+  `@ts-ignore`, 0 viñetas renderizadas, 0 "fútbol × ML" como bandera.
+- **Pendiente de Felipe:** validar Lighthouse mobile sobre Vercel (con GPU real);
+  en local el canvas se testeó con SwiftShader (software).
+
 ---
 
 ## Dirección de diseño (v1 — histórico)

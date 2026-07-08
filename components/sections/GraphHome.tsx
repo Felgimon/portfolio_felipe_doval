@@ -96,7 +96,10 @@ function NodeOverlay({
   }, [projRef]);
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-30" aria-hidden>
+    <div
+      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
+      aria-hidden
+    >
       {nodos.map((n, i) => {
         const active = i === activeIndex;
         return (
@@ -161,6 +164,7 @@ function HudRail({
                 <button
                   type="button"
                   onClick={() => onGoto(n.id)}
+                  aria-label={`${n.label} — ${n.hint}`}
                   aria-current={active ? "true" : undefined}
                   className={cn(
                     "group flex items-center gap-2 rounded-full px-2.5 py-1.5 font-mono text-xs tracking-wide transition-colors sm:px-3",
