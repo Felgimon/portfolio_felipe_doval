@@ -20,9 +20,10 @@ export function Eyebrow({ index, className, children, ...props }: EyebrowProps) 
           <span aria-hidden className="h-px w-6 bg-line" />
         </>
       ) : (
-        <span aria-hidden className="text-agua">
-          ●
-        </span>
+        <span
+          aria-hidden
+          className="size-1.5 shrink-0 rounded-full bg-agua shadow-[0_0_8px_-1px_var(--agua)]"
+        />
       )}
       {children}
     </span>

@@ -74,11 +74,11 @@ export default async function ProyectoDetalle({
     <article className="pt-28 pb-24">
       <Container size="wide">
         <Link
-          href="/#obras"
+          href="/#trabajo"
           className="link-underline inline-flex items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-agua"
         >
           <ArrowLeft className="size-4" />
-          Volver a obras
+          Volver al trabajo
         </Link>
 
         {/* Encabezado */}
@@ -156,18 +156,22 @@ export default async function ProyectoDetalle({
         )}
         {p.destacados && (
           <Bloque titulo="Decisiones y features" acento={p.acento}>
-            <ul className="flex flex-col gap-3">
-              {p.destacados.map((d) => (
-                <li key={d} className="flex gap-3 text-chalk-dim">
+            <ol className="flex flex-col">
+              {p.destacados.map((d, i) => (
+                <li
+                  key={d}
+                  className="grid grid-cols-[auto_1fr] gap-x-4 border-t border-line-soft py-4 first:border-t-0 first:pt-0"
+                >
                   <span
-                    aria-hidden
-                    className="mt-2 size-1.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: p.acento }}
-                  />
-                  {d}
+                    className="data pt-0.5 text-sm tabular-nums"
+                    style={{ color: p.acento }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="leading-relaxed text-chalk-dim">{d}</span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </Bloque>
         )}
 
@@ -211,9 +215,9 @@ export default async function ProyectoDetalle({
         {/* Navegación entre casos */}
         {siguiente && (
           <nav className="mt-16 flex flex-col gap-4 border-t border-line pt-10 sm:flex-row sm:items-center sm:justify-between">
-            <Button href="/#obras" variant="ghost">
+            <Button href="/#trabajo" variant="ghost">
               <ArrowLeft className="size-4" />
-              Todas las obras
+              Todo el trabajo
             </Button>
             <Link
               href={`/proyectos/${siguiente.slug}`}
