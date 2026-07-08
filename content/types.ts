@@ -68,6 +68,18 @@ export interface ItemStack {
   categoria: CategoriaStack;
 }
 
+/** Un principio del "Enfoque": cómo trabaja Felipe. Se renderiza numerado
+ * (01/02/03), sin viñetas. */
+export interface PrincipioEnfoque {
+  titulo: string;
+  texto: string;
+}
+
+export interface Enfoque {
+  resumen: string;
+  principios: PrincipioEnfoque[];
+}
+
 export type TipoTimeline = "trabajo" | "educacion" | "competencia";
 
 export interface ItemTimeline {
@@ -86,6 +98,7 @@ export interface Perfil {
   ubicacion: string;
   bioCorta: string;
   bioLarga: string[];
+  enfoque: Enfoque;
   metaDescripcion: string;
   links: {
     github: string;

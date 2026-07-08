@@ -17,8 +17,8 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <Logo className="text-2xl text-chalk" />
             <p className="mt-4 text-sm leading-relaxed text-chalk-dim">
-              {perfil.nombre}. Builder entre el full-stack y el ML, con el fútbol
-              como excusa para meterle datos a todo.
+              {perfil.nombre}. Desarrollador y builder: construyo productos de
+              punta a punta, del full-stack a los datos.
             </p>
             <p className="mt-3 font-mono text-xs text-muted">
               {perfil.ubicacion}

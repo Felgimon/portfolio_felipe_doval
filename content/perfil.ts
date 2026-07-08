@@ -1,25 +1,53 @@
 import type { Perfil } from "./types";
 
 /**
- * Perfil de Felipe. Textos tomados de contenido/bio.md y contenido/links.md
- * (la voz es de Felipe). Los links ya vienen cargados en el contenido.
+ * Perfil de Felipe. La voz es de Felipe (voseo rioplatense). El encuadre v2:
+ * los proyectos son un MEDIO para mostrar cómo piensa y construye, no el fin —
+ * por eso nada de "fútbol × ML" como bandera; el deporte es color personal.
  */
 export const perfil: Perfil = {
   nombre: "Felipe Doval",
   apodo: "Feli",
-  rol: "Estudiante · builder · fútbol × ML",
+  rol: "Desarrollador full-stack & datos",
   ubicacion: "Buenos Aires, Argentina",
 
   bioCorta:
-    "Soy Felipe Doval, estudiante de la especialización TIC en ORT Belgrano, Buenos Aires. Construyo productos reales: un workspace operativo que una empresa usa todos los días, y una plataforma de analítica de fútbol con machine learning. Me muevo entre el full-stack y los modelos de ML, con el deporte como mi excusa favorita para meterle datos a todo.",
+    "Soy Felipe Doval, estudiante de la especialización TIC en ORT Belgrano, Buenos Aires. Construyo productos de punta a punta —de la base de datos a la interfaz— y me meto con datos y machine learning cuando el problema lo pide. Lo que ves acá es la prueba de cómo pienso y de cómo llevo una idea de cero a algo que funciona; los proyectos son el medio, no el punto.",
 
   bioLarga: [
-    "Arranqué a programar en la escuela y no paré: hoy tengo proyectos que van desde un juego de terminal en C++ hasta plataformas web completas con Next.js, TypeScript y Python. Hice mi pasantía en Taquion trabajando con automatización (n8n) y workflows de Notion — y de esa experiencia salió Superlum, el workspace a medida que construí para reemplazar justamente a Notion en la operación diaria de la empresa. Me gusta el ciclo completo: entender el problema, modelar los datos, diseñar la experiencia y shippear.",
-    "La otra mitad de mi cabeza está en el deporte. Soy fanático del fútbol y del básquet, y esa obsesión terminó en código: FutbolVision, una plataforma de predicciones con XGBoost que apuesta por entender el juego (y explícitamente NO por apostar), y CourtSide, un tracker de NBA. Participé en competencias como NASA Space Apps y Premios Sadosky, trabajo bien en equipos chicos con deadlines reales, y lo que viene es más de lo mismo pero más grande: seguir construyendo.",
+    "Arranqué a programar en la escuela y no paré. Hoy tengo cosas que van desde un juego de terminal en C++ hasta plataformas web completas con Next.js, TypeScript y Python, pasando por modelos de machine learning. No me caso con una sola capa del stack: me gusta el ciclo entero —entender el problema, modelar los datos, diseñar la experiencia y shippear—, y ese es el hilo que conecta todo lo que hago.",
+    "Hice mi pasantía en Taquion automatizando con n8n y workflows de Notion, y de ahí salió Superlum: el workspace a medida que terminé construyendo para reemplazar a Notion en la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguearon competencias como NASA Space Apps y los Premios Sadosky. El deporte —fútbol y básquet— fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
   ],
 
+  enfoque: {
+    resumen:
+      "Trabajo el ciclo completo: entender el problema, modelar los datos, diseñar la experiencia y shippear. Por eso los proyectos son un medio —una prueba de cómo pienso—, no un fin en sí mismos.",
+    principios: [
+      {
+        titulo: "Entender antes de tocar código",
+        texto:
+          "Primero el problema real, no el ideal del papel. Reemplazar algo que la gente ya usa —como hice con Notion en Superlum— te obliga a mirar cómo trabaja de verdad, no cómo debería.",
+      },
+      {
+        titulo: "Los datos como cimiento",
+        texto:
+          "Modelo los datos antes que la interfaz. La estructura y la seguridad salen del modelo (en Superlum, permisos por fila con default-deny); agregarlas después sale caro. Y cuando el problema lo pide, entra el machine learning.",
+      },
+      {
+        titulo: "Diseñar y shippear",
+        texto:
+          "Me hago cargo de la experiencia y de que la cosa llegue a producción. De cero a algo que alguien usa todos los días: ese es el estándar con el que mido lo que hago.",
+      },
+      {
+        titulo: "La misma lógica en cualquier cancha",
+        texto:
+          "El deporte fue mi puerta de entrada a los datos, pero el método no cambia de dominio: si algo se puede medir, se puede entender y mejorar.",
+      },
+    ],
+  },
+
   metaDescripcion:
-    "Felipe Doval — estudiante y builder de Buenos Aires. Construyo productos reales entre el full-stack y el machine learning, con el fútbol como excusa para meterle datos a todo. Superlum, FutbolVision y más.",
+    "Felipe Doval — desarrollador y builder de Buenos Aires. Construyo productos reales de punta a punta, del full-stack a los datos y el machine learning. Portfolio: Superlum y más.",
 
   links: {
     github: "https://github.com/Felgimon",

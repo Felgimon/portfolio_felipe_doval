@@ -74,7 +74,7 @@ export const proyectos: Proyecto[] = [
       "Plataforma de analítica de fútbol con predicciones por machine learning — para entender el juego, no para apostar.",
     tagline: "Entendé el fútbol, no apuestes en él.",
     resumen:
-      "El cruce de mis dos mundos: fútbol × ML. Un modelo XGBoost baja la capa de datos que suele estar encerrada en clubes y casas de apuestas, y se la da al hincha que quiere entender por qué pasa lo que pasa en la cancha.",
+      "Un proyecto anterior donde me tocó el lado de machine learning: un modelo XGBoost que le baja al hincha la analítica que suele quedar encerrada en clubes y casas de apuestas. Ya no lo sigo, pero muestra bien cómo encaro un problema de datos de punta a punta.",
     problema:
       "La analítica de fútbol seria está encerrada en clubes y casas de apuestas. FutbolVision baja esa capa de datos al hincha que quiere entender por qué pasa lo que pasa en la cancha.",
     solucion:
@@ -118,9 +118,9 @@ export const proyectos: Proyecto[] = [
         falta: true,
       },
     ],
-    acento: "#74acdf",
+    acento: "#47a88c",
     anguloSitio:
-      "El cruce perfecto de mis dos mundos (fútbol × ML) y el posicionamiento ético como diferencial.",
+      "Evidencia del lado ML: feature engineering, elección de targets y un servicio de modelo separado de la UI. Proyecto anterior.",
   },
 
   // ==========================================================================
@@ -153,7 +153,7 @@ export const proyectos: Proyecto[] = [
       { src: "", alt: "Home con partidos (falta captura)", falta: true },
       { src: "", alt: "Búsqueda de jugadores (falta captura)", falta: true },
     ],
-    acento: "#e08a3c",
+    acento: "#e7a06a",
     anguloSitio:
       "La otra mitad deportiva (básquet) y resolución de problemas reales de integración de APIs.",
   },
@@ -203,7 +203,7 @@ export const proyectos: Proyecto[] = [
     stack: [],
     enlaces: [],
     capturas: [{ src: "", alt: "Captura de LOST (falta)", falta: true }],
-    acento: "#74acdf",
+    acento: "#8fe3c6",
     incompleto: true,
     anguloSitio: "Entrega en equipo con deadline real.",
   },
@@ -245,7 +245,7 @@ export const proyectos: Proyecto[] = [
       },
     ],
     capturas: [{ src: "", alt: "Captura de PC Builder (falta)", falta: true }],
-    acento: "#74acdf",
+    acento: "#8fe3c6",
     incompleto: true,
     anguloSitio: "Configurador por componentes.",
   },
