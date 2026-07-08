@@ -1,56 +1,68 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   DESIGN TOKENS — "Noche de estadio"
-   Portfolio de Felipe Doval. Lienzo dark azulado (no negro), celeste bandera
-   como señal, chalk cálido como texto/papel. La paleta completa y la escala
-   tipográfica se documentan en /dev/tokens (Fase 1).
+   DESIGN TOKENS — "Verde agua" (v2)
+   Portfolio de Felipe Doval. Base verde-noche (pino profundo, ni navy ni negro),
+   verde agua sólido como señal (protagonista, no fluo), texto hueso cálido y una
+   chispa terracota puntual para que no quede sofocante mono-verde.
+   Regla: los colores atenuados son HEX SÓLIDOS (no rgba con alpha bajado). El
+   alpha solo se usa en scrims de degradado y sombras, nunca en texto/marca.
    ========================================================================== */
 
 :root {
-  /* Paleta base */
-  --ink: #0b1220; /* fondo base — noche de estadio */
-  --ink-2: #0e1524; /* variación sutil de fondo para bandas */
-  --panel: #121b2e; /* superficies elevadas / cards */
-  --panel-2: #17223a; /* hover de panel */
-  --celeste: #74acdf; /* señal primaria (marca de Felipe) */
-  --celeste-bright: #a9d0ff; /* glow / hover / bloom */
-  --celeste-deep: #3f7cba; /* celeste presionado / bordes activos */
-  --chalk: #ece7dc; /* texto principal (blanco tiza cálido) */
-  --chalk-dim: #b9b3a6; /* texto secundario cálido */
-  --muted: #8a93a6; /* texto atenuado frío / metadatos */
-  --line: #26324a; /* hairlines, struts en reposo, bordes */
-  --line-soft: #1b2438; /* bordes más sutiles */
+  /* Base */
+  --ink: #0f1e1b; /* fondo base — pino profundo (verde-noche) */
+  --ink-2: #0c1917; /* variación de fondo para bandas / profundidad */
+  --panel: #16302a; /* superficies elevadas / cards */
+  --panel-2: #1c3a32; /* hover de panel */
 
-  /* Superficie "papel" — único momento cálido (About) */
-  --paper: #ece7dc;
-  --paper-ink: #0b1220;
+  /* Verde agua — la señal (marca de Felipe) */
+  --agua: #8fe3c6; /* señal primaria: grafo, nodo activo, links, acentos */
+  --agua-bright: #b7f0da; /* glow / hover / bloom */
+  --jade: #47a88c; /* verde medio — struts de apoyo / bordes activos */
+
+  /* Texto (sólidos, cero alpha) */
+  --chalk: #ece7db; /* texto principal — blanco hueso cálido */
+  --chalk-dim: #a6bab0; /* texto secundario — salvia */
+  --muted: #83978d; /* metadatos atenuados — niebla */
+
+  /* Líneas */
+  --line: #2a3f39; /* hairlines, struts en reposo, bordes */
+  --line-soft: #1e332d; /* bordes más sutiles */
+
+  /* Chispa cálida — uso puntual (hover activo, marcadores, una palabra) */
+  --brasa: #e7a06a; /* terracota complementaria del verde */
+
+  /* Superficie "papel" — momento cálido invertido (About) */
+  --paper: #ece7db;
+  --paper-ink: #0f1e1b;
 
   /* Estados */
-  --focus: #a9d0ff;
-  --danger: #e8705a;
-  --ok: #7fd1a3;
+  --focus: #b7f0da;
+  --danger: #e8846a;
+  --ok: #8fe3c6;
 
   /* Radios / sombras */
   --radius: 0.75rem;
   --radius-lg: 1.25rem;
-  --shadow-glow: 0 0 40px -8px rgba(116, 172, 223, 0.45);
+  --shadow-glow: 0 0 40px -8px rgba(143, 227, 198, 0.4);
 }
 
 @theme inline {
-  /* Colores → utilidades Tailwind (bg-ink, text-celeste, border-line, ...) */
+  /* Colores → utilidades Tailwind (bg-ink, text-agua, border-line, ...) */
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-panel: var(--panel);
   --color-panel-2: var(--panel-2);
-  --color-celeste: var(--celeste);
-  --color-celeste-bright: var(--celeste-bright);
-  --color-celeste-deep: var(--celeste-deep);
+  --color-agua: var(--agua);
+  --color-agua-bright: var(--agua-bright);
+  --color-jade: var(--jade);
   --color-chalk: var(--chalk);
   --color-chalk-dim: var(--chalk-dim);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-line-soft: var(--line-soft);
+  --color-brasa: var(--brasa);
   --color-paper: var(--paper);
   --color-paper-ink: var(--paper-ink);
   --color-focus: var(--focus);
@@ -58,8 +70,8 @@
   --color-ok: var(--ok);
 
   /* Familias tipográficas (desde next/font en lib/fonts.ts) */
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
   --font-mono: var(--font-mono);
 }
 
@@ -69,7 +81,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: auto; /* el scroll suave lo maneja Lenis (Fase 2) */
+  scroll-behavior: auto; /* el scroll suave lo maneja Lenis */
 }
 
 body {
@@ -82,7 +94,7 @@ body {
 }
 
 ::selection {
-  background-color: var(--celeste);
+  background-color: var(--agua);
   color: var(--ink);
 }
 
@@ -102,73 +114,74 @@ body {
   font-family: var(--font-mono), ui-monospace, monospace;
 }
 
-/* Display expandido (look scoreboard/transmisión) */
+/* Wordmark / logo: Bricolage apretada */
 .type-display {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 900;
-  font-variation-settings: "wght" 900, "wdth" 120;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  font-variation-settings: "opsz" 14;
+  letter-spacing: -0.03em;
   line-height: 0.92;
 }
 
 /* ============================================================================
-   ESCALA TIPOGRÁFICA
-   Display = Archivo expandida. Titulares fluidos con clamp. Eyebrows y datos en
-   mono. La escala se muestra completa en /dev/tokens.
+   ESCALA TIPOGRÁFICA — Bricolage Grotesque
+   El "expandido/condensado" NO usa eje wdth (Bricolage no lo tiene): se logra con
+   interlineado apretado + tracking + los modificadores .stretch-* (transform).
    ========================================================================== */
 
 .type-hero {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 900;
-  font-variation-settings: "wght" 900, "wdth" 120;
-  font-size: clamp(3.25rem, 12vw, 11rem);
-  line-height: 0.88;
-  letter-spacing: -0.03em;
+  font-weight: 800;
+  font-variation-settings: "opsz" 40;
+  font-size: clamp(2.75rem, 10vw, 8.5rem);
+  line-height: 0.84;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
 }
 
 .type-h1 {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 800;
-  font-variation-settings: "wght" 800, "wdth" 115;
-  font-size: clamp(2.25rem, 6vw, 4.5rem);
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 32;
+  font-size: clamp(2rem, 5.5vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
 }
 
 .type-h2 {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 800;
-  font-variation-settings: "wght" 800, "wdth" 112;
-  font-size: clamp(1.75rem, 4vw, 3rem);
-  line-height: 1;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  font-variation-settings: "opsz" 24;
+  font-size: clamp(1.6rem, 3.6vw, 2.75rem);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
 }
 
 .type-h3 {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 700;
-  font-variation-settings: "wght" 700, "wdth" 105;
-  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  font-weight: 600;
+  font-variation-settings: "opsz" 18;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
 
 .lead {
-  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+  font-weight: 400;
   line-height: 1.5;
   color: var(--chalk-dim);
 }
 
-/* Eyebrow / kicker: label de sección en mono, tracking amplio, celeste */
+/* Eyebrow / kicker: label de sección en mono, tracking amplio, verde agua */
 .eyebrow {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.75rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.28em;
-  color: var(--celeste);
+  color: var(--agua);
 }
 
 /* Dato/etiqueta numérica tipo telemetría */
@@ -176,6 +189,27 @@ body {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+}
+
+/* ----------------------------------------------------------------------------
+   ESTIRAMIENTO DE FIRMA — jugar con la deformación horizontal/vertical.
+   Opt-in sobre palabras/líneas de display. transform no ocupa layout: usar en
+   líneas aisladas con margen que las acomode.
+   -------------------------------------------------------------------------- */
+.stretch-y {
+  display: inline-block;
+  transform: scaleY(1.22);
+  transform-origin: bottom;
+}
+.stretch-x {
+  display: inline-block;
+  transform: scaleX(1.14);
+  transform-origin: left;
+}
+.squish-x {
+  display: inline-block;
+  transform: scaleX(0.86);
+  transform-origin: left;
 }
 
 /* ============================================================================
@@ -207,25 +241,25 @@ body {
   background-size: 34px 34px;
 }
 
-/* Superficie "papel" — el único momento cálido (About). Invierte el esquema.
-   Overrides scoped para mantener contraste AA cuando las clases compartidas
-   (.eyebrow, .lead) caen sobre fondo claro. */
+/* Superficie "papel" — el único momento cálido invertido (About). Overrides
+   scoped para mantener contraste AA cuando las clases compartidas (.eyebrow,
+   .lead) caen sobre fondo claro. */
 .surface-paper {
   background-color: var(--paper);
   color: var(--paper-ink);
 }
 .surface-paper .eyebrow {
-  color: #235886; /* celeste oscuro — AA sobre papel */
+  color: #1e6b57; /* jade oscuro — AA sobre papel */
 }
 .surface-paper .lead {
-  color: rgba(11, 18, 32, 0.74);
+  color: #3a544c; /* verde-tinta sólido — AA sobre papel */
 }
 .surface-paper .hairline {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(11, 18, 32, 0.16) 15%,
-    rgba(11, 18, 32, 0.16) 85%,
+    rgba(15, 30, 27, 0.16) 15%,
+    rgba(15, 30, 27, 0.16) 85%,
     transparent
   );
 }
@@ -272,7 +306,7 @@ body {
   width: 34px;
   height: 34px;
   margin: -17px 0 0 -17px;
-  border: 1.5px solid var(--celeste);
+  border: 1.5px solid var(--agua);
   border-radius: 9999px;
   transition:
     width 0.2s ease,
@@ -284,13 +318,13 @@ body {
   width: 54px;
   height: 54px;
   margin: -27px 0 0 -27px;
-  background-color: rgba(116, 172, 223, 0.12);
+  background-color: rgba(143, 227, 198, 0.14);
 }
 .cursor-dot {
   width: 6px;
   height: 6px;
   margin: -3px 0 0 -3px;
-  background-color: var(--celeste);
+  background-color: var(--agua);
   border-radius: 9999px;
 }
 

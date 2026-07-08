@@ -56,7 +56,7 @@ export function HeroTitle() {
     <h1 ref={ref} className="type-hero text-chalk">
       Felipe
       <br />
-      Doval<span className="text-celeste">_</span>
+      Doval<span className="text-agua">_</span>
     </h1>
   );
 }

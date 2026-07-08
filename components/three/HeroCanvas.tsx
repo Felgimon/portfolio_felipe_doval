@@ -27,7 +27,7 @@ function useMouseTracker(): RefObject<MousePos> {
   return mouse;
 }
 
-/** Luz celeste que persigue al puntero: enciende los nodos cercanos. */
+/** Luz agua que persigue al puntero: enciende los nodos cercanos. */
 function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
   const light = useRef<THREE.PointLight>(null);
   useFrame(() => {
@@ -41,7 +41,7 @@ function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
   return (
     <pointLight
       ref={light}
-      color="#a9d0ff"
+      color="#b7f0da"
       intensity={22}
       distance={9}
       position={[0, 0, 2.6]}
@@ -49,13 +49,13 @@ function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
   );
 }
 
-/** Campo shader de fondo (ruido celeste sutil). */
+/** Campo shader de fondo (ruido agua sutil). */
 function BgField() {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uColor: { value: new THREE.Color("#74acdf") },
+      uColor: { value: new THREE.Color("#8fe3c6") },
       uFocus: { value: new THREE.Vector2(0.6, 0.55) },
     }),
     [],
@@ -138,7 +138,7 @@ export default function HeroCanvas({
       <directionalLight
         position={[3, 4, 5]}
         intensity={0.9}
-        color="#cfe3ff"
+        color="#dff7ec"
       />
       <CursorLight mouse={mouse} />
       <Suspense fallback={null}>

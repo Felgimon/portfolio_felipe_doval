@@ -46,7 +46,7 @@ export function Contact() {
             </p>
             <EmailLink
               mode="copy"
-              className="type-h2 text-chalk transition-colors hover:text-celeste"
+              className="type-h2 text-chalk transition-colors hover:text-agua"
             />
           </div>
 
@@ -59,12 +59,12 @@ export function Contact() {
               href={perfil.links.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-3 rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-celeste/50"
+              className="group inline-flex items-center gap-3 rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-agua/50"
             >
               <BrandIcon name="github" className="size-6 text-chalk" />
               <span className="text-left">
                 <span className="block font-mono text-xs text-muted">GitHub</span>
-                <span className="text-chalk transition-colors group-hover:text-celeste">
+                <span className="text-chalk transition-colors group-hover:text-agua">
                   @Felgimon
                 </span>
               </span>
@@ -73,14 +73,14 @@ export function Contact() {
               href={perfil.links.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-3 rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-celeste/50"
+              className="group inline-flex items-center gap-3 rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-agua/50"
             >
               <BrandIcon name="linkedin" className="size-6 text-chalk" />
               <span className="text-left">
                 <span className="block font-mono text-xs text-muted">
                   LinkedIn
                 </span>
-                <span className="text-chalk transition-colors group-hover:text-celeste">
+                <span className="text-chalk transition-colors group-hover:text-agua">
                   Felipe Doval
                 </span>
               </span>

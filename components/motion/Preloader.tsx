@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { useAppReady } from "./AppReady";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { Logo } from "@/components/ui/Logo";
 
 const MIN_MS = 700; // tiempo mínimo visible (evita parpadeo si está cacheado)
 const MAX_MS = 2400; // techo: nunca supera los ~2.4s percibidos
@@ -107,20 +108,18 @@ export function Preloader() {
     >
       <div className="node-grid absolute inset-0 opacity-30" aria-hidden />
       <div className="relative flex flex-col items-center gap-8 px-6">
-        <p className="type-display text-5xl text-chalk sm:text-7xl">
-          FELIPE DOVAL<span className="text-celeste">_</span>
-        </p>
+        <Logo full className="text-5xl text-chalk uppercase sm:text-7xl" />
         <div className="flex w-56 flex-col gap-2">
           <div className="h-px w-full overflow-hidden bg-line">
             <div
-              className="h-full origin-left bg-celeste transition-[width] duration-200 ease-out"
+              className="h-full origin-left bg-agua transition-[width] duration-200 ease-out"
               style={{ width: `${pct}%` }}
             />
-            <div ref={barra} className="h-px w-full origin-left scale-x-0 bg-celeste-bright" />
+            <div ref={barra} className="h-px w-full origin-left scale-x-0 bg-agua-bright" />
           </div>
           <div className="flex justify-between font-mono text-xs text-muted">
             <span>cargando</span>
-            <span className="data text-celeste">{pct}%</span>
+            <span className="data text-agua">{pct}%</span>
           </div>
         </div>
       </div>

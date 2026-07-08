@@ -1,33 +1,25 @@
-import localFont from "next/font/local";
-import { Hanken_Grotesk, Spline_Sans_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Spline_Sans_Mono } from "next/font/google";
 
 /**
- * Sistema tipográfico del portfolio.
+ * Sistema tipográfico del portfolio (v2 — "verde agua").
  *
- * - display: Archivo (variable, ejes wght + wdth) — cargada localmente desde
- *   los TTF que provee Felipe. Es la MISMA tipografía del logo FD_ (fundición
- *   Omnibus-Type, Buenos Aires 🇦🇷). Se usa expandida + black para los títulos
- *   grandes: look "scoreboard / transmisión".
- * - body: Hanken Grotesk — grotesca cálida y muy legible para todo el texto.
- * - mono: Spline Sans Mono — números, labels y datos tipo telemetría.
+ * - sans (display + body): Bricolage Grotesque — grotesca VARIABLE con carácter
+ *   (ejes `opsz` + `wght`). Cortes editoriales, nada "default de IA". Se usa para
+ *   todo el texto: en display se aprieta el interlineado y se ESTIRA con
+ *   `transform: scaleX/scaleY` + tracking (Bricolage no tiene eje `wdth`); en
+ *   body queda tranquila. Una sola familia = coherencia.
+ * - mono: Spline Sans Mono — labels de nodo, índices y datos tipo telemetría.
  *
- * Cada una expone una CSS variable que globals.css mapea a un token de Tailwind.
+ * globals.css mapea `--font-sans`/`--font-mono` a los tokens de Tailwind
+ * (`--font-display`, `--font-body`, `--font-mono`).
  */
 
-export const fontDisplay = localFont({
-  src: "../app/fonts/Archivo-Variable.ttf",
-  variable: "--font-display",
-  display: "swap",
-  weight: "100 900",
-  style: "normal",
-  fallback: ["system-ui", "sans-serif"],
-});
-
-export const fontBody = Hanken_Grotesk({
+export const fontSans = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-sans",
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  axes: ["opsz"],
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const fontMono = Spline_Sans_Mono({
@@ -37,4 +29,4 @@ export const fontMono = Spline_Sans_Mono({
   weight: ["400", "500", "600"],
 });
 
-export const fontClassNames = `${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`;
+export const fontClassNames = `${fontSans.variable} ${fontMono.variable}`;

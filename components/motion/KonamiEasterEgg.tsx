@@ -34,7 +34,7 @@ export function KonamiEasterEgg() {
       const cartel = document.createElement("div");
       cartel.textContent = "⚽ ¡Modo hincha! 🏀";
       cartel.className =
-        "absolute left-1/2 top-24 -translate-x-1/2 rounded-full border border-celeste/40 bg-panel px-6 py-3 font-mono text-sm text-celeste";
+        "absolute left-1/2 top-24 -translate-x-1/2 rounded-full border border-agua/40 bg-panel px-6 py-3 font-mono text-sm text-agua";
       cont.appendChild(cartel);
       window.setTimeout(() => cartel.remove(), 2200);
     };

@@ -9,7 +9,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Proyecto } from "@/content/types";
 
 /**
- * Card de proyecto secundario con hover rico: elevación + glow celeste (CSS) e
+ * Card de proyecto secundario con hover rico: elevación + glow agua (CSS) e
  * inclinación sutil hacia el puntero (JS, solo pointer fino / sin reduced-motion).
  * Si hay repo, toda la card enlaza; si no, es informativa (proyecto sin link).
  */
@@ -39,7 +39,7 @@ export function ProjectCard({ proyecto }: { proyecto: Proyecto }) {
       onPointerLeave={onLeave}
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-panel transition-[transform,border-color,box-shadow] duration-300 will-change-transform",
-        repo && "hover:border-celeste/50 hover:shadow-[0_0_40px_-12px_rgba(116,172,223,0.4)]",
+        repo && "hover:border-agua/50 hover:shadow-[0_0_40px_-12px_rgba(143,227,198,0.4)]",
       )}
     >
       {/* Media */}
@@ -67,7 +67,7 @@ export function ProjectCard({ proyecto }: { proyecto: Proyecto }) {
         <div className="flex items-start justify-between gap-3">
           <h3 className="type-h3 text-chalk">{proyecto.nombre}</h3>
           {repo && (
-            <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-celeste" />
+            <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-agua" />
           )}
         </div>
         <p className="text-sm leading-relaxed text-chalk-dim">{proyecto.unaLinea}</p>

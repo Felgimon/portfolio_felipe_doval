@@ -8,3 +8,4 @@ export * from "./DeviceFrame";
 export * from "./Placeholder";
 export * from "./BrandIcon";
 export * from "./EmailLink";
+export * from "./Logo";

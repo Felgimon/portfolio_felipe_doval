@@ -61,7 +61,7 @@ export function About() {
                   sizes="(max-width: 1024px) 90vw, 40vw"
                   className="object-cover object-[center_18%] opacity-90 grayscale contrast-[1.14] brightness-[0.82]"
                 />
-                {/* Duotone celeste → ink */}
+                {/* Duotone agua → ink */}
                 <div
                   className="absolute inset-0 mix-blend-color"
                   style={{ backgroundColor: "#74acdf" }}
@@ -75,7 +75,7 @@ export function About() {
                 />
               </div>
               <figcaption className="absolute bottom-0 left-0 flex items-center gap-2 p-4 font-mono text-xs text-chalk">
-                <span className="text-celeste">●</span>
+                <span className="text-agua">●</span>
                 {perfil.apodo} · {perfil.ubicacion}
               </figcaption>
             </figure>

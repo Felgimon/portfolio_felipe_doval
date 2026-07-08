@@ -6,7 +6,7 @@ type EyebrowProps = React.HTMLAttributes<HTMLSpanElement> & {
 };
 
 /**
- * Kicker/eyebrow: label en mono, tracking amplio, celeste. Opcionalmente con un
+ * Kicker/eyebrow: label en mono, tracking amplio, agua. Opcionalmente con un
  * índice numerado (usarlo solo donde la secuencia codifica información real).
  */
 export function Eyebrow({ index, className, children, ...props }: EyebrowProps) {
@@ -20,7 +20,7 @@ export function Eyebrow({ index, className, children, ...props }: EyebrowProps) 
           <span aria-hidden className="h-px w-6 bg-line" />
         </>
       ) : (
-        <span aria-hidden className="text-celeste">
+        <span aria-hidden className="text-agua">
           ●
         </span>
       )}

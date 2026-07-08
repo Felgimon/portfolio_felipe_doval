@@ -60,7 +60,7 @@ export default function RootLayout({
       <body className="min-h-full antialiased">
         <a
           href="#inicio"
-          className="sr-only rounded-full bg-celeste px-4 py-2 font-mono text-xs text-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
+          className="sr-only rounded-full bg-agua px-4 py-2 font-mono text-xs text-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
         >
           Saltar al contenido
         </a>

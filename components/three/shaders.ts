@@ -1,5 +1,5 @@
 /**
- * Shader de fondo del hero: un campo de "telemetría" muy sutil — ruido celeste
+ * Shader de fondo del hero: un campo de "telemetría" muy sutil — ruido agua
  * lento con viñeta hacia el balón. Escrito a mano (GLSL es la fortaleza; nada
  * de SVG). Se usa con el `<shaderMaterial>` nativo de R3F (sin extend).
  */

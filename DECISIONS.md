@@ -3,9 +3,69 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
+> La sección **v2.0.0** es la vigente. Lo que sigue debajo ("Noche de estadio",
+> etc.) queda como **registro histórico** de la v1 (tag `v1.0.0`).
+
 ---
 
-## Dirección de diseño
+## v2.0.0 — Rediseño «verde agua» + navegación por grafo
+
+Felipe pidió un cambio drástico de concepto y de identidad sobre la v1 ya
+shippeada. Núcleo del cambio: **la home deja de ser un hero con texto y pasa a
+ser el balón-grafo como navegación** (cada nodo = un tópico; se entra clickeando
+un nodo o **scrolleando** por un orden por defecto), **los proyectos pasan a ser
+un medio para mostrar habilidades** (fuera el "fútbol × ML" como bandera;
+FutbolVision se baja de protagonista, Superlum al frente) e **identidad nueva
+no-IA**.
+
+### Paleta — "verde agua" (Fase A)
+Verde agua **claro y sólido** como señal (protagonista), sobre base verde-noche.
+Fundamento colorimétrico: **análogos** en la base (pino profundo → panel) + verde
+agua claro protagonista + un **cálido complementario** (terracota `--brasa`) como
+respiro para que no quede sofocante mono-verde.
+
+- `--ink #0f1e1b` base · `--panel #16302a` · `--agua #8fe3c6` señal ·
+  `--agua-bright #b7f0da` glow · `--jade #47a88c` struts · `--chalk #ece7db`
+  texto · `--chalk-dim #a6bab0` · `--muted #83978d` · `--brasa #e7a06a` chispa ·
+  `--line #2a3f39`.
+- **Regla de Felipe:** los colores atenuados son **hex sólidos**, NO `rgba()` con
+  alpha bajado (eso "delata IA"). El alpha solo se usa en scrims de degradado,
+  sombras y glows —nunca en texto ni marca—.
+- **No fluo:** el verde es "tirando a claro / agua", no fosforescente (Felipe
+  descartó el acid/lima). Contraste AA verificado en todos los pares (script node;
+  el más justo, muted/panel, da 4.55:1).
+- **Nombres de token honestos:** solo se renombró la familia que mentía
+  (`celeste*` → `agua`/`jade`); los genéricos (`ink`, `chalk`, `muted`, `line`,
+  `panel`, `paper`) mantienen nombre y cambian de valor. Menos churn, menos riesgo
+  de clase Tailwind muerta que el gate no detecta.
+
+### Tipografía — Bricolage Grotesque + Spline Sans Mono (Fase A)
+- **Display + body: Bricolage Grotesque** (Google Fonts, variable con ejes
+  `opsz` + `wght`), vía `next/font/google`. Reemplaza Archivo (local) y Hanken.
+  Grotesca con carácter/cortes editoriales — evita las "default de IA"
+  (Inter/Poppins/Space Grotesk). Una sola familia = coherencia.
+- **Mono: Spline Sans Mono** (se mantiene) para labels de nodo, índices y datos.
+- **Juego de firma (pedido de Felipe):** Bricolage NO tiene eje `wdth`, así que el
+  "expandido/condensado" se logra con interlineado apretado (`line-height` ~0.84
+  en display) + `letter-spacing` + los modificadores **`.stretch-x` / `.stretch-y`
+  / `.squish-x`** (`transform: scale`) para deformar palabras/líneas puntuales.
+- **Logo actualizado:** el `FD_` de terminal evoluciona → el guión bajo pasa a ser
+  un **nodo** (círculo agua con glow), atando la marca al grafo. Componente
+  `components/ui/Logo.tsx` (`full` = nombre completo). Favicons regenerados como un
+  micro-grafo de nodos (`scripts/gen-favicons.mjs`, solo primitivas circle/line).
+
+### Navegación por grafo (Fases C–D) — resumen del diseño
+Un solo mecanismo, dos formas de usarlo: el balón-grafo vive en capa sticky; el
+scroll (o el click en un nodo) elige el **nodo activo**; el grafo **rota** para
+ponerlo al frente y aparece el panel del tópico. Página scrolleable real (5
+secciones en el DOM → SEO/a11y/no-JS). Nodos = botones HTML proyectados sobre las
+coordenadas 3D (accesibles, tab-order natural). Nav = **HUD** (rail de 5 nodos con
+progreso `03/05`) que reemplaza la pill-nav y es el fallback de teclado/mobile/
+sin-WebGL. 5 tópicos: Perfil · Enfoque · Trabajo · Recorrido · Contacto.
+
+---
+
+## Dirección de diseño (v1 — histórico)
 
 **"Noche de estadio" (dark).** Lienzo ink azulado dominante (no negro plano),
 celeste bandera `#74ACDF` como señal, chalk cálido como texto. Elegido sobre la

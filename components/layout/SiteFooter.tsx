@@ -4,6 +4,7 @@ import { perfil } from "@/content/perfil";
 import { Container } from "@/components/ui/Container";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { EmailLink } from "@/components/ui/EmailLink";
+import { Logo } from "@/components/ui/Logo";
 
 const anio = new Date().getFullYear();
 
@@ -14,9 +15,7 @@ export function SiteFooter() {
       <Container size="wide" className="py-16">
         <div className="flex flex-col gap-12 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <p className="type-display text-2xl text-chalk">
-              FD<span className="text-celeste">_</span>
-            </p>
+            <Logo className="text-2xl text-chalk" />
             <p className="mt-4 text-sm leading-relaxed text-chalk-dim">
               {perfil.nombre}. Builder entre el full-stack y el ML, con el fútbol
               como excusa para meterle datos a todo.
@@ -30,13 +29,13 @@ export function SiteFooter() {
             <p className="eyebrow">Contacto</p>
             <EmailLink
               mode="link"
-              className="text-sm text-chalk-dim transition-colors hover:text-celeste"
+              className="text-sm text-chalk-dim transition-colors hover:text-agua"
             />
             <a
               href={perfil.links.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-celeste"
+              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-agua"
             >
               <BrandIcon name="github" className="size-4" />
               GitHub
@@ -45,7 +44,7 @@ export function SiteFooter() {
               href={perfil.links.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-celeste"
+              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-agua"
             >
               <BrandIcon name="linkedin" className="size-4" />
               LinkedIn
@@ -59,7 +58,7 @@ export function SiteFooter() {
           </p>
           <Link
             href="#inicio"
-            className="inline-flex items-center gap-1.5 font-mono text-xs text-chalk-dim transition-colors hover:text-celeste"
+            className="inline-flex items-center gap-1.5 font-mono text-xs text-chalk-dim transition-colors hover:text-agua"
           >
             Volver arriba
             <ArrowUp className="size-3.5" />

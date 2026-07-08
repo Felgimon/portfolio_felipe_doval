@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Cursor custom: aro celeste que sigue al puntero con lerp + punto exacto.
+ * Cursor custom: aro agua que sigue al puntero con lerp + punto exacto.
  * Crece sobre elementos interactivos. Solo se activa con `pointer: fine` y sin
  * reduced-motion (en touch / reduced-motion queda el cursor nativo). El gating
  * y el ocultado del cursor nativo se hacen por CSS (ver globals.css).

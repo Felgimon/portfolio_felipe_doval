@@ -37,12 +37,12 @@ export function Timeline() {
               return (
                 <li key={item.orden} data-reveal-item className="relative">
                   {/* Nodo numerado sobre la línea */}
-                  <span className="absolute top-0 -left-[3.4rem] flex size-9 items-center justify-center rounded-full border border-line bg-panel font-mono text-xs text-celeste">
+                  <span className="absolute top-0 -left-[3.4rem] flex size-9 items-center justify-center rounded-full border border-line bg-panel font-mono text-xs text-agua">
                     {String(item.orden).padStart(2, "0")}
                   </span>
                   <div className="flex flex-col gap-1.5">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <Icon className="size-4 text-celeste" aria-hidden />
+                      <Icon className="size-4 text-agua" aria-hidden />
                       <h3 className="type-h3 text-chalk">{item.titulo}</h3>
                       {item.periodo && (
                         <span className="data text-xs text-muted">
@@ -50,7 +50,7 @@ export function Timeline() {
                         </span>
                       )}
                     </div>
-                    <p className="font-mono text-xs tracking-wide text-celeste">
+                    <p className="font-mono text-xs tracking-wide text-agua">
                       {item.lugar}
                     </p>
                     <p className="mt-1 max-w-2xl text-sm leading-relaxed text-chalk-dim">

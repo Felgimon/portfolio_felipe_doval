@@ -17,7 +17,7 @@ type BalonGrafoProps = {
 
 /**
  * El balón-grafo: la red de nodos y struts (icosaedro truncado = pelota de
- * fútbol × red de pases × red neuronal). Material celeste emisivo que brilla
+ * fútbol × red de pases × red neuronal). Material verde agua emisivo que brilla
  * con el bloom del canvas. Rota lento y hace parallax hacia el mouse.
  */
 export function BalonGrafo({
@@ -56,8 +56,8 @@ export function BalonGrafo({
     <group ref={group} scale={scale} position={position}>
       <mesh geometry={geometry}>
         <meshStandardMaterial
-          color="#20364f"
-          emissive="#74acdf"
+          color="#14352c"
+          emissive="#8fe3c6"
           emissiveIntensity={0.9}
           metalness={0.55}
           roughness={0.32}

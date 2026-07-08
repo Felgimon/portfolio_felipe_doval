@@ -104,7 +104,7 @@ export function Hero() {
           con el fútbol como excusa para meterle datos a todo.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3 font-mono text-xs text-muted">
-          <span className="text-celeste">●</span>
+          <span className="text-agua">●</span>
           <span>fútbol × ML</span>
           <span className="text-line">/</span>
           <span>builder</span>
@@ -114,7 +114,7 @@ export function Hero() {
 
         <a
           href="#sobre"
-          className="mt-16 inline-flex w-fit items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-celeste"
+          className="mt-16 inline-flex w-fit items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-agua"
         >
           <ArrowDown className="size-4 animate-bounce" />
           Bajá para ver más

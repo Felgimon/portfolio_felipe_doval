@@ -70,7 +70,7 @@ export function FeaturedProject({ proyecto, invertido = false }: FeaturedProject
                 {proyecto.nombre}
               </Heading>
               {proyecto.tagline && (
-                <p className="mt-3 font-mono text-sm text-celeste">
+                <p className="mt-3 font-mono text-sm text-agua">
                   “{proyecto.tagline}”
                 </p>
               )}
@@ -101,7 +101,7 @@ export function FeaturedProject({ proyecto, invertido = false }: FeaturedProject
                     key={d}
                     className="flex gap-3 text-sm text-chalk-dim"
                   >
-                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-celeste" />
+                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-agua" />
                     {d}
                   </li>
                 ))}

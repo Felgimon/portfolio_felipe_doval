@@ -39,10 +39,10 @@ export function SiteNav() {
     <Link
       href="/"
       aria-label="Felipe Doval — inicio"
-      className="type-display text-lg tracking-tight text-chalk transition-colors hover:text-celeste"
+      className="type-display text-lg tracking-tight text-chalk transition-colors hover:text-agua"
       onClick={enHome ? irA("inicio") : undefined}
     >
-      FD<span className="text-celeste">_</span>
+      FD<span className="text-agua">_</span>
     </Link>
   );
 
@@ -75,7 +75,7 @@ export function SiteNav() {
                   )}
                 >
                   {isActive && (
-                    <span className="absolute inset-0 -z-10 rounded-full bg-celeste" />
+                    <span className="absolute inset-0 -z-10 rounded-full bg-agua" />
                   )}
                   {s.label}
                 </Link>
@@ -112,7 +112,7 @@ export function SiteNav() {
                   className={cn(
                     "block rounded-lg px-4 py-3 font-mono text-sm tracking-wide transition-colors",
                     enHome && active === s.id
-                      ? "bg-celeste/15 text-celeste"
+                      ? "bg-agua/15 text-agua"
                       : "text-chalk-dim hover:bg-panel-2 hover:text-chalk",
                   )}
                 >
