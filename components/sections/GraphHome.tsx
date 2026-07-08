@@ -1,5 +1,13 @@
 "use client";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
@@ -8,6 +16,7 @@ import { useGpuTier } from "@/hooks/useGpuTier";
 import { useAppReady } from "@/components/motion/AppReady";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import { useActiveSection } from "@/hooks/useActiveSection";
+import type { NodeProj } from "@/components/three/GraphCanvas";
 import { nodos, nodoIds, seccionIds, indiceNodo } from "@/lib/navigation";
 import { perfil } from "@/content/perfil";
 import { cn } from "@/lib/utils";
@@ -16,6 +25,19 @@ import { cn } from "@/lib/utils";
 const GraphCanvas = dynamic(() => import("@/components/three/GraphCanvas"), {
   ssr: false,
 });
+
+/** Flag de preview `?gl`: fuerza el canvas 3D aunque detect-gpu dé bajo (útil
+ * para ver el balón en cualquier máquina). Client-only, sin mismatch de
+ * hidratación. */
+function useForceGl(): boolean {
+  return useSyncExternalStore(
+    () => () => {},
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("gl"),
+    () => false,
+  );
+}
 
 /** Poster estático del grafo (reduced-motion / GPU débil). */
 function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
@@ -32,6 +54,84 @@ function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
           onLoad={onLoaded}
         />
       </div>
+    </div>
+  );
+}
+
+/** Etiquetas clickeables proyectadas sobre los nodos 3D. Son azúcar de puntero
+ * (tabIndex -1, aria-hidden): el teclado/lector navega por el HUD. Se posicionan
+ * cada frame leyendo la proyección del canvas; se ocultan cuando el nodo mira
+ * para atrás. */
+function NodeOverlay({
+  projRef,
+  activeIndex,
+  onGoto,
+}: {
+  projRef: RefObject<NodeProj[]>;
+  activeIndex: number;
+  onGoto: (id: string) => void;
+}) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const proj = projRef.current;
+      for (let i = 0; i < nodos.length; i++) {
+        const b = refs.current[i];
+        if (!b) continue;
+        const p = proj[i];
+        if (!p) {
+          b.style.opacity = "0";
+          b.style.pointerEvents = "none";
+        } else {
+          b.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -50%)`;
+          b.style.opacity = p.front ? "1" : "0";
+          b.style.pointerEvents = p.front ? "auto" : "none";
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [projRef]);
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-30" aria-hidden>
+      {nodos.map((n, i) => {
+        const active = i === activeIndex;
+        return (
+          <button
+            key={n.id}
+            type="button"
+            tabIndex={-1}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            onClick={() => onGoto(n.id)}
+            style={{ opacity: 0, willChange: "transform, opacity" }}
+            className="group absolute top-0 left-0 flex items-center gap-2 transition-opacity duration-300"
+          >
+            <span
+              className={cn(
+                "size-5 rounded-full border-2 border-agua bg-transparent transition-opacity duration-200",
+                active
+                  ? "opacity-100 shadow-[0_0_14px_0_var(--agua)]"
+                  : "opacity-0 shadow-[0_0_14px_0_var(--agua)] group-hover:opacity-100",
+              )}
+            />
+            <span
+              className={cn(
+                "rounded-full border border-line bg-ink/80 px-2.5 py-1 font-mono text-xs tracking-wide whitespace-nowrap backdrop-blur transition-opacity",
+                active
+                  ? "text-agua opacity-100"
+                  : "text-chalk-dim opacity-0 group-hover:opacity-100",
+              )}
+            >
+              {indiceNodo(i)} · {n.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -64,9 +164,7 @@ function HudRail({
                   aria-current={active ? "true" : undefined}
                   className={cn(
                     "group flex items-center gap-2 rounded-full px-2.5 py-1.5 font-mono text-xs tracking-wide transition-colors sm:px-3",
-                    active
-                      ? "text-agua"
-                      : "text-muted hover:text-chalk-dim",
+                    active ? "text-agua" : "text-muted hover:text-chalk-dim",
                   )}
                 >
                   <span aria-hidden className="tabular-nums opacity-70">
@@ -87,10 +185,7 @@ function HudRail({
             );
           })}
         </ol>
-        <span
-          aria-hidden
-          className="data hidden shrink-0 text-muted sm:block"
-        >
+        <span aria-hidden className="data hidden shrink-0 text-muted sm:block">
           {activeIndex >= 0 ? indiceNodo(activeIndex) : "00"} / 05
         </span>
       </div>
@@ -100,19 +195,23 @@ function HudRail({
 
 /**
  * Home = hub del grafo. El balón + nodos viven en una capa FIJA detrás del
- * contenido; el nodo activo (derivado del scroll) se ilumina y el HUD lo marca.
- * La portada (#inicio) muestra el modelo + una línea que enseña que los nodos se
- * pueden tocar. Los tópicos (children) scrollean por delante.
+ * contenido; el nodo activo (derivado del scroll) se ilumina, el balón rota para
+ * encararlo y el HUD lo marca. La portada (#inicio) muestra el modelo + una
+ * línea que enseña que los nodos se pueden tocar. Los tópicos (children)
+ * scrollean por delante.
  */
 export function GraphHome({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
   const { tier, loading } = useGpuTier();
+  const forceGl = useForceGl();
   const { marcarHeroCargado } = useAppReady();
   const { scrollTo } = useSmoothScroll();
 
   const ids = useMemo(() => seccionIds, []);
   const active = useActiveSection(ids);
   const activeIndex = nodoIds.indexOf(active as (typeof nodoIds)[number]);
+
+  const projRef = useRef<NodeProj[]>([]);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
@@ -127,15 +226,14 @@ export function GraphHome({ children }: { children: ReactNode }) {
     return () => obs.disconnect();
   }, []);
 
-  const usarCanvas = !reduced && !loading && tier >= 2;
-  const mostrarPoster = reduced || (!loading && tier < 2);
+  const usarCanvas = forceGl || (!reduced && !loading && tier >= 2);
+  const mostrarPoster = !forceGl && (reduced || (!loading && tier < 2));
 
   const goto = (id: string) => scrollTo(`#${id}`);
 
   return (
     <>
-      {/* Capa fija: el grafo 3D (o poster). Detrás del contenido, sin capturar
-          el puntero (los nodos clickeables llegan como overlay en la Fase D). */}
+      {/* Capa fija: el grafo 3D (o poster). Detrás del contenido. */}
       <div
         ref={stageRef}
         className="pointer-events-none fixed inset-0 z-0"
@@ -147,11 +245,19 @@ export function GraphHome({ children }: { children: ReactNode }) {
             activeIndex={activeIndex}
             paused={!visible}
             onReady={marcarHeroCargado}
+            onProject={(p) => {
+              projRef.current = p;
+            }}
           />
         ) : mostrarPoster ? (
           <PosterFallback onLoaded={marcarHeroCargado} />
         ) : null}
       </div>
+
+      {/* Nodos clickeables (solo con canvas) */}
+      {usarCanvas && (
+        <NodeOverlay projRef={projRef} activeIndex={activeIndex} onGoto={goto} />
+      )}
 
       {/* Contenido */}
       <div className="relative z-10">

@@ -10,12 +10,15 @@ import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { GraphNodes } from "./GraphNodes";
+import { GraphNodes, useBallRadius, nodePositions } from "./GraphNodes";
 import { heroBgVertex, heroBgFragment } from "./shaders";
 
 const MODEL = "/models/pelota-estructura-transformed.glb";
 
 type MousePos = { x: number; y: number };
+
+/** Proyección 2D de un nodo (px de viewport) + si mira a la cámara. */
+export type NodeProj = { x: number; y: number; front: boolean };
 
 /** Puntero normalizado (-1..1) desde `window` (el canvas es pointer-none). */
 function useMouseTracker(): RefObject<MousePos> {
@@ -91,51 +94,102 @@ function BalonMesh() {
   return (
     <mesh geometry={nodes.geometry_0.geometry}>
       <meshStandardMaterial
-        color="#14352c"
-        emissive="#8fe3c6"
-        emissiveIntensity={0.9}
-        metalness={0.55}
-        roughness={0.32}
+        color="#123028"
+        emissive="#59c9a6"
+        emissiveIntensity={0.5}
+        metalness={0.5}
+        roughness={0.4}
       />
     </mesh>
   );
 }
 
+// Temporales reutilizados en la proyección (sin allocs por frame).
+const _v = new THREE.Vector3();
+const _dir = new THREE.Vector3();
+const _center = new THREE.Vector3();
+const _q = new THREE.Quaternion();
+const _zAxis = new THREE.Vector3(0, 0, 1);
+
 /**
- * El grafo completo (balón + nodos) en un grupo que rota. En esta fase el grupo
- * oscila alrededor del frente (parallax al mouse + sway) para que los 5 nodos
- * queden siempre de cara a la cámara; la rotación dirigida al nodo activo según
- * el scroll llega en la Fase D.
+ * Grupo del grafo. `sway` (exterior) hace parallax + sway; `aim` (interior)
+ * ROTA para encarar el nodo activo a la cámara (según el scroll). Además
+ * proyecta las posiciones 2D de los nodos a `projRef` para los labels
+ * clickeables del overlay.
  */
 function GraphGroup({
   mouse,
   activeIndex,
   scale,
   position,
+  onProject,
 }: {
   mouse: RefObject<MousePos>;
   activeIndex: number;
   scale: number;
   position: [number, number, number];
+  onProject?: (p: NodeProj[]) => void;
 }) {
-  const group = useRef<THREE.Group>(null);
+  const sway = useRef<THREE.Group>(null);
+  const aim = useRef<THREE.Group>(null);
+  const buf = useRef<NodeProj[]>([]);
+  const radius = useBallRadius();
+  const positions = useMemo(() => nodePositions(radius), [radius]);
+  const { camera, size } = useThree();
+
   useFrame((state, delta) => {
-    const g = group.current;
-    if (!g) return;
     const t = state.clock.elapsedTime;
     const d = Math.min(delta, 0.05);
-    const mx = mouse.current?.x ?? 0;
-    const my = mouse.current?.y ?? 0;
-    const targetY = mx * 0.35 + Math.sin(t * 0.3) * 0.06;
-    const targetX = -my * 0.2 + Math.sin(t * 0.24) * 0.04;
-    g.rotation.y += (targetY - g.rotation.y) * 0.05 * (d / 0.016);
-    g.rotation.x += (targetX - g.rotation.x) * 0.05 * (d / 0.016);
-    g.position.y = position[1] + Math.sin(t * 0.5) * 0.04;
+
+    const s = sway.current;
+    if (s) {
+      const mx = mouse.current?.x ?? 0;
+      const my = mouse.current?.y ?? 0;
+      const ty = mx * 0.22 + Math.sin(t * 0.25) * 0.04;
+      const tx = -my * 0.14 + Math.sin(t * 0.2) * 0.03;
+      s.rotation.y += (ty - s.rotation.y) * 0.06;
+      s.rotation.x += (tx - s.rotation.x) * 0.06;
+      s.position.y = position[1] + Math.sin(t * 0.5) * 0.03;
+    }
+
+    const a = aim.current;
+    if (!a) return;
+
+    // Encarar el nodo activo (o identidad en la portada).
+    if (activeIndex >= 0 && activeIndex < positions.length) {
+      _dir.copy(positions[activeIndex]).normalize();
+      _q.setFromUnitVectors(_dir, _zAxis);
+    } else {
+      _q.identity();
+    }
+    a.quaternion.slerp(_q, 1 - Math.pow(0.0016, d));
+
+    // Proyección 2D de cada nodo para el overlay clickeable. Se muta un ref
+    // PROPIO (permitido) y se entrega por callback.
+    if (onProject) {
+      a.updateWorldMatrix(true, false);
+      a.getWorldPosition(_center);
+      const b = buf.current;
+      for (let i = 0; i < positions.length; i++) {
+        _v.copy(positions[i]).applyMatrix4(a.matrixWorld);
+        const front = _v.z > _center.z;
+        _v.project(camera);
+        b[i] = {
+          x: ((_v.x + 1) / 2) * size.width,
+          y: (1 - (_v.y + 1) / 2) * size.height,
+          front,
+        };
+      }
+      onProject(b);
+    }
   });
+
   return (
-    <group ref={group} scale={scale} position={position}>
-      <BalonMesh />
-      <GraphNodes activeIndex={activeIndex} />
+    <group ref={sway} scale={scale} position={position}>
+      <group ref={aim}>
+        <BalonMesh />
+        <GraphNodes activeIndex={activeIndex} />
+      </group>
     </group>
   );
 }
@@ -146,11 +200,13 @@ function ResponsiveGraph({
   activeIndex,
   baseScale,
   basePosition,
+  onProject,
 }: {
   mouse: RefObject<MousePos>;
   activeIndex: number;
   baseScale: number;
   basePosition: [number, number, number];
+  onProject?: (p: NodeProj[]) => void;
 }) {
   const width = useThree((s) => s.size.width);
   const narrow = width < 820;
@@ -164,6 +220,7 @@ function ResponsiveGraph({
       activeIndex={activeIndex}
       scale={scale}
       position={position}
+      onProject={onProject}
     />
   );
 }
@@ -182,15 +239,17 @@ export type GraphCanvasProps = {
   ballPosition?: [number, number, number];
   paused?: boolean;
   onReady?: () => void;
+  onProject?: (p: NodeProj[]) => void;
 };
 
 export default function GraphCanvas({
   tier = 3,
   activeIndex = -1,
-  ballScale = 1.9,
-  ballPosition = [0.55, 0, 0],
+  ballScale = 1.6,
+  ballPosition = [0.72, 0, 0],
   paused = false,
   onReady,
+  onProject,
 }: GraphCanvasProps) {
   const mouse = useMouseTracker();
   const dpr: [number, number] = tier >= 3 ? [1, 2] : [1, 1.5];
@@ -213,16 +272,17 @@ export default function GraphCanvas({
           activeIndex={activeIndex}
           baseScale={ballScale}
           basePosition={ballPosition}
+          onProject={onProject}
         />
         <SignalReady onReady={onReady} />
       </Suspense>
       <EffectComposer>
         <Bloom
-          intensity={0.95}
-          luminanceThreshold={0.15}
-          luminanceSmoothing={0.35}
+          intensity={0.82}
+          luminanceThreshold={0.22}
+          luminanceSmoothing={0.4}
           mipmapBlur
-          radius={0.72}
+          radius={0.7}
         />
       </EffectComposer>
     </Canvas>

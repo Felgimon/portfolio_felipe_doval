@@ -44,13 +44,13 @@ export function GraphNodes({ activeIndex }: { activeIndex: number }) {
       const g = refs.current[i];
       if (!g) continue;
       const active = i === activeIndex;
-      const pulse = 1 + Math.sin(t * 2 + i * 1.7) * (active ? 0.14 : 0.06);
-      const target = (active ? 1.6 : 1) * pulse;
+      const pulse = 1 + Math.sin(t * 2 + i * 1.7) * (active ? 0.16 : 0.07);
+      const target = (active ? 1.4 : 1) * pulse;
       g.scale.setScalar(THREE.MathUtils.lerp(g.scale.x, target, 0.12));
     }
   });
 
-  const base = radius * 0.05;
+  const base = radius * 0.058;
 
   return (
     <>
@@ -65,9 +65,9 @@ export function GraphNodes({ activeIndex }: { activeIndex: number }) {
           <mesh>
             <sphereGeometry args={[base, 24, 24]} />
             <meshStandardMaterial
-              color="#0f1e1b"
+              color="#b7f0da"
               emissive="#8fe3c6"
-              emissiveIntensity={i === activeIndex ? 2.6 : 1.15}
+              emissiveIntensity={i === activeIndex ? 2.4 : 1.5}
               toneMapped={false}
             />
           </mesh>
