@@ -68,6 +68,22 @@ Segunda pasada (seguía a ~15fps al mover el mouse):
   (PBR) cada frame; se dejaron solo las luces estáticas (el emissive compensa).
 - Esferas de nodo (24→16) y punto del logo (20→12) con menos segmentos.
 
+Tercera pasada — el diagnóstico clave (el detalle iba fluido, el grafo no):
+- **On-demand rendering (la solución de fondo):** el canvas renderizaba 60 fps
+  para siempre, incluso quieto. Ahora `frameloop` se PAUSA (`"never"`) cuando no
+  hay actividad. `GraphHome` lo prende con el scroll y lo apaga 600ms después de
+  que la cámara se asentó (`onActivity` de `CameraRig` avisa mientras se mueve →
+  la pausa no congela un frame en blanco en máquinas lentas). En reposo: **0
+  frames → 0% GPU → la página va a 60fps** (el grafo tan fluido como el detalle).
+- Se **sacó el parallax de mouse**: mover el mouse ya no dispara ningún render.
+- **Medidor de FPS** (`components/motion/DevOverlay.tsx`): con `?stats` en la URL
+  muestra el framerate real de la página (rAF). Es la forma de medir "¿va a
+  60?". Verificado: en reposo da 60 incluso con render por software.
+- **Warning `THREE.Clock` silenciado:** viene de `@react-three/fiber` (interno,
+  benigno). `DevOverlay` filtra SOLO ese mensaje de `console.warn`; el resto pasa.
+- Nodos sin pulso continuo (tamaño/brillo por prop) para ser compatibles con el
+  render on-demand.
+
 ---
 
 ## v2.0.0 — Rediseño «verde agua» + navegación por grafo

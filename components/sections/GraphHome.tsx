@@ -2,6 +2,7 @@
 import {
   type ReactNode,
   type RefObject,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -176,6 +177,11 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const camRef = useRef<CamState>({ active: 0, dive: 0 });
   const projRef = useRef<NodeProj[]>([]);
   const [activeIdx, setActiveIdx] = useState(-1); // -1 = portada; 0..4 = nodos
+  // El canvas renderiza solo mientras hay actividad (scroll / cámara moviéndose);
+  // en reposo se pausa (frameloop "never"). `activityRef` lo cablea el efecto.
+  const [rendering, setRendering] = useState(true);
+  const activityRef = useRef<(() => void) | null>(null);
+  const onActivity = useCallback(() => activityRef.current?.(), []);
 
   // Scroll → estado de cámara (active/dive) + índice activo (para HUD y glow).
   // Los offsets de sección se CACHEAN (en mount / resize / tras la carga): así el
@@ -219,7 +225,22 @@ export function GraphHome({ children }: { children: ReactNode }) {
       }
     };
 
+    // Pausa el render 600ms DESPUÉS de la última actividad (scroll o cámara aún
+    // moviéndose). Sin timer ciego: se pausa recién cuando todo se asentó, así
+    // no congela un frame en blanco en máquinas lentas.
+    let pauseTimer = 0;
+    const bump = () => {
+      clearTimeout(pauseTimer);
+      pauseTimer = window.setTimeout(() => setRendering(false), 600);
+    };
+    const wake = () => {
+      setRendering(true);
+      bump();
+    };
+    activityRef.current = bump; // la cámara (onActivity) mantiene vivo el render
+
     const onScroll = () => {
+      wake();
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(update);
     };
@@ -237,8 +258,10 @@ export function GraphHome({ children }: { children: ReactNode }) {
     const t2 = setTimeout(measure, 1800);
     return () => {
       cancelAnimationFrame(raf);
+      clearTimeout(pauseTimer);
       clearTimeout(t1);
       clearTimeout(t2);
+      activityRef.current = null;
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
     };
@@ -256,10 +279,12 @@ export function GraphHome({ children }: { children: ReactNode }) {
             camRef={camRef}
             activeIndex={activeIdx}
             reduced={reduced}
+            paused={!rendering}
             onReady={marcarHeroCargado}
             onProject={(p) => {
               projRef.current = p;
             }}
+            onActivity={onActivity}
           />
         ) : (
           <PosterFallback onLoaded={marcarHeroCargado} />

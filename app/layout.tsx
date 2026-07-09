@@ -7,6 +7,7 @@ import { AppReadyProvider } from "@/components/motion/AppReady";
 import { Preloader } from "@/components/motion/Preloader";
 import { CustomCursor } from "@/components/motion/CustomCursor";
 import { KonamiEasterEgg } from "@/components/motion/KonamiEasterEgg";
+import { DevOverlay } from "@/components/motion/DevOverlay";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
@@ -66,6 +67,7 @@ export default function RootLayout({
         </a>
         <CustomCursor />
         <KonamiEasterEgg />
+        <DevOverlay />
         <AppReadyProvider>
           <Preloader />
           <SmoothScroll>

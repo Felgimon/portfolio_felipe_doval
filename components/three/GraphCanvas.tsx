@@ -1,15 +1,8 @@
 "use client";
-import {
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, Text, Billboard, PerformanceMonitor } from "@react-three/drei";
+import { useGLTF, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
 import { heroBgVertex, heroBgFragment } from "./shaders";
@@ -21,24 +14,10 @@ const LOGO_FONT = "/fonts/logo.ttf";
 /** Escala del grafo. El balón queda centrado; la cámara hace todo el movimiento. */
 const S = 1.4;
 
-type MousePos = { x: number; y: number };
 /** Estado de cámara derivado del scroll: nodo activo (0 = overview) + cuánto
  * "buceó" hacia él (0..1). */
 export type CamState = { active: number; dive: number };
 export type NodeProj = { x: number; y: number; front: boolean };
-
-function useMouseTracker(): RefObject<MousePos> {
-  const mouse = useRef<MousePos>({ x: 0, y: 0 });
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, []);
-  return mouse;
-}
 
 function BgField() {
   const mat = useRef<THREE.ShaderMaterial>(null);
@@ -125,7 +104,7 @@ function GraphGroup({ activeIndex }: { activeIndex: number }) {
   );
 }
 
-// Temporales
+// Temporales (sin allocs por frame)
 const _dir = new THREE.Vector3();
 const _node = new THREE.Vector3();
 const _target = new THREE.Vector3();
@@ -138,20 +117,24 @@ const ORIGIN = new THREE.Vector3(0, 0, 0);
 /**
  * Rig de cámara scroll-driven: siempre mira al centro; su dirección y distancia
  * salen de (active, dive). En overview ve el balón entero; al "bucear" hacia un
- * nodo, se acerca por su dirección hasta encararlo de cerca ("meterse al nodo").
+ * nodo, se acerca por su dirección hasta encararlo de cerca. En modo on-demand,
+ * se auto-invalida SOLO mientras no llegó al objetivo → cuando se asienta, deja
+ * de renderizar (0 frames en reposo).
  */
 function CameraRig({
   camRef,
-  mouse,
   reduced,
   radius,
+  onActivity,
 }: {
   camRef: RefObject<CamState>;
-  mouse: RefObject<MousePos>;
   reduced: boolean;
   radius: number;
+  /** Se llama cada frame mientras la cámara AÚN se mueve (no llegó al objetivo).
+   * GraphHome lo usa para pausar el render recién cuando todo se asentó. */
+  onActivity?: () => void;
 }) {
-  const { camera } = useThree();
+  const camera = useThree((s) => s.camera);
   const rBall = radius * S;
   const OVER = rBall * 3.6; // overview: balón entero
   const CLOSE = rBall * 1.7; // pegado al nodo
@@ -171,19 +154,17 @@ function CameraRig({
       _target.copy(_dir).multiplyScalar(THREE.MathUtils.lerp(OVER, CLOSE, dive));
     }
 
-    // parallax sutil
-    _target.x += (mouse.current?.x ?? 0) * 0.22;
-    _target.y += (mouse.current?.y ?? 0) * 0.22;
-
     const k = reduced ? 1 : 1 - Math.pow(0.0009, Math.min(delta, 0.05));
     camera.position.lerp(_target, k);
     camera.lookAt(ORIGIN);
+
+    if (camera.position.distanceToSquared(_target) > 1e-5) onActivity?.();
   });
   return null;
 }
 
 /** Proyecta los nodos a 2D para el overlay clickeable; "front" según si el nodo
- * mira a la cámara (que ahora orbita). */
+ * mira a la cámara. Corre en los frames renderizados (durante scroll/asentado). */
 function NodeProjector({
   onProject,
   radius,
@@ -231,14 +212,15 @@ function Scene({
   reduced,
   onReady,
   onProject,
+  onActivity,
 }: {
   camRef: RefObject<CamState>;
   activeIndex: number;
   reduced: boolean;
   onReady?: () => void;
   onProject?: (p: NodeProj[]) => void;
+  onActivity?: () => void;
 }) {
-  const mouse = useMouseTracker();
   const radius = useBallRadius();
   return (
     <>
@@ -246,7 +228,12 @@ function Scene({
       <directionalLight position={[3, 4, 5]} intensity={0.9} color="#dff7ec" />
       <BgField />
       <GraphGroup activeIndex={activeIndex} />
-      <CameraRig camRef={camRef} mouse={mouse} reduced={reduced} radius={radius} />
+      <CameraRig
+        camRef={camRef}
+        reduced={reduced}
+        radius={radius}
+        onActivity={onActivity}
+      />
       <NodeProjector onProject={onProject} radius={radius} />
       <SignalReady onReady={onReady} />
     </>
@@ -257,9 +244,13 @@ export type GraphCanvasProps = {
   camRef: RefObject<CamState>;
   activeIndex?: number;
   reduced?: boolean;
+  /** true → frameloop "never" (0 frames en reposo). GraphHome lo prende con la
+   * actividad de scroll y lo apaga cuando la cámara se asentó. */
   paused?: boolean;
   onReady?: () => void;
   onProject?: (p: NodeProj[]) => void;
+  /** ping por frame mientras la cámara se mueve (para pausar recién al asentar). */
+  onActivity?: () => void;
 };
 
 export default function GraphCanvas({
@@ -269,14 +260,14 @@ export default function GraphCanvas({
   paused = false,
   onReady,
   onProject,
+  onActivity,
 }: GraphCanvasProps) {
-  // DPR adaptivo: arranca conservador (1) y sube hasta el techo solo si la
-  // máquina lo banca (PerformanceMonitor). Antialias OFF (el bloom disimula) →
-  // gran ahorro. Así es smooth en cualquier GPU sin perder nitidez en las buenas.
-  const maxDpr =
+  // On-demand: el canvas solo renderiza mientras `paused` es false (durante el
+  // scroll + un colchón para asentar la cámara). En reposo → frameloop "never" →
+  // 0 frames → 0% GPU (el grafo va tan fluido como una página sin 3D). DPR con
+  // techo 1.5 (antialias off; el bloom disimula).
+  const dpr =
     typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 1.5) : 1.25;
-  // Arranca nítido (maxDpr); si la GPU no sostiene el framerate, baja a 1.
-  const [dpr, setDpr] = useState(maxDpr);
 
   return (
     <Canvas
@@ -292,31 +283,25 @@ export default function GraphCanvas({
       }}
       style={{ pointerEvents: "none" }}
     >
-      <PerformanceMonitor
-        onIncline={() => setDpr(maxDpr)}
-        onDecline={() => setDpr(1)}
-        onFallback={() => setDpr(1)}
-        flipflops={3}
-      >
-        <Suspense fallback={null}>
-          <Scene
-            camRef={camRef}
-            activeIndex={activeIndex}
-            reduced={reduced}
-            onReady={onReady}
-            onProject={onProject}
-          />
-        </Suspense>
-        <EffectComposer>
-          <Bloom
-            intensity={0.8}
-            luminanceThreshold={0.22}
-            luminanceSmoothing={0.4}
-            mipmapBlur
-            radius={0.7}
-          />
-        </EffectComposer>
-      </PerformanceMonitor>
+      <Suspense fallback={null}>
+        <Scene
+          camRef={camRef}
+          activeIndex={activeIndex}
+          reduced={reduced}
+          onReady={onReady}
+          onProject={onProject}
+          onActivity={onActivity}
+        />
+      </Suspense>
+      <EffectComposer>
+        <Bloom
+          intensity={0.8}
+          luminanceThreshold={0.22}
+          luminanceSmoothing={0.4}
+          mipmapBlur
+          radius={0.7}
+        />
+      </EffectComposer>
     </Canvas>
   );
 }
