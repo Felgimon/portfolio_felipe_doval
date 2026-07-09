@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { isSoftwareRenderer, rendererName } from "@/lib/gpu";
 
 /**
  * Silencia SOLO el warning benigno de deprecación de `THREE.Clock` (lo emite
@@ -27,12 +28,14 @@ function silenceThreeClockWarning() {
  */
 export function DevOverlay() {
   const [fps, setFps] = useState<number | null>(null);
+  const [gpu, setGpu] = useState<{ name: string; soft: boolean } | null>(null);
   const enabled = useRef(false);
 
   useEffect(() => {
     silenceThreeClockWarning();
     enabled.current = new URLSearchParams(window.location.search).has("stats");
     if (!enabled.current) return;
+    setGpu({ name: rendererName(), soft: isSoftwareRenderer() });
 
     let raf = 0;
     let frames = 0;
@@ -63,14 +66,32 @@ export function DevOverlay() {
         zIndex: 9999,
         font: "600 12px ui-monospace, monospace",
         background: "rgba(15,30,27,0.85)",
-        color,
         border: "1px solid #2a3f39",
         borderRadius: 6,
         padding: "4px 8px",
         pointerEvents: "none",
+        textAlign: "right",
+        maxWidth: 320,
       }}
     >
-      {fps} FPS
+      <div style={{ color }}>{fps} FPS</div>
+      {gpu && (
+        <div
+          style={{
+            marginTop: 3,
+            fontSize: 9,
+            fontWeight: 400,
+            color: gpu.soft ? "#e8846a" : "#83978d",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          title={gpu.name}
+        >
+          {gpu.soft ? "⚠ SOFTWARE · " : "GPU · "}
+          {gpu.name}
+        </div>
+      )}
     </div>
   );
 }

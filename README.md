@@ -74,10 +74,10 @@ content/          ⭐ ÚNICA fuente de verdad, tipada:
                     perfil.ts     → bio, links, stack, timeline
                     proyectos.ts  → los 7 proyectos
                     types.ts      → tipos
-hooks/            useLenis, useGpuTier, useActiveSection, ...
-lib/              fonts.ts (next/font), gsap.ts, utils.ts
+hooks/            useWebGL, useReducedMotion, useActiveSection, ...
+lib/              fonts.ts (next/font), gpu.ts (sonda GPU), gsap.ts, utils.ts
 public/assets/    logo, foto, modelos-3d, capturas
-scripts/          smoke.ts (Playwright)
+scripts/          smoke.ts (Playwright) · perf.ts (medidor de FPS)
 contenido/        material original que pasó Felipe (fuente, no se sirve)
 ```
 

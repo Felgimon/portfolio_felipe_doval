@@ -84,6 +84,38 @@ Tercera pasada — el diagnóstico clave (el detalle iba fluido, el grafo no):
 - Nodos sin pulso continuo (tamaño/brillo por prop) para ser compatibles con el
   render on-demand.
 
+Cuarta pasada (v2.1.4) — la causa raíz medida:
+- **Diagnóstico con datos:** un medidor headless (`scripts/perf.ts`) que fuerza el
+  render y reporta el renderer de GPU + FPS. Reveló que en reposo la página iba a
+  **165fps pero moviéndose caía a 10** (en la máquina de Felipe) y a **4fps** en
+  headless — y el renderer era **SwiftShader (software)**. Conclusión: el WebGL
+  estaba corriendo **por software** (Chrome con aceleración por hardware apagada o
+  GPU en blocklist); 7.680 triángulos son triviales, el costo real es **fill-rate**
+  de bloom + shader fullscreen, que el render por software paga carísimo.
+- **Modo "lite" automático (`lib/gpu.ts` → `isSoftwareRenderer`):** si el renderer
+  es software (SwiftShader/llvmpipe/basic), el canvas va **sin bloom y con DPR 1**;
+  en GPU real, calidad completa. El emissivo (`toneMapped=false`) sostiene el glow
+  aun sin bloom. Medido: bajo SwiftShader pasó de **4 → 60fps** (¡moviéndose!).
+- **Fondo fbm → CSS:** el shader de telemetría full-screen se redibujaba cada frame;
+  se reemplazó por un `radial-gradient` CSS (glow agua sobre el pino) — mismo clima,
+  **costo cero**, y se ve igual con el canvas pausado.
+- **Settle casi instantáneo (el pedido de Felipe):** la cámara perseguía un umbral
+  `1e-5` asintótico → tardaba **~4s** en asentarse a bajo fps (esa era la
+  "recalibración"). Ahora hace **snap apenas el movimiento por frame es imperceptible**
+  (`MOVE_EPS`) y deja de pedir frames; el tracking del scroll es más ajustado
+  (`SETTLE` más chico → menos residuo al frenar). Buffer de pausa **600 → 180ms**.
+  La ventana de "recalibración" queda **≤0.5s** y, ya sin bloom, esos frames van a
+  60fps → no se siente lag.
+- **Renderer en `?stats`:** el overlay ahora muestra la GPU y marca **⚠ SOFTWARE**
+  si no hay aceleración → diagnóstico de un vistazo (para Felipe y cualquier visita).
+- **Limpieza:** se borró `hooks/useGpuTier.ts` (muerto) y la dependencia
+  `detect-gpu`; se borró `components/three/shaders.ts` (el fbm ya no se usa).
+
+> Nota para el dueño del equipo: si `?stats` dice **SOFTWARE**, el fix ideal es
+> prender la aceleración por hardware en Chrome (`chrome://gpu` para diagnosticar,
+> `chrome://settings/system` para activarla) → se ve el bloom completo a 165fps. El
+> modo lite es la red de seguridad para quien no la tenga.
+
 ---
 
 ## v2.0.0 — Rediseño «verde agua» + navegación por grafo
@@ -244,7 +276,6 @@ stack 3D/animación (lo más propenso a romper por peer deps).
 | motion | 12.42.2 | ex framer-motion, para transiciones de layout |
 | lenis | 1.3.25 | scroll suave, se integra con ScrollTrigger |
 | lucide-react | 1.23.0 | íconos (migraron a 1.x; verificado que es el latest) |
-| detect-gpu | 5.0.70 | degradación por hardware |
 | playwright | 1.61.1 | devDep, smoke test |
 | @next/bundle-analyzer | 16.2.10 | devDep, `npm run analyze` |
 | sharp | (via next) | favicon/OG en Fase 10 |
@@ -360,12 +391,14 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
   Sin `<Environment>` de drei (evita fetch de HDRI externo → self-contained).
 - **Carga:** `HeroCanvas` se importa con `next/dynamic({ ssr:false })` → no entra
   al bundle inicial.
-- **Degradación:**
-  - reduced-motion → **poster estático** (render real del balón).
-  - GPU tier < 2 / sin WebGL (detect-gpu) → poster.
-  - mientras detecta GPU → ink (no se carga el poster en dispositivos capaces).
-  - dpr capado a `[1,2]` (tier 3) / `[1,1.5]` (menor).
-  - Override de debug `?forcegl=1` para forzar el 3D en testing/headless.
+- **Degradación (v2.1.4):**
+  - sin WebGL → **poster estático** (render real del balón). Gate por
+    disponibilidad de WebGL (`hooks/useWebGL.ts`), no por tier.
+  - WebGL por **software** (SwiftShader/llvmpipe) → canvas en **modo lite**
+    (sin bloom, DPR 1) para sostener FPS (`lib/gpu.ts`).
+  - reduced-motion → cámara sin buceo (overview fijo), saltos instantáneos.
+  - dpr capado a `min(devicePixelRatio, 1.5)` (1 en modo lite).
+  - Override de debug `?gl` para forzar el canvas en testing/headless.
 - **Poster:** generado screenshoteando el render real (ruta temporal
   `/dev/poster`) → `public/assets/hero-poster.png`, servido con `next/image`.
 - **Preloader** (`useProgress` de drei): progreso real de assets, mínimo 700ms,

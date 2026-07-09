@@ -225,13 +225,14 @@ export function GraphHome({ children }: { children: ReactNode }) {
       }
     };
 
-    // Pausa el render 600ms DESPUÉS de la última actividad (scroll o cámara aún
-    // moviéndose). Sin timer ciego: se pausa recién cuando todo se asentó, así
-    // no congela un frame en blanco en máquinas lentas.
+    // Pausa el render 180ms DESPUÉS de la última actividad (scroll o cámara aún
+    // moviéndose). Sin timer ciego: se pausa recién cuando todo se asentó. Con la
+    // cámara haciendo snap apenas el movimiento es imperceptible, esta ventana es
+    // casi todo lo que dura la "recalibración" tras la animación.
     let pauseTimer = 0;
     const bump = () => {
       clearTimeout(pauseTimer);
-      pauseTimer = window.setTimeout(() => setRendering(false), 600);
+      pauseTimer = window.setTimeout(() => setRendering(false), 180);
     };
     const wake = () => {
       setRendering(true);
@@ -272,6 +273,18 @@ export function GraphHome({ children }: { children: ReactNode }) {
 
   return (
     <>
+      {/* Glow de fondo (CSS, costo cero): reemplaza el shader fbm full-screen que
+          se redibujaba cada frame. Mismo clima —halo agua sobre el pino profundo—
+          sin pagar fill-rate. */}
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-ink"
+        aria-hidden
+        style={{
+          background:
+            "radial-gradient(58% 52% at 50% 45%, rgba(143,227,198,0.12), rgba(143,227,198,0.028) 46%, transparent 72%), radial-gradient(130% 100% at 50% 118%, rgba(12,25,23,0.85), transparent 62%), var(--ink)",
+        }}
+      />
+
       {/* Capa fija: el grafo 3D (o poster si no hay WebGL). */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden>
         {usarCanvas ? (

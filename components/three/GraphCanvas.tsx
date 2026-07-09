@@ -5,7 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
-import { heroBgVertex, heroBgFragment } from "./shaders";
+import { isSoftwareRenderer } from "@/lib/gpu";
 import { nodos } from "@/lib/navigation";
 
 const MODEL = "/models/pelota-estructura-transformed.glb";
@@ -18,35 +18,6 @@ const S = 1.4;
  * "buceó" hacia él (0..1). */
 export type CamState = { active: number; dive: number };
 export type NodeProj = { x: number; y: number; front: boolean };
-
-function BgField() {
-  const mat = useRef<THREE.ShaderMaterial>(null);
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color("#8fe3c6") },
-      uFocus: { value: new THREE.Vector2(0.5, 0.5) },
-    }),
-    [],
-  );
-  useFrame((_, delta) => {
-    const m = mat.current;
-    if (m) m.uniforms.uTime.value += Math.min(delta, 0.05);
-  });
-  return (
-    <mesh position={[0, 0, -4]} scale={[24, 24, 1]}>
-      <planeGeometry args={[1, 1]} />
-      <shaderMaterial
-        ref={mat}
-        uniforms={uniforms}
-        vertexShader={heroBgVertex}
-        fragmentShader={heroBgFragment}
-        transparent
-        depthWrite={false}
-      />
-    </mesh>
-  );
-}
 
 function useBallRadius(): number {
   const { nodes } = useGLTF(MODEL) as unknown as {
@@ -108,18 +79,29 @@ function GraphGroup({ activeIndex }: { activeIndex: number }) {
 const _dir = new THREE.Vector3();
 const _node = new THREE.Vector3();
 const _target = new THREE.Vector3();
+const _prev = new THREE.Vector3();
 const _v = new THREE.Vector3();
 const _nd = new THREE.Vector3();
 const _cam = new THREE.Vector3();
 const _z = new THREE.Vector3(0, 0, 1);
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 
+/** Respuesta de la cámara: base de la caída exponiencial por segundo. Más chico
+ * = más "snappy" (buceo rápido + tracking ajustado del scroll → menos residuo al
+ * frenar → asienta antes). */
+const SETTLE = 0.00002;
+/** Umbral de "ya no se mueve": si el desplazamiento por frame es menor a esto,
+ * la cámara hace snap al objetivo y DEJA de pedir frames → el canvas se pausa.
+ * ~0.009 unidades sobre una cámara a distancia ~5 = sub-pixel (invisible). */
+const MOVE_EPS2 = 0.009 * 0.009;
+
 /**
  * Rig de cámara scroll-driven: siempre mira al centro; su dirección y distancia
  * salen de (active, dive). En overview ve el balón entero; al "bucear" hacia un
- * nodo, se acerca por su dirección hasta encararlo de cerca. En modo on-demand,
- * se auto-invalida SOLO mientras no llegó al objetivo → cuando se asienta, deja
- * de renderizar (0 frames en reposo).
+ * nodo, se acerca por su dirección hasta encararlo de cerca. On-demand: pide un
+ * frame más SOLO mientras se movió algo perceptible; apenas el movimiento es
+ * imperceptible hace snap y se calla → el render se pausa casi al instante en
+ * que termina la animación visible (nada de perseguir la cola asintótica).
  */
 function CameraRig({
   camRef,
@@ -130,8 +112,7 @@ function CameraRig({
   camRef: RefObject<CamState>;
   reduced: boolean;
   radius: number;
-  /** Se llama cada frame mientras la cámara AÚN se mueve (no llegó al objetivo).
-   * GraphHome lo usa para pausar el render recién cuando todo se asentó. */
+  /** ping por frame mientras la cámara AÚN se mueve de verdad. */
   onActivity?: () => void;
 }) {
   const camera = useThree((s) => s.camera);
@@ -154,11 +135,24 @@ function CameraRig({
       _target.copy(_dir).multiplyScalar(THREE.MathUtils.lerp(OVER, CLOSE, dive));
     }
 
-    const k = reduced ? 1 : 1 - Math.pow(0.0009, Math.min(delta, 0.05));
+    if (reduced) {
+      camera.position.copy(_target);
+      camera.lookAt(ORIGIN);
+      return; // reduced-motion: instantáneo, sin pings → pausa inmediata
+    }
+
+    _prev.copy(camera.position);
+    const k = 1 - Math.pow(SETTLE, Math.min(delta, 0.05));
     camera.position.lerp(_target, k);
     camera.lookAt(ORIGIN);
 
-    if (camera.position.distanceToSquared(_target) > 1e-5) onActivity?.();
+    // ¿Se movió algo perceptible este frame? Si sí, pedí otro. Si no, cerrá:
+    // snap al objetivo y no pingees → deja que el canvas se pause de una.
+    if (camera.position.distanceToSquared(_prev) > MOVE_EPS2) {
+      onActivity?.();
+    } else {
+      camera.position.copy(_target);
+    }
   });
   return null;
 }
@@ -226,7 +220,6 @@ function Scene({
     <>
       <ambientLight intensity={0.5} />
       <directionalLight position={[3, 4, 5]} intensity={0.9} color="#dff7ec" />
-      <BgField />
       <GraphGroup activeIndex={activeIndex} />
       <CameraRig
         camRef={camRef}
@@ -262,12 +255,16 @@ export default function GraphCanvas({
   onProject,
   onActivity,
 }: GraphCanvasProps) {
-  // On-demand: el canvas solo renderiza mientras `paused` es false (durante el
-  // scroll + un colchón para asentar la cámara). En reposo → frameloop "never" →
-  // 0 frames → 0% GPU (el grafo va tan fluido como una página sin 3D). DPR con
-  // techo 1.5 (antialias off; el bloom disimula).
-  const dpr =
-    typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 1.5) : 1.25;
+  // Modo "lite" cuando el WebGL corre por software (sin GPU acelerada): el
+  // fill-rate del bloom + DPR alto es lo que clava los FPS. En ese caso: sin
+  // postproceso y DPR 1. En GPU real: calidad completa (el bloom es el alma del
+  // look). El emissivo (toneMapped=false) sostiene el glow aun sin bloom.
+  const lite = useMemo(() => isSoftwareRenderer(), []);
+  const dpr = lite
+    ? 1
+    : typeof window !== "undefined"
+      ? Math.min(window.devicePixelRatio, 1.5)
+      : 1.25;
 
   return (
     <Canvas
@@ -293,15 +290,17 @@ export default function GraphCanvas({
           onActivity={onActivity}
         />
       </Suspense>
-      <EffectComposer>
-        <Bloom
-          intensity={0.8}
-          luminanceThreshold={0.22}
-          luminanceSmoothing={0.4}
-          mipmapBlur
-          radius={0.7}
-        />
-      </EffectComposer>
+      {!lite && (
+        <EffectComposer>
+          <Bloom
+            intensity={0.8}
+            luminanceThreshold={0.22}
+            luminanceSmoothing={0.4}
+            mipmapBlur
+            radius={0.7}
+          />
+        </EffectComposer>
+      )}
     </Canvas>
   );
 }
