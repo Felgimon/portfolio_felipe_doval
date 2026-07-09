@@ -40,27 +40,6 @@ function useMouseTracker(): RefObject<MousePos> {
   return mouse;
 }
 
-function CursorLight({ mouse }: { mouse: RefObject<MousePos> }) {
-  const light = useRef<THREE.PointLight>(null);
-  useFrame(() => {
-    const l = light.current;
-    if (!l) return;
-    const mx = mouse.current?.x ?? 0;
-    const my = mouse.current?.y ?? 0;
-    l.position.x += (mx * 3.2 - l.position.x) * 0.09;
-    l.position.y += (my * 2.2 - l.position.y) * 0.09;
-  });
-  return (
-    <pointLight
-      ref={light}
-      color="#b7f0da"
-      intensity={20}
-      distance={9}
-      position={[0, 0, 3]}
-    />
-  );
-}
-
 function BgField() {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(
@@ -114,7 +93,7 @@ function GraphGroup({ activeIndex }: { activeIndex: number }) {
         <meshStandardMaterial
           color="#123028"
           emissive="#59c9a6"
-          emissiveIntensity={0.5}
+          emissiveIntensity={0.62}
           metalness={0.5}
           roughness={0.4}
         />
@@ -133,7 +112,7 @@ function GraphGroup({ activeIndex }: { activeIndex: number }) {
           FD
         </Text>
         <mesh position={[0.46, -0.13, 0]}>
-          <sphereGeometry args={[0.07, 20, 20]} />
+          <sphereGeometry args={[0.07, 12, 12]} />
           <meshStandardMaterial
             color="#c7f5e2"
             emissive="#8fe3c6"
@@ -263,9 +242,8 @@ function Scene({
   const radius = useBallRadius();
   return (
     <>
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[3, 4, 5]} intensity={0.8} color="#dff7ec" />
-      <CursorLight mouse={mouse} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[3, 4, 5]} intensity={0.9} color="#dff7ec" />
       <BgField />
       <GraphGroup activeIndex={activeIndex} />
       <CameraRig camRef={camRef} mouse={mouse} reduced={reduced} radius={radius} />

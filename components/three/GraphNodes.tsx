@@ -63,7 +63,7 @@ export function GraphNodes({ activeIndex }: { activeIndex: number }) {
           position={p}
         >
           <mesh>
-            <sphereGeometry args={[base, 24, 24]} />
+            <sphereGeometry args={[base, 16, 16]} />
             <meshStandardMaterial
               color="#b7f0da"
               emissive="#8fe3c6"

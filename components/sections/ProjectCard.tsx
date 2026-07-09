@@ -65,7 +65,7 @@ export function ProjectCard({
           <Placeholder label={cap?.alt ?? "captura"} className="h-full border-0" />
         )}
         {proyecto.incompleto && (
-          <span className="absolute top-3 right-3 rounded-full border border-line bg-ink/80 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-muted backdrop-blur">
+          <span className="absolute top-3 right-3 rounded-full border border-line bg-ink/90 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-muted">
             en progreso
           </span>
         )}

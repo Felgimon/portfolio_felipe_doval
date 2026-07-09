@@ -56,6 +56,18 @@ un *layout thrash* en el scroll. Sin tocar UX ni bajar calidad visible:
   carga); el handler de scroll usa `scrollY` y no llama `getBoundingClientRect`
   por frame → scroll fluido. Loop de proyección de nodos sin allocations.
 
+Segunda pasada (seguía a ~15fps al mover el mouse):
+- **La mesh NO era el problema:** el balón tiene **4.140 vértices / 7.680
+  triángulos** (12 KB) — trivial para cualquier GPU. Reducir caras no daba nada;
+  el costo era fill-rate + compositor, no geometría.
+- **`backdrop-blur` fuera (el gran culpable):** el HUD y los 5 labels de nodo
+  tenían vidrio esmerilado **sobre el canvas animado**, así que el navegador
+  **re-blureaba cada frame** (y peor al mover el mouse por el parallax). Se
+  reemplazó por fondo sólido (`bg-ink/90`) — casi imperceptible en tema oscuro.
+- **Sin luz que sigue al mouse:** era un `pointLight` que re-sombreaba el balón
+  (PBR) cada frame; se dejaron solo las luces estáticas (el emissive compensa).
+- Esferas de nodo (24→16) y punto del logo (20→12) con menos segmentos.
+
 ---
 
 ## v2.0.0 — Rediseño «verde agua» + navegación por grafo

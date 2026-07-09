@@ -108,7 +108,7 @@ function NodeOverlay({
           className="group absolute top-0 left-0 flex items-center gap-2.5 transition-opacity duration-500"
         >
           <span className="size-5 shrink-0 rounded-full border-2 border-agua bg-transparent shadow-[0_0_14px_0_var(--agua)] transition-transform group-hover:scale-110" />
-          <span className="rounded-full border border-line bg-ink/80 px-3 py-1 font-mono text-xs tracking-wide whitespace-nowrap text-chalk backdrop-blur transition-colors group-hover:text-agua">
+          <span className="rounded-full border border-line bg-ink/90 px-3 py-1 font-mono text-xs tracking-wide whitespace-nowrap text-chalk transition-colors group-hover:text-agua">
             {n.label}
           </span>
         </button>
@@ -131,7 +131,7 @@ function HudRail({
       aria-label="Secciones"
       className="fixed inset-x-0 bottom-0 z-40"
     >
-      <div className="mx-auto flex max-w-[88rem] items-center justify-center gap-0.5 border-t border-line bg-ink/72 px-1 py-2.5 backdrop-blur-md sm:justify-start sm:gap-2 sm:px-8">
+      <div className="mx-auto flex max-w-[88rem] items-center justify-center gap-0.5 border-t border-line bg-ink/90 px-1 py-2.5 sm:justify-start sm:gap-2 sm:px-8">
         {nodos.map((n, i) => {
           const active = i === activeIdx;
           return (
