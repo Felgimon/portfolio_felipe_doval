@@ -22,7 +22,7 @@ export function SiteNav() {
         <Link
           href="/"
           aria-label="Felipe Doval — inicio"
-          className="rounded-full border border-line bg-ink/85 px-4 py-2 transition-colors hover:border-agua/50"
+          className="glass glass-spec glass-pill px-4 py-2"
         >
           <Logo className="text-lg text-chalk" />
         </Link>
@@ -30,7 +30,7 @@ export function SiteNav() {
         {!enHome && (
           <Link
             href="/#trabajo"
-            className="inline-flex items-center gap-2 rounded-full border border-line bg-ink/85 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:border-agua/50 hover:text-agua"
+            className="glass glass-spec glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-oro-deep"
           >
             <ArrowLeft className="size-4" />
             Volver al grafo

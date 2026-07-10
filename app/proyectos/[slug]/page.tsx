@@ -71,11 +71,13 @@ export default async function ProyectoDetalle({
   const siguiente = otros[0];
 
   return (
-    <article className="pt-28 pb-24">
+    <article className="relative pt-28 pb-24">
+      {/* Cielo de fondo, coherente con la home */}
+      <div className="sky sky-drift pointer-events-none fixed inset-0 -z-10" aria-hidden />
       <Container size="wide">
         <Link
           href="/#trabajo"
-          className="link-underline inline-flex items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-agua"
+          className="link-underline inline-flex items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-oro-deep"
         >
           <ArrowLeft className="size-4" />
           Volver al trabajo
@@ -176,7 +178,7 @@ export default async function ProyectoDetalle({
             {p.capturas.map((c, i) => (
               <div
                 key={i}
-                className="relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-ink-2"
+                className="glass glass-spec relative aspect-[16/10] overflow-hidden"
               >
                 {c.src && !c.falta ? (
                   <Image
@@ -221,11 +223,11 @@ export default async function ProyectoDetalle({
                 <span className="block font-mono text-xs text-muted">
                   Siguiente caso
                 </span>
-                <span className="type-h3 text-chalk transition-colors group-hover:text-agua">
+                <span className="type-h3 text-chalk transition-colors group-hover:text-oro-deep">
                   {siguiente.nombre}
                 </span>
               </span>
-              <ArrowUpRight className="size-6 text-agua" />
+              <ArrowUpRight className="size-6 text-oro-deep" />
             </Link>
           </nav>
         )}

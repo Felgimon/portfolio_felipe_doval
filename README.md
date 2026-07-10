@@ -7,11 +7,14 @@ o simplemente scrolleando (orden por defecto), y el balón rota para encarar el
 nodo activo. Un HUD de consola marca el progreso y es el fallback accesible
 (teclado / mobile / sin-WebGL), más páginas de detalle por proyecto.
 
-**Dirección de diseño (v2 — "verde agua"):** base verde-noche (pino profundo),
-verde agua sólido como señal, chispa terracota puntual; tipografía Bricolage
-Grotesque con estiramientos de firma. Colores sólidos (sin alpha bajado). El
-elemento firma es el **balón-grafo** 3D (pelota de fútbol × red de nodos).
-Detalle completo en [`DECISIONS.md`](./DECISIONS.md).
+**Dirección de diseño (v3 — "cielo"):** fondo **celeste** (cielo procedural CSS),
+el balón **blanco** flota en él (UI espacial), texto **tinta** y acento **oro**
+(guiño al sol). **Cero glow**: los nodos son **mini-soles** (shader GLSL) y los
+contenedores flotantes son **Liquid Glass**. Los paneles no son "slides": el texto
+flota sobre el cielo y el modelo se corre al costado, agrandándose. Tipografía
+Bricolage Grotesque con estiramientos de firma. El elemento firma es el
+**balón-grafo** 3D (pelota de fútbol × red de nodos). Detalle e historial (v2
+"verde agua", v1) en [`DECISIONS.md`](./DECISIONS.md).
 
 ## Stack
 

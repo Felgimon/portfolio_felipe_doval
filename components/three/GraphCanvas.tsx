@@ -3,7 +3,6 @@ import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, Text, Billboard } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { nodos } from "@/lib/navigation";
@@ -32,45 +31,58 @@ function useBallRadius(): number {
 
 /** Malla del balón + el logo FD flotando en el centro 3D + los nodos. Grupo
  * ESTÁTICO (sin rotación): así las direcciones de los nodos son fijas en el
- * mundo y la cámara los encara con precisión. */
+ * mundo y la cámara los encara con precisión. El logo FD solo se muestra en la
+ * portada (overview); en un tópico el mini-sol activo toma el centro. */
 function GraphGroup({ activeIndex }: { activeIndex: number }) {
   const { nodes } = useGLTF(MODEL) as unknown as {
     nodes: Record<string, THREE.Mesh>;
   };
+  const overview = activeIndex < 0;
   return (
     <group scale={S}>
+      {/* Balón BLANCO nacarado — sin emissive/glow. Material físico con un poco de
+          clearcoat para que los struts tengan highlights definidos (más "real")
+          contra el cielo celeste. */}
       <mesh geometry={nodes.geometry_0.geometry}>
-        <meshStandardMaterial
-          color="#123028"
-          emissive="#59c9a6"
-          emissiveIntensity={0.62}
-          metalness={0.5}
-          roughness={0.4}
+        <meshPhysicalMaterial
+          color="#f4f8fb"
+          metalness={0.0}
+          roughness={0.32}
+          clearcoat={0.6}
+          clearcoatRoughness={0.35}
+          sheen={0.4}
+          sheenColor="#cfe6f5"
         />
       </mesh>
       <GraphNodes activeIndex={activeIndex} />
-      <Billboard>
-        <Text
-          font={LOGO_FONT}
-          fontSize={0.42}
-          color="#c7f5e2"
-          anchorX="center"
-          anchorY="middle"
-          letterSpacing={-0.02}
-          material-toneMapped={false}
-        >
-          FD
-        </Text>
-        <mesh position={[0.46, -0.13, 0]}>
-          <sphereGeometry args={[0.07, 12, 12]} />
-          <meshStandardMaterial
-            color="#c7f5e2"
-            emissive="#8fe3c6"
-            emissiveIntensity={3}
-            toneMapped={false}
-          />
-        </mesh>
-      </Billboard>
+      {/* Logo FD flotando en el centro 3D: metal tinta pulido (definido, con
+          highlights) + punto oro. Sin glow. Solo en la portada. */}
+      {overview && (
+        <Billboard>
+          <Text
+            font={LOGO_FONT}
+            fontSize={0.42}
+            anchorX="center"
+            anchorY="middle"
+            letterSpacing={-0.02}
+          >
+            FD
+            <meshStandardMaterial
+              color="#0e2233"
+              metalness={0.85}
+              roughness={0.28}
+            />
+          </Text>
+          <mesh position={[0.46, -0.13, 0]}>
+            <sphereGeometry args={[0.075, 20, 20]} />
+            <meshStandardMaterial
+              color="#e8a83f"
+              metalness={0.5}
+              roughness={0.3}
+            />
+          </mesh>
+        </Billboard>
+      )}
     </group>
   );
 }
@@ -117,8 +129,11 @@ function CameraRig({
 }) {
   const camera = useThree((s) => s.camera);
   const rBall = radius * S;
-  const OVER = rBall * 3.6; // overview: balón entero
-  const CLOSE = rBall * 1.7; // pegado al nodo
+  const OVER = rBall * 3.6; // overview: balón entero, de frente
+  // En tópico la cámara ORBITA para poner el nodo activo (mini-sol) de frente y
+  // se ACERCA → el balón se agranda y el sol queda protagonista en el espacio
+  // vacío (el texto flota al costado opuesto por CSS).
+  const CLOSE = rBall * 2.35;
 
   useFrame((_, delta) => {
     const st = camRef.current;
@@ -218,8 +233,10 @@ function Scene({
   const radius = useBallRadius();
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[3, 4, 5]} intensity={0.9} color="#dff7ec" />
+      {/* Luz de día: relleno frío del cielo + sol cálido desde arriba. */}
+      <ambientLight intensity={0.8} color="#eaf5fb" />
+      <directionalLight position={[2, 5, 4]} intensity={1.05} color="#fff6e6" />
+      <directionalLight position={[-4, -1, -2]} intensity={0.25} color="#bfe0f2" />
       <GraphGroup activeIndex={activeIndex} />
       <CameraRig
         camRef={camRef}
@@ -255,16 +272,16 @@ export default function GraphCanvas({
   onProject,
   onActivity,
 }: GraphCanvasProps) {
-  // Modo "lite" cuando el WebGL corre por software (sin GPU acelerada): el
-  // fill-rate del bloom + DPR alto es lo que clava los FPS. En ese caso: sin
-  // postproceso y DPR 1. En GPU real: calidad completa (el bloom es el alma del
-  // look). El emissivo (toneMapped=false) sostiene el glow aun sin bloom.
+  // Sin postproceso (cero glow, decisión de diseño v3): la escena es liviana en
+  // cualquier GPU. Con antialias off, el balón blanco puede aliasing en sus
+  // struts finos, así que el DPR sube un poco más si la GPU es real; en software
+  // (SwiftShader) se capa a 1 para sostener FPS.
   const lite = useMemo(() => isSoftwareRenderer(), []);
   const dpr = lite
     ? 1
     : typeof window !== "undefined"
-      ? Math.min(window.devicePixelRatio, 1.5)
-      : 1.25;
+      ? Math.min(window.devicePixelRatio, 2)
+      : 1.5;
 
   return (
     <Canvas
@@ -273,7 +290,7 @@ export default function GraphCanvas({
       camera={{ position: [0, 0, 6], fov: 40 }}
       gl={{
         alpha: true,
-        antialias: false,
+        antialias: !lite,
         stencil: false,
         depth: true,
         powerPreference: "high-performance",
@@ -290,17 +307,6 @@ export default function GraphCanvas({
           onActivity={onActivity}
         />
       </Suspense>
-      {!lite && (
-        <EffectComposer>
-          <Bloom
-            intensity={0.8}
-            luminanceThreshold={0.22}
-            luminanceSmoothing={0.4}
-            mipmapBlur
-            radius={0.7}
-          />
-        </EffectComposer>
-      )}
     </Canvas>
   );
 }

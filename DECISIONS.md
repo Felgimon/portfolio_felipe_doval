@@ -3,7 +3,70 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v2.1** es la vigente. Debajo quedan v2.0.0 y la v1 como registro.
+> La sección **v3.0.0** es la vigente. Debajo quedan v2.x, v2.0.0 y la v1 como
+> registro histórico.
+
+---
+
+## v3.0.0 — Rediseño «cielo» (UI espacial + Liquid Glass + mini-soles)
+
+Giro drástico de identidad pedido por Felipe: de la noche verde-agua a un **CIELO
+claro**. El balón flota en el cielo (UI espacial), acento **ORO** (guiño al sol —
+easter egg argentino celeste+blanco, nunca se nombra), **cero glow**, contenedores
+**Liquid Glass** y paneles que **dejan de sentirse "slide"**.
+
+### Identidad — tema «cielo»
+- **Paleta:** fondo celeste (`--ink` ahora `#a9d3ea`), superficies blancas/vidrio,
+  texto **tinta** fría (`--chalk #10293b`), acento **oro** (`--agua`→oro `#e0a63a`;
+  para texto-acento AA sobre claro se usa `--oro-deep #8a5a0f`). Los tokens son por
+  **rol**: sus valores giraron al tema cielo pero los nombres marcan la función; se
+  agregaron alias nuevos (`--oro*`, `--cielo*`, `--nube`, `--glass-*`). Reemplazos
+  seguros con sed (`text-agua`→`text-oro-deep`, `text-ink`→`text-chalk`).
+- **Cielo procedural (CSS, costo cero):** `.sky` = gradiente horizonte→cielo +
+  nubes con radial-gradients, deriva lenta (`.sky-drift`). No es imagen (Felipe
+  eligió procedural sobre foto). Se usa en la home y en el detalle.
+- **Liquid Glass:** utilidades `.glass` / `.glass-spec` / `.glass-pill` /
+  `.glass-hover` (blur+saturate del fondo, borde especular, sombra de elevación —
+  sin glow). HUD, nav, labels, tarjetas de datos, foto y cards de proyecto son
+  vidrio. Reemplaza a los `bg-ink/90` oscuros de v2.
+- **Favicon/OG regenerados** al tema (OG celeste + tinta + nodo oro; `icon.tsx` /
+  `apple-icon.tsx` generados con ImageResponse, reemplazan los PNG estáticos).
+
+### El 3D (cero glow, mini-soles)
+- **Balón BLANCO nacarado** (`meshPhysicalMaterial` con clearcoat/sheen → struts
+  definidos) sobre el cielo. **Se sacó el bloom/EffectComposer por completo.**
+- **Nodos = mini-soles realistas** (`components/three/sun.ts`, shader GLSL a mano):
+  núcleo blanco-caliente, plasma granulado (fbm) y borde tipo corona (Fresnel EN la
+  superficie, **no** halo/glow externo). **Estático** (sin `uTime`) → el render
+  on-demand sigue pausando en reposo; costo trivial. El nodo activo es un sol más
+  grande y brillante, protagonista de la sección.
+- **Logo FD 3D:** metal tinta pulido (`meshStandardMaterial` metálico → definido),
+  solo en la portada; en un tópico el sol activo toma el centro.
+- **Luz de día:** relleno frío del cielo + sol cálido cenital + rim sutil.
+
+### Paneles espaciales (fin del "slide")
+- **Se eliminó el scrim oscuro** del `TopicPanel`. El texto **flota** directo sobre
+  el cielo (tinta sobre claro = legible); los datos van en **tarjetas Liquid Glass**
+  (herramientas, principios, timeline, links) — **cero bullets** (se quitaron los
+  puntos de los eyebrows y los `·` de listas). El eyebrow va sin bullet.
+- **Modelo al costado + más grande:** al entrar a un tópico la cámara se **acerca**
+  (balón grande) y **orbita** para poner el sol activo de frente; un transform CSS
+  corre el modelo al lado **opuesto** al texto (alterna por tópico, `ladoModelo`).
+  El sol activo queda protagonista en el espacio vacío.
+- **Nav 3D siempre viva:** los labels de nodo se muestran **en todo momento** (no
+  solo en la portada) y son clickeables → se salta a cualquier sección desde el
+  modelo aun estando dentro de una. El overlay recibe el **mismo transform** que el
+  canvas (quedan pegados a los nodos); los de la cara de atrás quedan atenuados pero
+  clickeables. (Antes solo servía para el primer nodo.)
+- **Mobile:** el modelo queda detrás del texto (una columna); sin scrim, al entrar a
+  un tópico se **atenúa** (`.graph-layer.is-topic`, opacity 0.28 <768px) para que el
+  texto gane. En desktop va al costado, pleno.
+
+### Perf / QA
+- Gate verde (tsc 0 · lint 0 · build ok). Smoke desktop+mobile: 0 errores de
+  consola. **`npm run perf`: 60/61 FPS** aun bajo SwiftShader (sin bloom + sun
+  estático + on-demand). El glass solo aparece en scroll (canvas casi siempre
+  pausado) → no re-blurea por frame.
 
 ---
 

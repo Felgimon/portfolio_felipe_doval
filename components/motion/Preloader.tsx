@@ -101,7 +101,7 @@ export function Preloader() {
   return (
     <div
       ref={root}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-ink"
+      className="sky fixed inset-0 z-[100] flex flex-col items-center justify-center"
       role="status"
       aria-live="polite"
       aria-label="Cargando el sitio"
@@ -119,7 +119,7 @@ export function Preloader() {
           </div>
           <div className="flex justify-between font-mono text-xs text-muted">
             <span>cargando</span>
-            <span className="data text-agua">{pct}%</span>
+            <span className="data text-oro-deep">{pct}%</span>
           </div>
         </div>
       </div>

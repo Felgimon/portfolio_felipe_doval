@@ -44,6 +44,18 @@ export type NodoId = Nodo["id"];
 /** Índice formateado 01..05 para el HUD (a partir de la posición en el array). */
 export const indiceNodo = (i: number) => String(i + 1).padStart(2, "0");
 
+/**
+ * Lado donde se ubica el MODELO 3D en cada tópico (UI espacial): alterna para
+ * dar ritmo y que no se sienta un slide repetido. El TEXTO va al lado opuesto.
+ * Regla única compartida por GraphHome (transform del canvas) y las secciones
+ * (alineación del contenido). Par → modelo a la derecha; impar → a la izquierda.
+ */
+export const ladoModelo = (i: number): "left" | "right" =>
+  i % 2 === 0 ? "right" : "left";
+export const ladoTexto = (i: number): "left" | "right" =>
+  ladoModelo(i) === "right" ? "left" : "right";
+export const indiceTopico = (id: string) => nodoIds.indexOf(id as NodoId);
+
 export const nodoIds = nodos.map((n) => n.id) as NodoId[];
 
 /** El estado de aterrizaje (solo modelo + logo). No es un nodo, es la portada. */

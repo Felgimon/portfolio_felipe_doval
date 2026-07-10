@@ -2,6 +2,7 @@ import Image from "next/image";
 import { perfil } from "@/content/perfil";
 import type { CategoriaStack } from "@/content/types";
 import { Reveal } from "@/components/motion/Reveal";
+import { ladoTexto, indiceTopico } from "@/lib/navigation";
 import { TopicPanel } from "./TopicPanel";
 
 const ORDEN_STACK: CategoriaStack[] = [
@@ -26,41 +27,45 @@ function agruparStack() {
   }));
 }
 
-/** Nodo Perfil — quién es Felipe: foto tratada, bio y el stack como datos en
- * mono (sin viñetas). */
+/** Nodo Perfil — quién es Felipe: foto enmarcada en vidrio, bio flotante y el
+ * stack en contenedores Liquid Glass (sin viñetas ni separadores de lista). */
 export function Perfil() {
   const grupos = agruparStack();
 
   return (
-    <TopicPanel id="perfil" kicker="Perfil" contentClassName="max-w-4xl">
+    <TopicPanel
+      id="perfil"
+      kicker="Perfil"
+      align={ladoTexto(indiceTopico("perfil"))}
+      contentClassName="max-w-4xl"
+    >
       <div className="grid gap-10 md:grid-cols-[0.7fr_1.3fr] md:gap-12">
-        {/* Foto tratada */}
+        {/* Foto enmarcada en vidrio */}
         <Reveal>
-          <figure className="grain relative w-full max-w-[16rem] overflow-hidden rounded-2xl border border-line bg-ink-2">
-            <div className="relative aspect-[4/5]">
+          <figure className="glass grain relative w-full max-w-[16rem] overflow-hidden p-1.5">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[calc(var(--radius-lg)-0.35rem)]">
               <Image
                 src="/assets/foto/foto_frente.png"
                 alt={`${perfil.nombre}, ${perfil.rol}`}
                 fill
                 sizes="(max-width: 768px) 60vw, 20vw"
-                className="object-cover object-[center_18%] opacity-95 grayscale contrast-[1.12] brightness-[0.9]"
+                className="object-cover object-[center_18%] contrast-[1.05] grayscale-[0.35]"
               />
               <div
-                className="absolute inset-0 mix-blend-color"
-                style={{ backgroundColor: "#8fe3c6" }}
+                className="absolute inset-0 mix-blend-soft-light"
+                style={{ backgroundColor: "#e0a63a" }}
               />
               <div
-                className="absolute inset-0 mix-blend-multiply"
+                className="absolute inset-0"
                 style={{
                   background:
-                    "linear-gradient(180deg, rgba(15,30,27,0.35), rgba(15,30,27,0.1) 45%, rgba(15,30,27,0.85))",
+                    "linear-gradient(180deg, transparent 44%, rgba(16,41,59,0.72))",
                 }}
               />
+              <figcaption className="absolute bottom-0 left-0 p-3 font-mono text-xs text-white">
+                {perfil.apodo} · {perfil.ubicacion}
+              </figcaption>
             </div>
-            <figcaption className="absolute bottom-0 left-0 flex items-center gap-2 p-3 font-mono text-xs text-chalk">
-              <span className="inline-block size-1.5 rounded-full bg-agua" />
-              {perfil.apodo} · {perfil.ubicacion}
-            </figcaption>
           </figure>
         </Reveal>
 
@@ -69,8 +74,8 @@ export function Perfil() {
           <Reveal>
             <h2 className="type-h1 text-chalk">
               Construyo de{" "}
-              <span className="stretch-y inline-block text-agua">punta</span> a
-              punta
+              <span className="stretch-y inline-block text-oro-deep">punta</span>{" "}
+              a punta
             </h2>
           </Reveal>
 
@@ -84,26 +89,28 @@ export function Perfil() {
             </div>
           </Reveal>
 
-          <hr className="hairline" />
-
           <Reveal>
             <p className="eyebrow mb-4">Herramientas</p>
-            <dl className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {grupos.map((g) => (
                 <div
                   key={g.categoria}
                   data-reveal-item
-                  className="flex flex-col gap-1"
+                  className="glass glass-spec glass-hover p-4"
                 >
-                  <dt className="font-mono text-xs tracking-wide text-muted">
+                  <p className="font-mono text-[0.7rem] tracking-wider text-oro-deep uppercase">
                     {g.categoria}
-                  </dt>
-                  <dd className="font-mono text-sm text-chalk-dim">
-                    {g.items.join("  ·  ")}
-                  </dd>
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5">
+                    {g.items.map((it) => (
+                      <span key={it} className="font-mono text-sm text-chalk">
+                        {it}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ))}
-            </dl>
+            </div>
           </Reveal>
         </div>
       </div>

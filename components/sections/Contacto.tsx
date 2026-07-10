@@ -2,19 +2,25 @@ import { perfil } from "@/content/perfil";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { EmailLink } from "@/components/ui/EmailLink";
 import { Reveal } from "@/components/motion/Reveal";
+import { ladoTexto, indiceTopico } from "@/lib/navigation";
 import { TopicPanel } from "./TopicPanel";
 
 /**
- * Nodo Contacto — email con micro-interacción de "copiado" + GitHub/LinkedIn.
- * Sin formulario (Felipe no configuró Formspree/Resend): no ponemos un form
- * falso.
+ * Nodo Contacto — email con micro-interacción de "copiado" + GitHub/LinkedIn en
+ * contenedores Liquid Glass. Sin formulario (Felipe no configuró backend): no
+ * ponemos un form falso.
  */
 export function Contacto() {
   return (
-    <TopicPanel id="contacto" kicker="Contacto" contentClassName="max-w-3xl">
+    <TopicPanel
+      id="contacto"
+      kicker="Contacto"
+      align={ladoTexto(indiceTopico("contacto"))}
+      contentClassName="max-w-3xl"
+    >
       <Reveal>
         <h2 className="type-h1 text-chalk">
-          ¿Tenés algo para <span className="text-agua">construir</span>?
+          ¿Tenés algo para <span className="text-oro-deep">construir</span>?
         </h2>
         <p className="lead mt-6 max-w-2xl">
           Estoy abierto a proyectos, pasantías y buenas ideas. Si algo de lo que
@@ -24,29 +30,28 @@ export function Contacto() {
 
       <Reveal className="mt-12">
         {/* Email — la micro-interacción de copiado */}
-        <div data-reveal-item className="border-t border-line pt-8">
-          <p className="mb-3 font-mono text-xs tracking-wide text-muted">Email</p>
+        <div data-reveal-item className="glass glass-spec p-6">
+          <p className="mb-3 font-mono text-xs tracking-wide text-oro-deep">
+            Email
+          </p>
           <EmailLink
             mode="copy"
-            className="type-h2 break-all text-chalk transition-colors hover:text-agua"
+            className="type-h2 break-all text-chalk transition-colors hover:text-oro-deep"
           />
         </div>
 
         {/* Redes */}
-        <div
-          data-reveal-item
-          className="mt-10 flex flex-wrap gap-4 border-t border-line pt-8"
-        >
+        <div data-reveal-item className="mt-4 flex flex-wrap gap-3">
           <a
             href={perfil.links.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-3 rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-agua/50"
+            className="glass glass-spec glass-hover group inline-flex items-center gap-3 px-5 py-4"
           >
             <BrandIcon name="github" className="size-6 text-chalk" />
             <span className="text-left">
               <span className="block font-mono text-xs text-muted">GitHub</span>
-              <span className="text-chalk transition-colors group-hover:text-agua">
+              <span className="text-chalk transition-colors group-hover:text-oro-deep">
                 @Felgimon
               </span>
             </span>
@@ -55,19 +60,21 @@ export function Contacto() {
             href={perfil.links.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-3 rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-agua/50"
+            className="glass glass-spec glass-hover group inline-flex items-center gap-3 px-5 py-4"
           >
             <BrandIcon name="linkedin" className="size-6 text-chalk" />
             <span className="text-left">
-              <span className="block font-mono text-xs text-muted">LinkedIn</span>
-              <span className="text-chalk transition-colors group-hover:text-agua">
+              <span className="block font-mono text-xs text-muted">
+                LinkedIn
+              </span>
+              <span className="text-chalk transition-colors group-hover:text-oro-deep">
                 Felipe Doval
               </span>
             </span>
           </a>
         </div>
 
-        <p data-reveal-item className="mt-10 font-mono text-xs text-muted">
+        <p data-reveal-item className="mt-8 font-mono text-xs text-muted">
           {perfil.ubicacion} · tip: si andás con teclado, ya sabés qué código
           probar.
         </p>

@@ -4,17 +4,18 @@ import { join } from "node:path";
 import { perfil } from "@/content/perfil";
 
 // Imagen OG generada desde los tokens del design system (texto + color, sin
-// ilustración dibujada). El "_" de la marca es un nodo verde agua. Tipografía
-// Archivo Black para la tarjeta social (bold grotesco; el sitio usa Bricolage).
+// ilustración dibujada). Tema "cielo": fondo celeste, texto tinta, el "_" de la
+// marca es un nodo ORO. Tipografía Archivo Black (bold grotesco; el sitio usa
+// Bricolage).
 export const alt = `${perfil.nombre} — ${perfil.rol}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const INK = "#0f1e1b";
-const AGUA = "#8fe3c6";
-const HUESO = "#ece7db";
-const SALVIA = "#a6bab0";
-const NIEBLA = "#83978d";
+const CIELO = "linear-gradient(160deg, #d3ecf9 0%, #a9d3ea 60%, #7fb8db 100%)";
+const ORO = "#c88a1e";
+const TINTA = "#10293b";
+const PIZARRA = "#38566a";
+const NIEBLA = "#4f6d80";
 
 export default async function OpengraphImage() {
   const archivo = await readFile(
@@ -30,7 +31,7 @@ export default async function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: INK,
+          background: CIELO,
           padding: "72px",
           fontFamily: "Archivo",
         }}
@@ -45,14 +46,14 @@ export default async function OpengraphImage() {
             fontSize: 26,
           }}
         >
-          <div style={{ display: "flex", alignItems: "flex-end", color: HUESO }}>
+          <div style={{ display: "flex", alignItems: "flex-end", color: TINTA }}>
             FD
             <div
               style={{
                 width: 14,
                 height: 14,
                 borderRadius: 7,
-                backgroundColor: AGUA,
+                backgroundColor: ORO,
                 marginLeft: 6,
                 marginBottom: 6,
               }}
@@ -70,7 +71,7 @@ export default async function OpengraphImage() {
               display: "flex",
               fontSize: 150,
               lineHeight: 0.9,
-              color: HUESO,
+              color: TINTA,
               letterSpacing: -4,
             }}
           >
@@ -82,7 +83,7 @@ export default async function OpengraphImage() {
               alignItems: "flex-end",
               fontSize: 150,
               lineHeight: 0.9,
-              color: HUESO,
+              color: TINTA,
               letterSpacing: -4,
             }}
           >
@@ -92,7 +93,7 @@ export default async function OpengraphImage() {
                 width: 34,
                 height: 34,
                 borderRadius: 17,
-                backgroundColor: AGUA,
+                backgroundColor: ORO,
                 marginLeft: 10,
                 marginBottom: 22,
               }}
@@ -107,10 +108,10 @@ export default async function OpengraphImage() {
             alignItems: "center",
             gap: 20,
             fontSize: 30,
-            color: SALVIA,
+            color: PIZARRA,
           }}
         >
-          <div style={{ width: 46, height: 6, backgroundColor: AGUA }} />
+          <div style={{ width: 46, height: 6, backgroundColor: ORO }} />
           desarrollador · full-stack &amp; datos · builder de producto
         </div>
       </div>

@@ -29,13 +29,13 @@ export function SiteFooter() {
             <p className="eyebrow">Contacto</p>
             <EmailLink
               mode="link"
-              className="text-sm text-chalk-dim transition-colors hover:text-agua"
+              className="text-sm text-chalk-dim transition-colors hover:text-oro-deep"
             />
             <a
               href={perfil.links.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-agua"
+              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-oro-deep"
             >
               <BrandIcon name="github" className="size-4" />
               GitHub
@@ -44,7 +44,7 @@ export function SiteFooter() {
               href={perfil.links.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-agua"
+              className="inline-flex items-center gap-2 text-sm text-chalk-dim transition-colors hover:text-oro-deep"
             >
               <BrandIcon name="linkedin" className="size-4" />
               LinkedIn
@@ -58,7 +58,7 @@ export function SiteFooter() {
           </p>
           <Link
             href="#inicio"
-            className="inline-flex items-center gap-1.5 font-mono text-xs text-chalk-dim transition-colors hover:text-agua"
+            className="inline-flex items-center gap-1.5 font-mono text-xs text-chalk-dim transition-colors hover:text-oro-deep"
           >
             Volver arriba
             <ArrowUp className="size-3.5" />

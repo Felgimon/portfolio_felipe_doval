@@ -10,10 +10,10 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { Proyecto } from "@/content/types";
 
 /**
- * Card de proyecto con hover rico: elevación + glow agua (CSS) e inclinación
- * sutil hacia el puntero (JS, solo pointer fino / sin reduced-motion).
- * `href` interno (case study) tiene prioridad; si no, enlaza al repo; si no hay
- * ninguno, es informativa.
+ * Card de proyecto en Liquid Glass con hover espacial: elevación (sombra, SIN
+ * glow) e inclinación sutil hacia el puntero (JS, solo pointer fino / sin
+ * reduced-motion). `href` interno (case study) tiene prioridad; si no, enlaza al
+ * repo; si no hay ninguno, es informativa.
  */
 export function ProjectCard({
   proyecto,
@@ -47,12 +47,12 @@ export function ProjectCard({
       onPointerMove={onMove}
       onPointerLeave={onLeave}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-panel transition-[transform,border-color,box-shadow] duration-300 will-change-transform",
-        linkable && "hover:border-agua/50 hover:shadow-[0_0_40px_-12px_rgba(143,227,198,0.4)]",
+        "glass glass-spec group relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-300 will-change-transform",
+        linkable && "hover:shadow-[var(--shadow-float)]",
       )}
     >
       {/* Media */}
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-line-soft bg-ink-2">
+      <div className="relative aspect-[16/10] overflow-hidden border-b border-line-soft bg-white/40">
         {tieneCaptura ? (
           <Image
             src={cap.src}
@@ -65,7 +65,7 @@ export function ProjectCard({
           <Placeholder label={cap?.alt ?? "captura"} className="h-full border-0" />
         )}
         {proyecto.incompleto && (
-          <span className="absolute top-3 right-3 rounded-full border border-line bg-ink/90 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-muted">
+          <span className="glass glass-pill absolute top-3 right-3 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-chalk-dim">
             en progreso
           </span>
         )}
@@ -76,20 +76,18 @@ export function ProjectCard({
         <div className="flex items-start justify-between gap-3">
           <h3 className="type-h3 text-chalk">{proyecto.nombre}</h3>
           {linkable && (
-            <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-agua" />
+            <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-oro-deep" />
           )}
         </div>
         <p className="text-sm leading-relaxed text-chalk-dim">{proyecto.unaLinea}</p>
         {proyecto.stack.length > 0 && (
-          <ul className="mt-auto flex flex-wrap gap-1.5 pt-2">
+          <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
             {proyecto.stack.slice(0, 3).map((s) => (
-              <li key={s}>
-                <Tag variant="outline" size="sm">
-                  {s}
-                </Tag>
-              </li>
+              <Tag key={s} variant="outline" size="sm">
+                {s}
+              </Tag>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

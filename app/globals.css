@@ -1,51 +1,74 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   DESIGN TOKENS — "Verde agua" (v2)
-   Portfolio de Felipe Doval. Base verde-noche (pino profundo, ni navy ni negro),
-   verde agua sólido como señal (protagonista, no fluo), texto hueso cálido y una
-   chispa terracota puntual para que no quede sofocante mono-verde.
-   Regla: los colores atenuados son HEX SÓLIDOS (no rgba con alpha bajado). El
-   alpha solo se usa en scrims de degradado y sombras, nunca en texto/marca.
+   DESIGN TOKENS — "Cielo" (v3)
+   Portfolio de Felipe Doval. Giro completo: de la noche verde-agua a un CIELO
+   claro. Fondo celeste (UI espacial, el balón flota en el cielo), superficies de
+   Liquid Glass, texto tinta (slate-navy frío que rima con el cielo) y ORO cálido
+   como acento (guiño al sol — easter egg, nunca se nombra). Cero glow: la
+   profundidad la dan sombras suaves y el vidrio, no halos emisivos.
+
+   Los tokens son por ROL (fondo / texto / acento / línea), no por color literal:
+   sus VALORES giraron para el tema cielo, sus nombres marcan la función. Se
+   agregan alias nuevos (--oro, --cielo, --glass-*) para el código nuevo.
+   Regla de Felipe: los atenuados son HEX SÓLIDOS; el alpha solo en vidrio,
+   scrims de degradado y sombras.
    ========================================================================== */
 
 :root {
-  /* Base */
-  --ink: #0f1e1b; /* fondo base — pino profundo (verde-noche) */
-  --ink-2: #0c1917; /* variación de fondo para bandas / profundidad */
-  --panel: #16302a; /* superficies elevadas / cards */
-  --panel-2: #1c3a32; /* hover de panel */
+  /* Base — cielo */
+  --ink: #a9d3ea; /* fondo base — celeste medio (rol: page background) */
+  --ink-2: #94c6e3; /* celeste más profundo — bandas / profundidad */
+  --panel: #f4fbff; /* superficie sólida clara — cards no-vidrio */
+  --panel-2: #ffffff; /* hover de panel / blanco puro */
 
-  /* Verde agua — la señal (marca de Felipe) */
-  --agua: #8fe3c6; /* señal primaria: grafo, nodo activo, links, acentos */
-  --agua-bright: #b7f0da; /* glow / hover / bloom */
-  --jade: #47a88c; /* verde medio — struts de apoyo / bordes activos */
+  /* Alias de cielo (código nuevo) */
+  --cielo-hi: #d3ecf9; /* horizonte alto, claro */
+  --cielo: #a9d3ea; /* cielo medio */
+  --cielo-lo: #7fb8db; /* cielo bajo, más saturado */
+  --nube: #ffffff; /* nube / blanco del balón */
 
-  /* Texto (sólidos, cero alpha) */
-  --chalk: #ece7db; /* texto principal — blanco hueso cálido */
-  --chalk-dim: #a6bab0; /* texto secundario — salvia */
-  --muted: #83978d; /* metadatos atenuados — niebla */
+  /* Acento — ORO (rol: señal/marca; ex "agua") */
+  --agua: #e0a63a; /* oro cálido: nodos, palabra clave, acentos grandes */
+  --agua-bright: #f4c869; /* oro claro: highlights / hover */
+  --jade: #8a5a0f; /* oro PROFUNDO: texto-acento chico AA sobre cielo (links, eyebrow) */
+  --oro: #e0a63a; /* alias explícito */
+  --oro-hi: #f4c869;
+  --oro-deep: #8a5a0f;
 
-  /* Líneas */
-  --line: #2a3f39; /* hairlines, struts en reposo, bordes */
-  --line-soft: #1e332d; /* bordes más sutiles */
+  /* Texto (sólidos, cero alpha) — tinta fría */
+  --chalk: #10293b; /* texto principal — slate-navy profundo (rol: primary text) */
+  --chalk-dim: #38566a; /* texto secundario — pizarra */
+  --muted: #4f6d80; /* metadatos atenuados — niebla (AA sobre cielo) */
 
-  /* Chispa cálida — uso puntual (hover activo, marcadores, una palabra) */
-  --brasa: #e7a06a; /* terracota complementaria del verde */
+  /* Líneas — hairlines sobre claro */
+  --line: #8bb4cd; /* bordes / hairlines en reposo */
+  --line-soft: #b4d5e7; /* bordes más sutiles */
 
-  /* Superficie "papel" — momento cálido invertido (About) */
-  --paper: #ece7db;
-  --paper-ink: #0f1e1b;
+  /* Chispa cálida secundaria — uso puntual */
+  --brasa: #d9762b; /* terracota — marcador cálido ocasional */
+
+  /* Superficie invertida — momento oscuro puntual (contra-forma del cielo) */
+  --paper: #0f2233; /* slate profundo */
+  --paper-ink: #eaf5fb; /* texto claro sobre esa superficie */
+
+  /* Liquid Glass (Apple-style: translúcido, borde especular, blur del fondo) */
+  --glass-bg: rgba(255, 255, 255, 0.5); /* vidrio claro */
+  --glass-bg-2: rgba(255, 255, 255, 0.62); /* vidrio hover / más sólido */
+  --glass-brd: rgba(255, 255, 255, 0.75); /* borde especular (luz sobre el vidrio) */
+  --glass-brd-lo: rgba(16, 41, 59, 0.12); /* borde inferior sutil */
+  --glass-blur: 16px;
 
   /* Estados */
-  --focus: #b7f0da;
-  --danger: #e8846a;
-  --ok: #8fe3c6;
+  --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
+  --danger: #c0392b;
+  --ok: #e0a63a;
 
-  /* Radios / sombras */
-  --radius: 0.75rem;
-  --radius-lg: 1.25rem;
-  --shadow-glow: 0 0 40px -8px rgba(143, 227, 198, 0.4);
+  /* Radios / sombras (espaciales: elevación por sombra, no glow) */
+  --radius: 0.85rem;
+  --radius-lg: 1.5rem;
+  --shadow-float: 0 22px 48px -20px rgba(15, 41, 66, 0.42); /* flotación espacial */
+  --shadow-soft: 0 10px 28px -14px rgba(15, 41, 66, 0.3);
 }
 
 @theme inline {
@@ -68,6 +91,14 @@
   --color-focus: var(--focus);
   --color-danger: var(--danger);
   --color-ok: var(--ok);
+  /* Alias nuevos */
+  --color-oro: var(--oro);
+  --color-oro-hi: var(--oro-hi);
+  --color-oro-deep: var(--oro-deep);
+  --color-nube: var(--nube);
+  --color-cielo: var(--cielo);
+  --color-cielo-hi: var(--cielo-hi);
+  --color-cielo-lo: var(--cielo-lo);
 
   /* Familias tipográficas (desde next/font en lib/fonts.ts) */
   --font-display: var(--font-sans);
@@ -95,7 +126,7 @@ body {
 
 ::selection {
   background-color: var(--agua);
-  color: var(--ink);
+  color: #10293b;
 }
 
 /* Foco visible y consistente en todo lo interactivo (piso de accesibilidad) */
@@ -169,14 +200,15 @@ body {
   color: var(--chalk-dim);
 }
 
-/* Eyebrow / kicker: label de sección en mono, tracking amplio, verde agua */
+/* Eyebrow / kicker: label de sección en mono, tracking amplio, oro profundo (AA
+   sobre cielo). SIN punto/bullet: el kicker va solo. */
 .eyebrow {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.28em;
-  color: var(--agua);
+  color: var(--oro-deep);
 }
 
 /* Dato/etiqueta numérica tipo telemetría */
@@ -188,8 +220,6 @@ body {
 
 /* ----------------------------------------------------------------------------
    ESTIRAMIENTO DE FIRMA — jugar con la deformación horizontal/vertical.
-   Opt-in sobre palabras/líneas de display. transform no ocupa layout: usar en
-   líneas aisladas con margen que las acomode.
    -------------------------------------------------------------------------- */
 .stretch-y {
   display: inline-block;
@@ -205,6 +235,65 @@ body {
   display: inline-block;
   transform: scaleX(0.86);
   transform-origin: left;
+}
+
+/* ============================================================================
+   LIQUID GLASS — contenedores flotantes translúcidos (UI espacial).
+   Vidrio con blur+saturación del fondo, borde especular (luz arriba), sombra de
+   elevación. Se usa para datos/paneles que flotan sobre el cielo.
+   ========================================================================== */
+
+.glass {
+  position: relative;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 var(--glass-brd-lo);
+}
+.glass-strong {
+  background: var(--glass-bg-2);
+}
+.glass-pill {
+  border-radius: 9999px;
+}
+/* Reflejo especular sutil arriba del vidrio (luz que "moja" el borde) */
+.glass-spec::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  opacity: 0.7;
+}
+@media (hover: hover) {
+  .glass-hover {
+    transition:
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.3s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .glass-hover:hover {
+    background: var(--glass-bg-2);
+    box-shadow:
+      var(--shadow-float),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    transform: translateY(-2px);
+  }
+}
+
+/* Flotación espacial: sombra de elevación (sin glow) */
+.float {
+  box-shadow: var(--shadow-float);
 }
 
 /* ============================================================================
@@ -225,8 +314,8 @@ body {
   border: 0;
 }
 
-/* Malla de nodos de fondo — el motivo firma en 2D (dots = nodos del grafo).
-   No es SVG dibujado a mano: es un radial-gradient repetido. */
+/* Malla de puntos de fondo — motivo firma en 2D. Radial-gradient repetido (no es
+   SVG a mano). Muy sutil sobre el cielo. */
 .node-grid {
   background-image: radial-gradient(
     circle at 1px 1px,
@@ -236,38 +325,35 @@ body {
   background-size: 34px 34px;
 }
 
-/* Superficie "papel" — el único momento cálido invertido (About). Overrides
-   scoped para mantener contraste AA cuando las clases compartidas (.eyebrow,
-   .lead) caen sobre fondo claro. */
+/* Superficie invertida — el único momento oscuro (contra-forma del cielo). */
 .surface-paper {
   background-color: var(--paper);
   color: var(--paper-ink);
 }
 .surface-paper .eyebrow {
-  color: #1e6b57; /* jade oscuro — AA sobre papel */
+  color: #f4c869; /* oro claro — AA sobre slate profundo */
 }
 .surface-paper .lead {
-  color: #3a544c; /* verde-tinta sólido — AA sobre papel */
+  color: #b9cdd9; /* claro frío — AA sobre slate */
 }
 .surface-paper .hairline {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(15, 30, 27, 0.16) 15%,
-    rgba(15, 30, 27, 0.16) 85%,
+    rgba(255, 255, 255, 0.18) 15%,
+    rgba(255, 255, 255, 0.18) 85%,
     transparent
   );
 }
 
-/* Grano de película (textura, no ícono): SVG feTurbulence como data-uri, en
-   CSS. Se usa sobre la foto tratada. */
+/* Grano de película (textura, no ícono): feTurbulence como data-uri. */
 .grain::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.14;
+  opacity: 0.12;
   mix-blend-mode: overlay;
 }
 
@@ -285,8 +371,65 @@ body {
 }
 
 /* ============================================================================
+   CIELO PROCEDURAL — fondo celeste con nubes suaves, generado por CSS (cero
+   peso de carga). Gradiente vertical (horizonte claro → cielo medio) + capas de
+   nubes con radial-gradients desenfocados que derivan muy lento.
+   ========================================================================== */
+.sky {
+  background:
+    radial-gradient(
+      120% 80% at 20% 22%,
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0) 45%
+    ),
+    radial-gradient(
+      90% 60% at 78% 30%,
+      rgba(255, 255, 255, 0.7),
+      rgba(255, 255, 255, 0) 46%
+    ),
+    radial-gradient(
+      100% 70% at 62% 78%,
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0) 50%
+    ),
+    linear-gradient(
+      180deg,
+      var(--cielo-hi) 0%,
+      var(--cielo) 52%,
+      var(--cielo-lo) 100%
+    );
+}
+.sky-drift {
+  animation: sky-drift 60s ease-in-out infinite alternate;
+}
+
+/* En pantallas chicas el modelo queda DETRÁS del texto (layout de una columna).
+   Sin scrim: al entrar a un tópico se atenúa para que el texto flotante gane
+   legibilidad. En desktop va a un costado, así que queda pleno. */
+@media (max-width: 767px) {
+  .graph-layer.is-topic {
+    opacity: 0.28;
+  }
+}
+@keyframes sky-drift {
+  from {
+    background-position:
+      0% 0%,
+      0% 0%,
+      0% 0%,
+      0 0;
+  }
+  to {
+    background-position:
+      6% 3%,
+      -5% 2%,
+      4% -3%,
+      0 0;
+  }
+}
+
+/* ============================================================================
    CURSOR CUSTOM — solo desktop (pointer fino) y sin reduced-motion.
-   El gating es por CSS; el JS solo agrega .has-custom-cursor y mueve los divs.
    ========================================================================== */
 .cursor-el {
   position: fixed;
@@ -301,7 +444,7 @@ body {
   width: 34px;
   height: 34px;
   margin: -17px 0 0 -17px;
-  border: 1.5px solid var(--agua);
+  border: 1.5px solid var(--oro-deep);
   border-radius: 9999px;
   transition:
     width 0.2s ease,
@@ -313,13 +456,13 @@ body {
   width: 54px;
   height: 54px;
   margin: -27px 0 0 -27px;
-  background-color: rgba(143, 227, 198, 0.14);
+  background-color: rgba(224, 166, 58, 0.16);
 }
 .cursor-dot {
   width: 6px;
   height: 6px;
   margin: -3px 0 0 -3px;
-  background-color: var(--agua);
+  background-color: var(--oro-deep);
   border-radius: 9999px;
 }
 
