@@ -23,7 +23,7 @@ export function Recorrido() {
     >
       <Reveal>
         <h2 className="type-h1 text-chalk">
-          Por dónde fui <span className="text-oro-deep">pasando</span>
+          Por dónde fui <span className="accent-grad">pasando</span>
         </h2>
       </Reveal>
 
@@ -41,7 +41,7 @@ export function Recorrido() {
                   {TIPO_LABEL[t.tipo] ?? t.tipo}
                 </span>
               </div>
-              <p className="mt-1 font-mono text-xs text-oro-deep">
+              <p className="mt-1 font-mono text-xs text-acento">
                 {t.lugar}
                 {t.periodo ? ` · ${t.periodo}` : ""}
               </p>

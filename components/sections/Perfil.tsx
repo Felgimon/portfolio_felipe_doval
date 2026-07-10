@@ -74,7 +74,7 @@ export function Perfil() {
           <Reveal>
             <h2 className="type-h1 text-chalk">
               Construyo de{" "}
-              <span className="stretch-y inline-block text-oro-deep">punta</span>{" "}
+              <span className="stretch-y inline-block accent-grad">punta</span>{" "}
               a punta
             </h2>
           </Reveal>
@@ -98,7 +98,7 @@ export function Perfil() {
                   data-reveal-item
                   className="glass glass-spec glass-hover p-4"
                 >
-                  <p className="font-mono text-[0.7rem] tracking-wider text-oro-deep uppercase">
+                  <p className="font-mono text-[0.7rem] tracking-wider text-acento uppercase">
                     {g.categoria}
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5">

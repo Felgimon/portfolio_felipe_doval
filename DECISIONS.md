@@ -3,8 +3,75 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v3.0.0** es la vigente. Debajo quedan v2.x, v2.0.0 y la v1 como
+> La sección **v3.1.0** es la vigente. Debajo quedan v3.0.0, v2.x y la v1 como
 > registro histórico.
+
+---
+
+## v3.1.0 — Escena 3D real: skybox fotorealista + soles que iluminan + glass iOS
+
+Feedback duro de Felipe sobre v3.0.0 ("parece cartón"): pensar la página **como
+una escena 3D real (Blender)**, no como una página con canvas. Cambios de fondo:
+
+### Skybox + environment map (la gran diferencia)
+- **Skybox fotorealista:** "Kloofendal 48d Partly Cloudy Pure Sky" de **Poly
+  Haven (CC0)** — cielo celeste real con cúmulos y sol. Descargado del Tonemapped
+  JPG 8K oficial y redimensionado a **4K/354KB** (más 1K/42KB para software
+  rendering) con System.Drawing. Es `scene.background` equirectangular
+  (`SkyDome`): al orbitar/panear la cámara **se ve otra parte del cielo por
+  sección** — el modelo nunca se mueve, se mueve la cámara.
+- **Environment map:** el HDR 1K del mismo cielo (`<Environment files>`) ilumina
+  el balón → `meshPhysicalMaterial` blanco con clearcoat que **refleja el cielo**
+  (nacarado real, adiós "cartón gris"). El FD y el punto oro son metal pulido que
+  también refleja.
+- **Modo lite (software rendering):** skybox 1K + `meshStandardMaterial` +
+  luces simples en vez de envmap (el PBR con envmap se paga carísimo sin GPU).
+  Medido: 60 fps reposo / ~32 moviendo bajo SwiftShader (peor caso absoluto;
+  cualquier GPU real vuela).
+
+### La cámara hace TODO el encuadre (fuera el transform CSS)
+- Se eliminó el corrimiento CSS del canvas. En un tópico la cámara **orbita** al
+  sol activo, **se acerca** (`CLOSE = r*2.55`, balón grande) y **panea el punto
+  de mira** (`PAN_F = 0.3` del semiancho visible, con vector right de cámara) →
+  el balón queda del lado opuesto al texto, **sin salirse de pantalla**, invadiendo
+  un poco el lado del texto. El settle on-demand ahora vigila posición **y** punto
+  de mira (snap de ambos).
+- El overlay de labels ya no necesita transform espejo: la proyección sale de la
+  cámara real → siempre pegado a los soles.
+
+### Soles que encandilan e iluminan (sin post-proceso)
+- **Corona con textura:** destello radial cálido generado en canvas
+  (`CanvasTexture` + sprite con `AdditiveBlending`) → el sol satura a blanco y se
+  disipa sobre el cielo: encandila de verdad, sin bloom ni glow CSS.
+- **El sol activo emite una `pointLight`** cálida que baña los struts cercanos
+  del balón → la "reacción realista en el modelo" (como una luz en Blender).
+- Shader del núcleo más caliente (satura a blanco, `pow(facing,4)*0.9`).
+
+### Liquid Glass real (iOS-style)
+- El vidrio ahora es **muy translúcido** (`rgba(255,255,255,0.26)`) con
+  `backdrop-filter: blur(26px) saturate(200%) brightness(1.06)` — el cielo se ve
+  A TRAVÉS del panel, borroso y saturado (eso es liquid glass; antes era una capa
+  blanca casi opaca).
+- **Borde especular direccional**: gradiente EN el anillo del borde
+  (arriba-izq brillante → abajo-der tenue) con mask-composite `exclude` —
+  como la luz moja el canto del vidrio en iOS. + sheen interno arriba
+  (`glass-spec::after`) y sombra de profundidad. Cero glow.
+
+### Acentos: fuera el dorado del texto
+- El dorado en letras "no daba puro/místico" → el **oro queda SOLO en los soles
+  3D y micro-marcas** (punto del logo). El acento de texto/UI pasa a **azul
+  celeste profundo** (`--acento #0b5385`, AA sobre cielo) y las palabras-acento
+  de display usan **`.accent-grad`**: gradiente azul profundo → celeste luminoso
+  (background-clip: text) — luz del cielo atravesando la letra, no un color chato.
+- Se quitó el último bullet vivo (punto con glow del `Eyebrow` del detalle).
+- **Email de corrido**: `whitespace-nowrap` + `font-size: clamp()` adaptativo
+  (nunca quiebra en "il.com").
+
+### QA
+Gate verde (tsc 0 · lint 0 · build ok) · smoke desktop+mobile 0 errores de
+consola · perf: 60 fps reposo (on-demand intacto) · assets +1.8MB (skybox 4K
+354KB + HDR 1.4MB + lite 42KB), cargados dentro del Suspense del canvas (el
+preloader ya espera al hero).
 
 ---
 

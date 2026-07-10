@@ -28,11 +28,14 @@
   --cielo-lo: #7fb8db; /* cielo bajo, más saturado */
   --nube: #ffffff; /* nube / blanco del balón */
 
-  /* Acento — ORO (rol: señal/marca; ex "agua") */
-  --agua: #e0a63a; /* oro cálido: nodos, palabra clave, acentos grandes */
-  --agua-bright: #f4c869; /* oro claro: highlights / hover */
-  --jade: #8a5a0f; /* oro PROFUNDO: texto-acento chico AA sobre cielo (links, eyebrow) */
-  --oro: #e0a63a; /* alias explícito */
+  /* Acento de TEXTO/UI — azul celeste profundo (puro, rima con el cielo).
+     El oro queda reservado para los SOLES 3D y micro-marcas (punto del logo). */
+  --acento: #0b5385; /* azul profundo: links, eyebrows, estados activos (AA) */
+  --acento-hi: #2f97d8; /* azul claro: hovers / highlights */
+  --agua: #0b5385; /* rol "señal" → ahora azul (alias legacy) */
+  --agua-bright: #2f97d8;
+  --jade: #0b5385;
+  --oro: #e0a63a; /* SOLO soles/micro-marcas */
   --oro-hi: #f4c869;
   --oro-deep: #8a5a0f;
 
@@ -52,12 +55,12 @@
   --paper: #0f2233; /* slate profundo */
   --paper-ink: #eaf5fb; /* texto claro sobre esa superficie */
 
-  /* Liquid Glass (Apple-style: translúcido, borde especular, blur del fondo) */
-  --glass-bg: rgba(255, 255, 255, 0.5); /* vidrio claro */
-  --glass-bg-2: rgba(255, 255, 255, 0.62); /* vidrio hover / más sólido */
-  --glass-brd: rgba(255, 255, 255, 0.75); /* borde especular (luz sobre el vidrio) */
-  --glass-brd-lo: rgba(16, 41, 59, 0.12); /* borde inferior sutil */
-  --glass-blur: 16px;
+  /* Liquid Glass (iOS-style: MUY translúcido, blur+saturación fuertes del fondo,
+     borde especular fino y sombra de profundidad — el fondo "moja" el vidrio) */
+  --glass-bg: rgba(255, 255, 255, 0.26); /* vidrio (el cielo se ve a través) */
+  --glass-bg-2: rgba(255, 255, 255, 0.42); /* vidrio hover / más denso */
+  --glass-brd: rgba(255, 255, 255, 0.62); /* borde especular */
+  --glass-blur: 26px;
 
   /* Estados */
   --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
@@ -92,6 +95,8 @@
   --color-danger: var(--danger);
   --color-ok: var(--ok);
   /* Alias nuevos */
+  --color-acento: var(--acento);
+  --color-acento-hi: var(--acento-hi);
   --color-oro: var(--oro);
   --color-oro-hi: var(--oro-hi);
   --color-oro-deep: var(--oro-deep);
@@ -125,8 +130,8 @@ body {
 }
 
 ::selection {
-  background-color: var(--agua);
-  color: #10293b;
+  background-color: var(--acento);
+  color: #f2f8fc;
 }
 
 /* Foco visible y consistente en todo lo interactivo (piso de accesibilidad) */
@@ -200,15 +205,24 @@ body {
   color: var(--chalk-dim);
 }
 
-/* Eyebrow / kicker: label de sección en mono, tracking amplio, oro profundo (AA
-   sobre cielo). SIN punto/bullet: el kicker va solo. */
+/* Eyebrow / kicker: label de sección en mono, tracking amplio, azul profundo
+   (AA sobre cielo). SIN punto/bullet: el kicker va solo. */
 .eyebrow {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.28em;
-  color: var(--oro-deep);
+  color: var(--acento);
+}
+
+/* Palabra-acento de display: gradiente de azul profundo a celeste luminoso
+   (luz del cielo atravesando la letra — puro, sin color chato). */
+.accent-grad {
+  background-image: linear-gradient(118deg, #083d66 0%, #1370ad 52%, #3fa0d8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Dato/etiqueta numérica tipo telemetría */
@@ -238,22 +252,52 @@ body {
 }
 
 /* ============================================================================
-   LIQUID GLASS — contenedores flotantes translúcidos (UI espacial).
-   Vidrio con blur+saturación del fondo, borde especular (luz arriba), sombra de
-   elevación. Se usa para datos/paneles que flotan sobre el cielo.
+   LIQUID GLASS — vidrio líquido estilo iOS.
+   Claves del material real: (1) MUY translúcido — el contenido de atrás se ve,
+   solo que borroso y saturado (blur 26px + saturate 200%); (2) borde especular
+   FINO que gira alrededor (claro arriba-izq, se apaga abajo-der: luz direccional
+   real, no un borde plano); (3) brillo interno arriba (la "cara" del vidrio);
+   (4) sombra de profundidad suave. Nada de glow.
    ========================================================================== */
 
 .glass {
   position: relative;
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
-  backdrop-filter: blur(var(--glass-blur)) saturate(165%);
-  border: 1px solid var(--glass-brd);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   box-shadow:
-    var(--shadow-soft),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65),
-    inset 0 -1px 0 var(--glass-brd-lo);
+    0 18px 44px -18px rgba(10, 38, 60, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.18),
+    inset 1.5px 0 1px -1px rgba(255, 255, 255, 0.5),
+    inset -1.5px 0 1px -1px rgba(255, 255, 255, 0.5);
+}
+/* Borde especular direccional: un gradiente EN el borde (arriba-izq brillante →
+   abajo-der tenue), recortado al anillo del border con mask compositing. */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.35) 38%,
+    rgba(255, 255, 255, 0.12) 62%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
 }
 .glass-strong {
   background: var(--glass-bg-2);
@@ -261,19 +305,19 @@ body {
 .glass-pill {
   border-radius: 9999px;
 }
-/* Reflejo especular sutil arriba del vidrio (luz que "moja" el borde) */
-.glass-spec::before {
+/* Cara iluminada del vidrio: sheen amplio arriba (luz que entra al material). */
+.glass-spec::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0) 42%
+    172deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.06) 38%,
+    rgba(255, 255, 255, 0) 60%
   );
-  opacity: 0.7;
 }
 @media (hover: hover) {
   .glass-hover {
@@ -285,8 +329,9 @@ body {
   .glass-hover:hover {
     background: var(--glass-bg-2);
     box-shadow:
-      var(--shadow-float),
-      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      0 26px 60px -22px rgba(10, 38, 60, 0.5),
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.22);
     transform: translateY(-2px);
   }
 }
@@ -331,7 +376,7 @@ body {
   color: var(--paper-ink);
 }
 .surface-paper .eyebrow {
-  color: #f4c869; /* oro claro — AA sobre slate profundo */
+  color: #7cc4ea; /* celeste claro — AA sobre slate profundo */
 }
 .surface-paper .lead {
   color: #b9cdd9; /* claro frío — AA sobre slate */
@@ -444,7 +489,7 @@ body {
   width: 34px;
   height: 34px;
   margin: -17px 0 0 -17px;
-  border: 1.5px solid var(--oro-deep);
+  border: 1.5px solid var(--acento);
   border-radius: 9999px;
   transition:
     width 0.2s ease,
@@ -456,13 +501,13 @@ body {
   width: 54px;
   height: 54px;
   margin: -27px 0 0 -27px;
-  background-color: rgba(224, 166, 58, 0.16);
+  background-color: rgba(11, 83, 133, 0.14);
 }
 .cursor-dot {
   width: 6px;
   height: 6px;
   margin: -3px 0 0 -3px;
-  background-color: var(--oro-deep);
+  background-color: var(--acento);
   border-radius: 9999px;
 }
 

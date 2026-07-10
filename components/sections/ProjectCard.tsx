@@ -76,7 +76,7 @@ export function ProjectCard({
         <div className="flex items-start justify-between gap-3">
           <h3 className="type-h3 text-chalk">{proyecto.nombre}</h3>
           {linkable && (
-            <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-oro-deep" />
+            <ArrowUpRight className="size-5 shrink-0 text-muted transition-colors group-hover:text-acento" />
           )}
         </div>
         <p className="text-sm leading-relaxed text-chalk-dim">{proyecto.unaLinea}</p>

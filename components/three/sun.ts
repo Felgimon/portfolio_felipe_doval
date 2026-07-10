@@ -70,8 +70,8 @@ export const sunFragment = /* glsl */ `
     // Núcleo caliente al centro → oro → naranja en el borde.
     vec3 col = mix(uMid, uCore, smoothstep(0.25, 1.0, facing));
     col = mix(col, uEdge, fres);
-    col *= 0.72 + 0.7 * p;            // manchas de plasma (sunspots/fáculas)
-    col += uCore * pow(facing, 6.0) * 0.35; // chispa del núcleo (encandila un toque)
+    col *= 0.78 + 0.6 * p;            // manchas de plasma (sunspots/fáculas)
+    col += uCore * pow(facing, 4.0) * 0.9; // núcleo que satura a blanco (encandila)
 
     gl_FragColor = vec4(col * uBright, 1.0);
   }

@@ -25,7 +25,7 @@ export function Trabajo() {
     >
       <Reveal>
         <h2 className="type-h1 max-w-3xl text-chalk">
-          La <span className="text-oro-deep">prueba</span>: lo que construí
+          La <span className="accent-grad">prueba</span>: lo que construí
         </h2>
         <p className="lead mt-5 max-w-2xl">
           Cada uno resolvió un problema real. El grande —Superlum— tiene su
@@ -52,7 +52,7 @@ export function Trabajo() {
               </div>
               <Link
                 href="/proyectos/superlum"
-                className="group mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-oro px-5 py-2.5 font-mono text-xs tracking-wide text-chalk transition-colors hover:bg-oro-hi"
+                className="group mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-acento px-5 py-2.5 font-mono text-xs tracking-wide text-white transition-colors hover:bg-acento-hi"
               >
                 Ver el caso
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

@@ -7,14 +7,15 @@ o simplemente scrolleando (orden por defecto), y el balón rota para encarar el
 nodo activo. Un HUD de consola marca el progreso y es el fallback accesible
 (teclado / mobile / sin-WebGL), más páginas de detalle por proyecto.
 
-**Dirección de diseño (v3 — "cielo"):** fondo **celeste** (cielo procedural CSS),
-el balón **blanco** flota en él (UI espacial), texto **tinta** y acento **oro**
-(guiño al sol). **Cero glow**: los nodos son **mini-soles** (shader GLSL) y los
-contenedores flotantes son **Liquid Glass**. Los paneles no son "slides": el texto
-flota sobre el cielo y el modelo se corre al costado, agrandándose. Tipografía
-Bricolage Grotesque con estiramientos de firma. El elemento firma es el
-**balón-grafo** 3D (pelota de fútbol × red de nodos). Detalle e historial (v2
-"verde agua", v1) en [`DECISIONS.md`](./DECISIONS.md).
+**Dirección de diseño (v3.1 — "cielo"):** escena 3D real: **skybox fotorealista**
+(Poly Haven CC0, celeste con nubes) como fondo de la escena, el balón **blanco
+nacarado** (environment map del cielo) flota en él, y los nodos son **mini-soles**
+(shader + corona + luz puntual que baña el balón). La **cámara** hace todo el
+encuadre: orbita y panea por sección (se ve otra parte del cielo). Texto **tinta**,
+acento **azul celeste profundo** (gradiente `.accent-grad`); el **oro** queda solo
+en los soles. Contenedores **Liquid Glass** estilo iOS (translúcidos de verdad).
+Tipografía Bricolage Grotesque con estiramientos de firma. Detalle e historial
+(v3.0, v2 "verde agua", v1) en [`DECISIONS.md`](./DECISIONS.md).
 
 ## Stack
 

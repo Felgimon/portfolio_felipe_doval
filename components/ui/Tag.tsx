@@ -6,7 +6,7 @@ type TagProps = React.HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variants: Record<NonNullable<TagProps["variant"]>, string> = {
-  solid: "bg-agua/15 text-oro-deep border border-agua/25",
+  solid: "bg-acento/10 text-acento border border-acento/25",
   outline: "border border-line text-chalk-dim",
   soft: "bg-panel text-chalk-dim border border-line-soft",
 };

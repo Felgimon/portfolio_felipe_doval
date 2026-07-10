@@ -8,10 +8,10 @@ const base =
   "group inline-flex items-center justify-center gap-2 rounded-full font-mono text-xs uppercase tracking-[0.14em] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50 disabled:pointer-events-none";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-agua text-chalk hover:bg-agua-bright",
+  primary: "bg-acento text-white hover:bg-acento-hi",
   secondary:
-    "border border-line bg-transparent text-chalk hover:border-agua hover:text-oro-deep",
-  ghost: "bg-transparent text-chalk-dim hover:text-oro-deep",
+    "border border-line bg-transparent text-chalk hover:border-acento hover:text-acento",
+  ghost: "bg-transparent text-chalk-dim hover:text-acento",
 };
 
 const sizes: Record<Size, string> = {

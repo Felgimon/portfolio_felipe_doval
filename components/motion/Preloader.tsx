@@ -112,14 +112,14 @@ export function Preloader() {
         <div className="flex w-56 flex-col gap-2">
           <div className="h-px w-full overflow-hidden bg-line">
             <div
-              className="h-full origin-left bg-agua transition-[width] duration-200 ease-out"
+              className="h-full origin-left bg-acento transition-[width] duration-200 ease-out"
               style={{ width: `${pct}%` }}
             />
-            <div ref={barra} className="h-px w-full origin-left scale-x-0 bg-agua-bright" />
+            <div ref={barra} className="h-px w-full origin-left scale-x-0 bg-acento-hi" />
           </div>
           <div className="flex justify-between font-mono text-xs text-muted">
             <span>cargando</span>
-            <span className="data text-oro-deep">{pct}%</span>
+            <span className="data text-acento">{pct}%</span>
           </div>
         </div>
       </div>

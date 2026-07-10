@@ -20,7 +20,7 @@ export function Contacto() {
     >
       <Reveal>
         <h2 className="type-h1 text-chalk">
-          ¿Tenés algo para <span className="text-oro-deep">construir</span>?
+          ¿Tenés algo para <span className="accent-grad">construir</span>?
         </h2>
         <p className="lead mt-6 max-w-2xl">
           Estoy abierto a proyectos, pasantías y buenas ideas. Si algo de lo que
@@ -31,12 +31,13 @@ export function Contacto() {
       <Reveal className="mt-12">
         {/* Email — la micro-interacción de copiado */}
         <div data-reveal-item className="glass glass-spec p-6">
-          <p className="mb-3 font-mono text-xs tracking-wide text-oro-deep">
+          <p className="mb-3 font-mono text-xs tracking-wide text-acento">
             Email
           </p>
+          {/* De corrido, sin quiebre: el tamaño se adapta al ancho (clamp). */}
           <EmailLink
             mode="copy"
-            className="type-h2 break-all text-chalk transition-colors hover:text-oro-deep"
+            className="data font-semibold whitespace-nowrap text-[clamp(0.95rem,3.2vw,1.9rem)] text-chalk transition-colors hover:text-acento"
           />
         </div>
 
@@ -51,7 +52,7 @@ export function Contacto() {
             <BrandIcon name="github" className="size-6 text-chalk" />
             <span className="text-left">
               <span className="block font-mono text-xs text-muted">GitHub</span>
-              <span className="text-chalk transition-colors group-hover:text-oro-deep">
+              <span className="text-chalk transition-colors group-hover:text-acento">
                 @Felgimon
               </span>
             </span>
@@ -67,7 +68,7 @@ export function Contacto() {
               <span className="block font-mono text-xs text-muted">
                 LinkedIn
               </span>
-              <span className="text-chalk transition-colors group-hover:text-oro-deep">
+              <span className="text-chalk transition-colors group-hover:text-acento">
                 Felipe Doval
               </span>
             </span>

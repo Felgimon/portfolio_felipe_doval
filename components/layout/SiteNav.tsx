@@ -30,7 +30,7 @@ export function SiteNav() {
         {!enHome && (
           <Link
             href="/#trabajo"
-            className="glass glass-spec glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-oro-deep"
+            className="glass glass-spec glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-acento"
           >
             <ArrowLeft className="size-4" />
             Volver al grafo

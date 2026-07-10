@@ -15,7 +15,7 @@ import { useWebGL } from "@/hooks/useWebGL";
 import { useAppReady } from "@/components/motion/AppReady";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import type { CamState, NodeProj } from "@/components/three/GraphCanvas";
-import { ladoModelo, nodos, seccionIds } from "@/lib/navigation";
+import { nodos, seccionIds } from "@/lib/navigation";
 import { perfil } from "@/content/perfil";
 import { cn } from "@/lib/utils";
 
@@ -56,24 +56,24 @@ function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
 
 /** Etiquetas clickeables proyectadas sobre los nodos 3D. Se muestran SIEMPRE (no
  * solo en la portada) para que se pueda saltar a cualquier sección desde el
- * modelo en todo momento. El contenedor recibe el MISMO transform que el canvas
- * → los labels quedan pegados a los nodos aunque el modelo se corra. Los nodos de
+ * modelo en todo momento. La proyección sale de la cámara real, así que los
+ * labels quedan pegados a los soles aunque la cámara orbite/panee. Los nodos de
  * la cara de atrás quedan atenuados pero igual clickeables. Azúcar de puntero
  * (tabIndex -1); el teclado/lector usa el HUD. */
 function NodeOverlay({
   projRef,
   activeIdx,
-  transform,
   onGoto,
 }: {
   projRef: RefObject<NodeProj[]>;
   activeIdx: number;
-  transform: string;
   onGoto: (id: string) => void;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const activeRef = useRef(activeIdx);
-  activeRef.current = activeIdx;
+  useEffect(() => {
+    activeRef.current = activeIdx;
+  }, [activeIdx]);
   useEffect(() => {
     let raf = 0;
     const tick = () => {
@@ -101,8 +101,7 @@ function NodeOverlay({
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-30 hidden overflow-hidden transition-transform duration-[900ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] will-change-transform sm:block"
-      style={{ transform }}
+      className="pointer-events-none fixed inset-0 z-30 hidden overflow-hidden sm:block"
       aria-hidden
     >
       {nodos.map((n, i) => (
@@ -118,7 +117,7 @@ function NodeOverlay({
           className="group absolute top-0 left-0"
         >
           {/* El label flota DEBAJO del sol (no lo tapa); el sol 3D es el marcador. */}
-          <span className="glass glass-pill absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 font-mono text-xs tracking-wide whitespace-nowrap text-chalk transition-colors group-hover:text-oro-deep">
+          <span className="glass glass-pill absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 font-mono text-xs tracking-wide whitespace-nowrap text-chalk transition-colors group-hover:text-acento">
             {n.label}
           </span>
         </button>
@@ -153,14 +152,14 @@ function HudRail({
               aria-current={active ? "true" : undefined}
               className={cn(
                 "relative rounded-full px-2.5 py-1.5 font-mono text-[0.7rem] tracking-wide whitespace-nowrap transition-colors sm:px-4 sm:text-xs",
-                active ? "text-oro-deep" : "text-muted hover:text-chalk",
+                active ? "text-acento" : "text-muted hover:text-chalk",
               )}
             >
               {n.label}
               {active && (
                 <span
                   aria-hidden
-                  className="absolute inset-x-2.5 -bottom-0.5 h-0.5 rounded-full bg-oro-deep sm:inset-x-4"
+                  className="absolute inset-x-2.5 -bottom-0.5 h-0.5 rounded-full bg-acento sm:inset-x-4"
                 />
               )}
             </button>
@@ -280,33 +279,21 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const usarCanvas = forceGl || webgl;
   const goto = (id: string) => scrollTo(`#${id}`);
 
-  // El modelo se corre al lado opuesto del texto según el tópico (alterna); el
-  // TAMAÑO lo da la cámara (se acerca), no un scale CSS (evita blur). En overview,
-  // centrado. reduced-motion: sin desplazamiento (queda centrado, estable).
-  const modelTransform =
-    reduced || activeIdx < 0
-      ? "translateX(0)"
-      : ladoModelo(activeIdx) === "right"
-        ? "translateX(24%)"
-        : "translateX(-24%)";
-
   return (
     <>
       {/* Cielo procedural (CSS, costo cero): el balón flota en él. Gradiente
           horizonte→cielo + nubes suaves que derivan muy lento. */}
       <div className="sky sky-drift pointer-events-none fixed inset-0 -z-10" aria-hidden />
 
-      {/* Capa fija: el grafo 3D (o poster si no hay WebGL). En overview queda
-          centrado; al entrar a un tópico se CORRE a un costado (transform CSS,
-          barato/compositado) para dejar respirar el texto flotante del lado
-          opuesto. */}
+      {/* Capa fija: el grafo 3D (o poster si no hay WebGL). El encuadre por
+          sección lo hace la CÁMARA (orbita + panea dentro del canvas); acá no
+          hay transforms. En mobile se atenúa al entrar a un tópico. */}
       <div
         className={cn(
-          "graph-layer pointer-events-none fixed inset-0 z-0 transition-[transform,opacity] duration-[900ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] will-change-transform",
+          "graph-layer pointer-events-none fixed inset-0 z-0 transition-opacity duration-700",
           activeIdx >= 0 && "is-topic",
         )}
         aria-hidden
-        style={{ transform: modelTransform }}
       >
         {usarCanvas ? (
           <GraphCanvas
@@ -326,12 +313,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
       </div>
 
       {usarCanvas && (
-        <NodeOverlay
-          projRef={projRef}
-          activeIdx={activeIdx}
-          transform={modelTransform}
-          onGoto={goto}
-        />
+        <NodeOverlay projRef={projRef} activeIdx={activeIdx} onGoto={goto} />
       )}
 
       {/* Contenido */}

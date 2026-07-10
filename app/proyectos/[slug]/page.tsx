@@ -77,7 +77,7 @@ export default async function ProyectoDetalle({
       <Container size="wide">
         <Link
           href="/#trabajo"
-          className="link-underline inline-flex items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-oro-deep"
+          className="link-underline inline-flex items-center gap-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-acento"
         >
           <ArrowLeft className="size-4" />
           Volver al trabajo
@@ -223,11 +223,11 @@ export default async function ProyectoDetalle({
                 <span className="block font-mono text-xs text-muted">
                   Siguiente caso
                 </span>
-                <span className="type-h3 text-chalk transition-colors group-hover:text-oro-deep">
+                <span className="type-h3 text-chalk transition-colors group-hover:text-acento">
                   {siguiente.nombre}
                 </span>
               </span>
-              <ArrowUpRight className="size-6 text-oro-deep" />
+              <ArrowUpRight className="size-6 text-acento" />
             </Link>
           </nav>
         )}

@@ -58,7 +58,7 @@ export function EmailLink({
           <Check className="size-4 text-ok" aria-hidden />
         ) : (
           <Copy
-            className="size-4 text-muted transition-colors group-hover:text-oro-deep"
+            className="size-4 text-muted transition-colors group-hover:text-acento"
             aria-hidden
           />
         )}

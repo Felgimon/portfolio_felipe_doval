@@ -26,12 +26,25 @@ archivos que Google Fonts, OFL).
 | `pelota-facetada.glb` | Balón facetado sólido | Generado proceduralmente por Felipe | CC0 (propio) |
 | `esfera-lowpoly.glb` | Icoesfera facetada | Generado proceduralmente por Felipe | CC0 (propio) |
 
-## Logo y marca (v2)
+## HDRI / Skybox (v3.1)
+
+| Archivo | Qué es | Origen | Licencia |
+|---|---|---|---|
+| `public/hdri/cielo-fondo.jpg` (4K) + `cielo-fondo-1k.jpg` | Skybox fotorealista del cielo (fondo equirectangular de la escena) | [Kloofendal 48d Partly Cloudy (Pure Sky)](https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky) — Poly Haven | **CC0** (sin atribución requerida; se acredita igual) |
+| `public/hdri/cielo-luz.hdr` (1K) | Environment map (iluminación + reflejos del balón) | El mismo HDRI de Poly Haven, versión HDR 1K | CC0 |
+
+Los JPG salen del "Tonemapped JPG" 8K oficial de Poly Haven, redimensionado a
+4K / 1K (JPEG q80) para web. El HDR 1K se usa solo como LUZ (PMREM), no como
+fondo.
+
+## Logo y marca (v3)
 
 - Logo **FD·** (monograma + nodo, wordmark): el guión bajo de terminal
-  evolucionó a un nodo verde agua con glow (`components/ui/Logo.tsx`), atando la
-  marca al balón-grafo. Compuesto con Bricolage Grotesque. Propio.
-- Color de marca **verde agua `#8FE3C6`** (seafoam sólido). Propio.
+  evolucionó a un nodo (círculo oro) (`components/ui/Logo.tsx`), atando la
+  marca a los soles del grafo. Compuesto con Bricolage Grotesque. Propio.
+- Acento de texto **azul celeste profundo `#0B5385`** (+ gradiente
+  `.accent-grad`); **oro `#E0A63A`** reservado a los soles 3D y micro-marcas.
+  Propio.
 - **Favicons**: micro-grafo de nodos generado con solo primitivas circle/line
   (`scripts/gen-favicons.mjs`). Propio.
 - **Poster de fallback** (`public/assets/hero-poster.png`): render propio del

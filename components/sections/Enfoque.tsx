@@ -17,7 +17,7 @@ export function Enfoque() {
     >
       <Reveal>
         <h2 className="type-h1 text-chalk">
-          Los proyectos son el <span className="text-oro-deep">medio</span>, no
+          Los proyectos son el <span className="accent-grad">medio</span>, no
           el fin
         </h2>
         <p className="lead mt-6 max-w-2xl">{resumen}</p>
