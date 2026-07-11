@@ -586,8 +586,11 @@ export default function GraphCanvas({
           (uBright > 1, toneMapped=false) derraman luz. El cielo, el vidrio y el
           balón quedan limpios. Esto es el "encandila": luz renderizada real del
           modelo, no un halo pegado. En software rendering se omite. */}
+      {/* multisampling 0: el MSAA sobre el buffer HDR del composer es otra
+          fuente conocida de frames negros en algunos drivers; el DPR alto
+          compensa el aliasing. */}
       {!lite && (
-        <EffectComposer multisampling={4}>
+        <EffectComposer multisampling={0}>
           <Bloom
             intensity={0.7}
             luminanceThreshold={1.0}

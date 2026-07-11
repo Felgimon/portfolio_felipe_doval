@@ -74,6 +74,19 @@ como referencia visual).
 - El FD ahora se anima por ESCALA de su grupo (la opacidad del material de
   troika-text no es confiable de mutar).
 
+### v3.4.1 — Fix del parpadeo negro (fuera transmission + MSAA)
+Felipe reportó frames NEGROS intermitentes en GPU real (no reproducible en
+headless/SwiftShader → problema de driver). Las dos fuentes conocidas de black
+frames con este stack en Chrome/ANGLE, eliminadas por ingeniería:
+- **Fuera `transmission`** del vidrio: la transmisión re-renderiza la escena
+  por frame dentro del composer (fuente clásica de frames negros + costo). El
+  vidrio pasa a ser "óptico": `transparent opacity 0.14 + clearcoat + envmap`
+  — con el skybox reflejándose se ve casi igual, es inmune y más rápido.
+- **`multisampling={0}`** en el EffectComposer: el MSAA sobre el buffer HDR es
+  la otra fuente conocida; el DPR alto compensa el aliasing.
+Verificado con un probe de ráfaga de frames (14 capturas consecutivas, un JPEG
+negro pesa ~10× menos): 0 frames oscuros. Look idéntico (captura comparada).
+
 ### v3.3.2 — Crecimiento épico del sol activo + subrayado vivo del HUD
 - **Foco gradual por nodo**: cada mini-sol tiene su PROPIO material y un valor
   de foco (0..1) animado por frame (easing exponencial, ~95% en 0.7s): escala,

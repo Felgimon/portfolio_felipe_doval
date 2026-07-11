@@ -164,24 +164,26 @@ export function Lattice({ lite }: { lite: boolean }) {
           />
         )}
       </mesh>
-      {/* Esfera de vidrio físico: el sol se ve A TRAVÉS del vidrio y el cielo
-          se refleja en su superficie. ior bajo = burbuja fina, sin efecto lupa.
+      {/* Esfera de vidrio: burbuja transparente que refleja el cielo (el
+          envmap hace el realismo). SIN transmission: la transmisión re-renderiza
+          la escena por frame dentro del composer y en algunos drivers (Chrome/
+          ANGLE) produce frames negros intermitentes — con el envmap, el vidrio
+          "óptico" simple se ve casi igual y es inmune + más rápido.
           depthWrite OFF: si el vidrio escribe depth, TODO lo transparente que
           tiene adentro (corona, llamas, protuberancias, el FD) se rechaza por
-          profundidad y desaparece — el fuego se compone ENCIMA del vidrio.
-          Solo en GPU real (la transmisión re-renderiza la escena). */}
+          profundidad y desaparece — el fuego se compone ENCIMA del vidrio. */}
       {!lite && (
         <mesh>
           <sphereGeometry args={[BALL_R * 0.94, 48, 48]} />
           <meshPhysicalMaterial
-            color="#ffffff"
-            transmission={1}
-            thickness={0.05}
-            roughness={0.05}
-            ior={1.08}
+            color="#eaf4fb"
+            transparent
+            opacity={0.14}
+            metalness={0}
+            roughness={0.06}
             clearcoat={1}
-            clearcoatRoughness={0.08}
-            envMapIntensity={1.1}
+            clearcoatRoughness={0.06}
+            envMapIntensity={1.3}
             side={THREE.FrontSide}
             depthWrite={false}
           />
