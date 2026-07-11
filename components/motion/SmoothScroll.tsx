@@ -11,7 +11,10 @@ import { gsap, ScrollTrigger } from "@/lib/gsap";
 
 type ScrollTarget = string | number | HTMLElement;
 type SmoothScrollApi = {
-  scrollTo: (target: ScrollTarget, opts?: { offset?: number }) => void;
+  scrollTo: (
+    target: ScrollTarget,
+    opts?: { offset?: number; immediate?: boolean },
+  ) => void;
 };
 
 const SmoothScrollContext = createContext<SmoothScrollApi | null>(null);
@@ -80,7 +83,12 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     scrollTo: (target, opts) => {
       const lenis = lenisRef.current;
       if (lenis) {
-        lenis.scrollTo(target, { offset: opts?.offset ?? 0 });
+        // immediate: el contenido salta YA (sin recorrer las secciones
+        // intermedias); la transición visual la hace la CÁMARA del grafo.
+        lenis.scrollTo(target, {
+          offset: opts?.offset ?? 0,
+          immediate: opts?.immediate ?? false,
+        });
       } else if (typeof window !== "undefined") {
         if (typeof target === "number") {
           window.scrollTo({ top: target });

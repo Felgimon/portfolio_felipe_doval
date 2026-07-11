@@ -50,6 +50,30 @@ bajo SwiftShader (la pausa lite sigue activa). Los `.glb` quedan en
 `public/models/` como material histórico (el poster sin-WebGL sigue usándolos
 como referencia visual).
 
+### v3.4.0 — Ráfagas solares + navegación directa (y el bug del vidrio)
+- **Protuberancias en arco** (como la referencia de Betelgeuse): dos torus
+  parciales anclados al limbo con shader de fuego (ruido animado que repta por
+  el arco, pies fundidos con la superficie), derivando lentamente alrededor del
+  sol. **Ráfagas periódicas**: 3 jets que erupcionan y se apagan (períodos y
+  fases distintos → nunca en sincronía). Los mini-soles también erupcionan
+  (burst periódico en brillo + corona). Blending NORMAL para el fuego (el
+  aditivo desaparece contra el cielo claro).
+- **EL BUG DEL VIDRIO (root cause encontrado por bisección con capturas):** la
+  esfera de vidrio (transmission) escribía DEPTH → todas las capas transparentes
+  DENTRO del vidrio (corona, llamas, protuberancias y el FD) se rechazaban por
+  profundidad → invisibles. Por eso el FD desapareció en v3.3.2 y el sol no
+  "encandilaba". Fix: `depthWrite={false}` en el vidrio (el fuego se compone
+  encima; la oclusión real la da el disco opaco del sol). Probado con FD rojo +
+  depthTest off para aislar la causa.
+- **Navegación por click DIRECTA (sin mareo):** al clickear una sección, el
+  contenido salta YA (`lenis.scrollTo(..., { immediate: true })`) — nada de
+  speed-scroll por las secciones intermedias. La transición visual la hace la
+  CÁMARA con **damping adaptativo**: cerca del objetivo (scroll) tracking
+  ajustado; lejos (click) un planeo suave (~1s) EN LÍNEA DIRECTA al nodo (los
+  waypoints solo aplican al scroll continuo).
+- El FD ahora se anima por ESCALA de su grupo (la opacidad del material de
+  troika-text no es confiable de mutar).
+
 ### v3.3.2 — Crecimiento épico del sol activo + subrayado vivo del HUD
 - **Foco gradual por nodo**: cada mini-sol tiene su PROPIO material y un valor
   de foco (0..1) animado por frame (easing exponencial, ~95% en 0.7s): escala,

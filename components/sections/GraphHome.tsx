@@ -327,7 +327,10 @@ export function GraphHome({ children }: { children: ReactNode }) {
   }, []);
 
   const usarCanvas = forceGl || webgl;
-  const goto = (id: string) => scrollTo(`#${id}`);
+  // Click en nodo/HUD: el contenido salta YA (sin speed-scroll por las
+  // secciones intermedias, que marea); la transición la hace la CÁMARA, que
+  // orbita en línea directa hasta el nodo elegido.
+  const goto = (id: string) => scrollTo(`#${id}`, { immediate: true });
 
   return (
     <>

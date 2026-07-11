@@ -166,6 +166,9 @@ export function Lattice({ lite }: { lite: boolean }) {
       </mesh>
       {/* Esfera de vidrio físico: el sol se ve A TRAVÉS del vidrio y el cielo
           se refleja en su superficie. ior bajo = burbuja fina, sin efecto lupa.
+          depthWrite OFF: si el vidrio escribe depth, TODO lo transparente que
+          tiene adentro (corona, llamas, protuberancias, el FD) se rechaza por
+          profundidad y desaparece — el fuego se compone ENCIMA del vidrio.
           Solo en GPU real (la transmisión re-renderiza la escena). */}
       {!lite && (
         <mesh>
@@ -180,6 +183,7 @@ export function Lattice({ lite }: { lite: boolean }) {
             clearcoatRoughness={0.08}
             envMapIntensity={1.1}
             side={THREE.FrontSide}
+            depthWrite={false}
           />
         </mesh>
       )}

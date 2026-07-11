@@ -9,9 +9,11 @@ import { Lattice, BALL_R } from "./Lattice";
 import {
   makeSunMaterial,
   makeFlameMaterial,
+  makeProminenceMaterial,
   makeCoronaTexture,
   advanceSuns,
   spinSun,
+  burst,
 } from "./sun";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
@@ -62,13 +64,13 @@ function SkyDome({ lite }: { lite: boolean }) {
 }
 
 /* Transición del sol central (mutación imperativa, fuera del componente):
- * en un tópico se ACHICA y el FD se desvanece (el sol del tópico es el
- * protagonista y quedan alineados en el eje de cámara); en la portada vuelve a
- * crecer con el logo. Corre en frames renderizados (la cámara siempre está en
- * movimiento cuando esto cambia, así que nunca queda a medio camino). */
+ * en un tópico se ACHICA y el FD se encoge hasta desaparecer (el sol del tópico
+ * es el protagonista y quedan alineados en el eje de cámara); en la portada
+ * vuelve a crecer con el logo. El FD se anima por ESCALA de su grupo (robusto:
+ * la opacidad del material de troika-text no es confiable de mutar). */
 function easeSunCore(
   g: THREE.Group,
-  fd: THREE.MeshBasicMaterial | null,
+  fdG: THREE.Group | null,
   inTopic: boolean,
   delta: number,
 ) {
@@ -77,20 +79,39 @@ function easeSunCore(
   const target = inTopic ? 0.45 : 1;
   const s = g.scale.x + (target - g.scale.x) * k;
   g.scale.setScalar(s);
-  if (fd) {
-    const o = inTopic ? 0 : 1;
-    fd.opacity += (o - fd.opacity) * k;
-    fd.visible = fd.opacity > 0.02;
+  if (fdG) {
+    const o = inTopic ? 0.0001 : 1;
+    const fs = fdG.scale.x + (o - fdG.scale.x) * k;
+    fdG.scale.setScalar(fs);
+    fdG.visible = fs > 0.03;
+  }
+}
+
+/* Ráfagas/jets del sol central: erupciones periódicas de luz en el limbo
+ * (cada una con su período y fase → nunca en sincronía, como un sol real). */
+const JETS = [
+  { dir: new THREE.Vector3(0.9, 0.35, 0.2).normalize(), period: 7, phase: 0.15, rot: -0.38 },
+  { dir: new THREE.Vector3(-0.75, 0.6, 0.15).normalize(), period: 9.5, phase: 0.55, rot: 2.45 },
+  { dir: new THREE.Vector3(-0.2, -0.95, 0.25).normalize(), period: 8.2, phase: 0.8, rot: 1.78 },
+];
+function pulseJets(sprites: (THREE.Sprite | null)[], t: number, R: number) {
+  for (let i = 0; i < JETS.length; i++) {
+    const s = sprites[i];
+    if (!s) continue;
+    const b = burst(t, JETS[i].period, JETS[i].phase);
+    (s.material as THREE.SpriteMaterial).opacity = b * 0.85;
+    s.scale.set(R * (1.2 + 1.7 * b), R * 0.55, 1);
   }
 }
 
 /**
  * SOL CENTRAL — el corazón del grafo, con el logo FD adentro (silueta oscura
  * sobre el disco ardiente, como un eclipse). Capas, de adentro hacia afuera:
- * superficie de plasma animada (domain-warp, HDR) → shell de LLAMAS
- * (prominencias animadas en el borde) → corona aditiva → una luz puntual que
- * ilumina el balón desde adentro. El FD va en un Billboard entre el sol y la
- * cámara (siempre legible). En lite: superficie estática, sin llamas.
+ * superficie de plasma animada (domain-warp, HDR) → shell de LLAMAS → dos
+ * PROTUBERANCIAS en arco ancladas al limbo (como la referencia) que derivan
+ * lentamente → RÁFAGAS periódicas (jets que erupcionan y se apagan) → corona →
+ * una luz puntual que ilumina el balón desde adentro. El FD va en un Billboard
+ * entre el sol y la cámara. En lite: superficie estática, sin fuegos.
  */
 function SunCore({
   radius,
@@ -107,34 +128,60 @@ function SunCore({
   const group = useRef<THREE.Group>(null);
   const sunMesh = useRef<THREE.Mesh>(null);
   const flameMesh = useRef<THREE.Mesh>(null);
-  const fdMat = useRef<THREE.MeshBasicMaterial>(null);
+  const flareGroup = useRef<THREE.Group>(null);
+  const jetRefs = useRef<(THREE.Sprite | null)[]>([]);
+  const fdGroup = useRef<THREE.Group>(null);
+  const timeRef = useRef(0);
   const mat = useMemo(
     () => makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite }),
     [R, lite],
   );
   const flame = useMemo(
-    () => (lite ? null : makeFlameMaterial(1 / (R * 1.32))),
+    () => (lite ? null : makeFlameMaterial(1 / (R * 1.42))),
+    [R, lite],
+  );
+  const prom = useMemo(
+    () => (lite ? null : makeProminenceMaterial(1 / (R * 0.5))),
     [R, lite],
   );
   const corona = useMemo(() => makeCoronaTexture(), []);
+  // Anclajes de las protuberancias: local +X del arco = dirección radial del
+  // limbo (los pies tocan la superficie, el bucle sale hacia afuera).
+  const arcs = useMemo(() => {
+    const X = new THREE.Vector3(1, 0, 0);
+    const mk = (d: THREE.Vector3, roll: number, arcR: number) => {
+      const dir = d.normalize();
+      const q = new THREE.Quaternion().setFromUnitVectors(X, dir);
+      const qRoll = new THREE.Quaternion().setFromAxisAngle(dir, roll);
+      return { q: qRoll.multiply(q), pos: dir.clone().multiplyScalar(R * 0.9), arcR };
+    };
+    return [
+      mk(new THREE.Vector3(0.85, 0.45, -0.12), 0.4, R * 0.5),
+      mk(new THREE.Vector3(-0.8, -0.35, -0.28), 2.1, R * 0.4),
+    ];
+  }, [R]);
   useEffect(() => {
     return () => {
       mat.dispose();
       flame?.dispose();
+      prom?.dispose();
       corona.dispose();
     };
-  }, [mat, flame, corona]);
+  }, [mat, flame, prom, corona]);
 
   useFrame((_, delta) => {
     if (!reduced) {
-      advanceSuns(delta, mat, flame);
-      // Rotación lenta: el plasma gira (movimiento inequívoco); las llamas
-      // contra-rotan para que el fuego "viva" independiente del disco.
+      timeRef.current += Math.min(delta, 0.1);
+      advanceSuns(delta, mat, flame, prom);
+      // Rotación lenta: el plasma gira; las llamas contra-rotan; las
+      // protuberancias derivan por el limbo (independientes del disco).
       if (sunMesh.current) spinSun(sunMesh.current, 0.06, delta);
       if (flameMesh.current) spinSun(flameMesh.current, -0.04, delta);
+      if (flareGroup.current) spinSun(flareGroup.current, 0.045, delta);
+      pulseJets(jetRefs.current, timeRef.current, R);
     }
     if (group.current) {
-      easeSunCore(group.current, fdMat.current, activeIndex >= 0, delta);
+      easeSunCore(group.current, fdGroup.current, activeIndex >= 0, delta);
     }
   });
 
@@ -144,9 +191,41 @@ function SunCore({
         <sphereGeometry args={[R, 48, 48]} />
       </mesh>
       {flame && (
-        <mesh ref={flameMesh} material={flame} scale={1.32}>
+        <mesh ref={flameMesh} material={flame} scale={1.42}>
           <sphereGeometry args={[R, 32, 32]} />
         </mesh>
+      )}
+      {/* Protuberancias en arco + ráfagas periódicas (solo GPU real). */}
+      {prom && (
+        <group ref={flareGroup}>
+          {arcs.map((a, i) => (
+            <group key={i} position={a.pos} quaternion={a.q}>
+              <mesh material={prom} rotation={[0, 0, -Math.PI * 0.575]}>
+                <torusGeometry args={[a.arcR, R * 0.055, 8, 40, Math.PI * 1.15]} />
+              </mesh>
+            </group>
+          ))}
+          {JETS.map((j, i) => (
+            <sprite
+              key={i}
+              ref={(el) => {
+                jetRefs.current[i] = el;
+              }}
+              position={j.dir.clone().multiplyScalar(R * 1.05)}
+              scale={[R * 1.2, R * 0.55, 1]}
+            >
+              {/* Blending normal: la ráfaga tiene cuerpo contra el cielo claro. */}
+              <spriteMaterial
+                map={corona}
+                rotation={j.rot}
+                depthWrite={false}
+                transparent
+                opacity={0}
+                toneMapped={false}
+              />
+            </sprite>
+          ))}
+        </group>
       )}
       {/* Un solo halo amplio y suave: el resplandor cercano lo hacen las llamas
           + el bloom (dos coronas encimadas lavaban la textura del disco). */}
@@ -162,20 +241,23 @@ function SunCore({
       </sprite>
       {/* El sol ilumina el balón desde el centro (luz real en la escena). */}
       <pointLight color="#ffb45c" intensity={1.2} distance={radius * 2.4} decay={1.8} />
-      {/* FD entre el sol y la cámara: silueta tinta sobre el disco ardiente. */}
-      <Billboard>
-        <Text
-          font={LOGO_FONT}
-          fontSize={R * 0.72}
-          position={[0, 0, R * 1.5]}
-          anchorX="center"
-          anchorY="middle"
-          letterSpacing={-0.02}
-        >
-          FD
-          <meshBasicMaterial ref={fdMat} color="#122a3e" transparent />
-        </Text>
-      </Billboard>
+      {/* FD entre el sol y la cámara: silueta tinta sobre el disco ardiente.
+          Se anima por escala del grupo (ver easeSunCore). */}
+      <group ref={fdGroup}>
+        <Billboard>
+          <Text
+            font={LOGO_FONT}
+            fontSize={R * 0.72}
+            position={[0, 0, R * 1.5]}
+            anchorX="center"
+            anchorY="middle"
+            letterSpacing={-0.02}
+          >
+            FD
+            <meshBasicMaterial color="#122a3e" transparent />
+          </Text>
+        </Billboard>
+      </group>
     </group>
   );
 }
@@ -324,7 +406,14 @@ function CameraRig({
 
     _prev.copy(camera.position);
     _prevLook.copy(_lookCur);
-    const k = 1 - Math.pow(SETTLE, Math.min(delta, 0.05));
+    // Damping ADAPTATIVO: cerca del objetivo (scroll) = tracking ajustado;
+    // lejos (click directo a otra sección: t salta) = planeo suave (~1s) en
+    // línea directa — la cámara orbita derecho al nodo, SIN recorrer los
+    // waypoints intermedios (nada de speed-scroll mareador).
+    const remaining = camera.position.distanceTo(_target);
+    const far = THREE.MathUtils.clamp(remaining / (rBall * 3), 0, 1);
+    const damp = THREE.MathUtils.lerp(SETTLE, 0.05, far);
+    const k = 1 - Math.pow(damp, Math.min(delta, 0.05));
     camera.position.lerp(_target, k);
     _lookCur.lerp(_lookGoal, k);
     camera.lookAt(_lookCur);

@@ -143,12 +143,68 @@ const flameFragment = /* glsl */ `
     float t = uTime * 0.32;
 
     float n = fbm(p * 1.6 + vec3(0.0, t * 2.2, 0.0) + fbm(p * 3.1 - vec3(t, 0.0, t)) * 1.2);
-    float tongue = smoothstep(0.42, 0.9, n * rim * 1.9);
+    float tongue = smoothstep(0.34, 0.88, n * rim * 2.15);
     vec3 col = mix(vec3(1.0, 0.3, 0.02), vec3(1.0, 0.75, 0.25), n);
 
-    gl_FragColor = vec4(col * 1.6, tongue * 0.9);
+    gl_FragColor = vec4(col * 1.6, tongue * 0.95);
   }
 `;
+
+/** Protuberancia solar: arco de plasma anclado al limbo (como las erupciones en
+ * bucle de la referencia). Es un torus parcial; el fuego es ruido animado que
+ * REPTA por el arco, desvaneciéndose en los pies. */
+const prominenceVertex = /* glsl */ `
+  varying vec2 vUv;
+  varying vec3 vLocal;
+  void main() {
+    vUv = uv;
+    vLocal = position;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const prominenceFragment = /* glsl */ `
+  precision highp float;
+  uniform float uTime;
+  uniform float uInvR;
+  varying vec2 vUv;
+  varying vec3 vLocal;
+  ${CHUNK_NOISE}
+
+  void main() {
+    // Los pies del arco se funden con la superficie; el lomo brilla.
+    float ends = pow(sin(3.14159265 * vUv.x), 0.75);
+    float n = fbm(vLocal * uInvR * 5.0 + vec3(0.0, uTime * 0.4, uTime * 0.22));
+    float a = ends * smoothstep(0.18, 0.75, n);
+    vec3 col = mix(vec3(0.82, 0.14, 0.02), vec3(1.0, 0.52, 0.1), n);
+    col += vec3(1.0, 0.82, 0.45) * pow(n, 3.0) * 0.8;
+    gl_FragColor = vec4(col * 1.35, a);
+  }
+`;
+
+export function makeProminenceMaterial(invR: number): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: prominenceVertex,
+    fragmentShader: prominenceFragment,
+    transparent: true,
+    depthWrite: false,
+    // Blending NORMAL (no aditivo): el fuego tiene cuerpo también contra el
+    // cielo claro (el aditivo solo suma luz y desaparece sobre nubes blancas).
+    side: THREE.DoubleSide,
+    toneMapped: false,
+    uniforms: {
+      uTime: { value: 0 },
+      uInvR: { value: invR },
+    },
+  });
+}
+
+/** Ráfaga periódica 0..1: una erupción corta por período (curva sin^8 → sube y
+ * baja rápido, el resto del período en calma). */
+export function burst(time: number, period: number, phase: number): number {
+  const s = Math.sin((time / period + phase) * Math.PI * 2);
+  return Math.pow(Math.max(0, s), 8);
+}
 
 /* ---------- factorías de materiales / texturas ---------- */
 
