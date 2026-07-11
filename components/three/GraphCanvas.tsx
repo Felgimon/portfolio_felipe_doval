@@ -7,6 +7,8 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
 import { Lattice, BALL_R } from "./Lattice";
 import {
+  SUN_TEX,
+  prepSunTexture,
   makeSunMaterial,
   makeFlameMaterial,
   makeProminenceMaterial,
@@ -135,11 +137,15 @@ function SunCore({
   const ejRefs = useRef<(THREE.Sprite | null)[]>([]);
   const fdGroup = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
-  // Ráfagas desprendidas: 10 partículas con trayectorias/vidas propias.
-  const ejSpecs = useMemo(() => makeEjectaSpecs(10, 7), []);
+  // Ráfagas desprendidas: 14 partículas con trayectorias/vidas propias.
+  const ejSpecs = useMemo(() => makeEjectaSpecs(14, 7), []);
+  // La FOTO solar real (granulación NASA/SDO) — la base del hiperrealismo.
+  const solTex = useTexture(SUN_TEX);
+  useEffect(() => prepSunTexture(solTex), [solTex]);
   const mat = useMemo(
-    () => makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite }),
-    [R, lite],
+    () =>
+      makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite, map: solTex }),
+    [R, lite, solTex],
   );
   const flame = useMemo(
     () => (lite ? null : makeFlameMaterial(1 / (R * 1.42))),
@@ -233,8 +239,10 @@ function SunCore({
           ))}
           {/* Ráfagas que se DESPRENDEN: nacen en el limbo, se alejan
               desacelerando con curl, se hinchan y se desvanecen; algunas
-              recaen al sol (arco de prominencia). Animadas en updateEjecta. */}
-          {ejSpecs.map((_, i) => (
+              recaen al sol (arco de prominencia). Las "hot" son chispas
+              incandescentes (aditivas); el resto, bloques de plasma con cuerpo
+              (blending normal, visibles contra el cielo claro). */}
+          {ejSpecs.map((e, i) => (
             <sprite
               key={`ej-${i}`}
               ref={(el) => {
@@ -244,6 +252,8 @@ function SunCore({
             >
               <spriteMaterial
                 map={corona}
+                color={e.hot ? "#ffdda6" : "#ff8f36"}
+                blending={e.hot ? THREE.AdditiveBlending : THREE.NormalBlending}
                 depthWrite={false}
                 transparent
                 opacity={0}

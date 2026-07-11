@@ -2,9 +2,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useTexture } from "@react-three/drei";
 import { nodos } from "@/lib/navigation";
 import { BALL_R } from "./Lattice";
 import {
+  SUN_TEX,
+  prepSunTexture,
   makeSunMaterial,
   makeCoronaTexture,
   makeEjectaSpecs,
@@ -84,12 +87,19 @@ export function GraphNodes({
   );
   const base = radius * 0.085;
 
+  const solTex = useTexture(SUN_TEX);
+  useEffect(() => prepSunTexture(solTex), [solTex]);
   const mats = useMemo(
     () =>
       nodos.map(() =>
-        makeSunMaterial({ bright: BRIGHT_0, invR: 1 / base, animated: !lite }),
+        makeSunMaterial({
+          bright: BRIGHT_0,
+          invR: 1 / base,
+          animated: !lite,
+          map: solTex,
+        }),
       ),
-    [base, lite],
+    [base, lite, solTex],
   );
   const corona = useMemo(() => makeCoronaTexture(), []);
   useEffect(() => {
@@ -181,7 +191,7 @@ export function GraphNodes({
           </sprite>
           {/* Ráfagas desprendidas (animadas en updateEjecta; solo GPU real). */}
           {!lite &&
-            ejSpecs[i].map((_, j) => (
+            ejSpecs[i].map((e, j) => (
               <sprite
                 key={`ej-${j}`}
                 ref={(el) => {
@@ -191,6 +201,8 @@ export function GraphNodes({
               >
                 <spriteMaterial
                   map={corona}
+                  color={e.hot ? "#ffdda6" : "#ff8f36"}
+                  blending={e.hot ? THREE.AdditiveBlending : THREE.NormalBlending}
                   depthWrite={false}
                   transparent
                   opacity={0}

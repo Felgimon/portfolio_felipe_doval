@@ -1,10 +1,10 @@
 # CREDITS — assets y licencias
 
 Todos los assets del portfolio son propios de Felipe o de licencia libre
-(CC0 / SIL OFL / ISC). **Al día de hoy no hay ningún asset con licencia CC-BY**,
-así que no hace falta una línea de atribución obligatoria en el footer. Si en el
-futuro se agrega un asset CC-BY (ej. un HDRI de Poly Haven o un modelo de
-Sketchfab), se documenta acá y se agrega el crédito visible.
+(CC0 / SIL OFL / ISC), **con UNA excepción CC-BY**: la textura solar de Solar
+System Scope (ver tabla), acreditada visiblemente en el footer del sitio como
+exige la licencia. Si se agrega otro asset CC-BY, se documenta acá y se suma su
+crédito visible.
 
 ## Tipografías (v2.1 — self-hosted)
 
@@ -36,6 +36,12 @@ archivos que Google Fonts, OFL).
 Los JPG salen del "Tonemapped JPG" 8K oficial de Poly Haven, redimensionado a
 4K / 1K (JPEG q80) para web. El HDR 1K se usa solo como LUZ (PMREM), no como
 fondo.
+
+## Textura solar (v3.6 — CC-BY, con crédito en el footer)
+
+| Archivo | Qué es | Origen | Licencia |
+|---|---|---|---|
+| `public/textures/sol.jpg` (2K) | Superficie solar fotográfica (equirectangular, granulación real) — base del sol central y los mini-soles | [Solar System Scope — Textures](https://www.solarsystemscope.com/textures/) (derivada de imágenes NASA/SDO) | **CC BY 4.0** → crédito visible en el footer del sitio |
 
 ## Logo y marca (v3)
 

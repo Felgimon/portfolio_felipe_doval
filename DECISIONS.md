@@ -74,6 +74,24 @@ como referencia visual).
 - El FD ahora se anima por ESCALA de su grupo (la opacidad del material de
   troika-text no es confiable de mutar).
 
+### v3.6.0 — Sol fotorealista (foto NASA/SDO hirviendo) + eyecciones visibles
+- Felipe no veía las eyecciones de v3.5 (opacidad efectiva ~0.25 contra fondo
+  brillante) y pidió hiperrealismo con técnicas 3D reales.
+- **Textura solar FOTOGRÁFICA** (`public/textures/sol.jpg`, 2K equirect, 803KB):
+  Solar System Scope (**CC BY 4.0**, derivada de imágenes NASA/SDO — la textura
+  estándar de la comunidad three.js para soles). Crédito visible en el footer +
+  CREDITS.md.
+- **Shader híbrido foto + procedural** (la innovación): la foto se muestrea con
+  **UVs distorsionadas por el domain-warp animado** + deriva lenta → la
+  granulación fotográfica REAL hierve y fluye (rotación diferencial). El calor
+  procedural modula el brillo (fáculas vivas); núcleo y limbo pasan de 1.0 para
+  el bloom. La variante lite también usa la foto (estática).
+- **Eyecciones ahora VISIBLES**: tamaño ×1.8 (0.28–0.58R), travel 0.7–1.6R,
+  vidas más cortas (2.8–5.6s → más eventos), opacidad pico 0.85–0.95, y dos
+  clases: **"hot"** (chispas incandescentes, blending aditivo, tinte crema) y
+  **plasma** (bloques con cuerpo, blending normal, tinte naranja fuego) —
+  legibles contra el cielo claro y contra el disco.
+
 ### v3.5.0 — Eyecciones de plasma + fin del "acomodón" post-click
 - **Ráfagas que se DESPRENDEN** (`makeEjectaSpecs`/`updateEjecta` en `sun.ts`):
   pool de partículas (10 el sol central + 3 por mini-sol) con física de

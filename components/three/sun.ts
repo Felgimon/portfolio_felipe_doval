@@ -54,26 +54,45 @@ const CHUNK_NOISE = /* glsl */ `
   }
 `;
 
+/** Textura fotográfica del sol (Solar System Scope, CC-BY 4.0 — derivada de
+ * imágenes NASA/SDO). El realismo base sale de la FOTO; el shader la hace
+ * hervir. */
+export const SUN_TEX = "/textures/sol.jpg";
+
+/** Prepara la textura solar (mutación imperativa fuera de componentes). */
+export function prepSunTexture(t: THREE.Texture) {
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  t.needsUpdate = true;
+}
+
 export const sunVertex = /* glsl */ `
   varying vec3 vView;   // normal en espacio de vista (z+ = mirando a cámara)
   varying vec3 vLocal;  // posición local (el plasma es estable en el objeto)
+  varying vec2 vUv;     // UV equirectangular (para la foto solar)
   void main() {
     vView = normalize(normalMatrix * normal);
     vLocal = position;
+    vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
-/** Superficie FULL: plasma con domain-warping animado + núcleo blanco-caliente
- * HDR + limbo naranja. La paleta sigue la referencia (rojo profundo → naranja →
- * oro → blanco). */
+/** Superficie FULL: la FOTO solar real (granulación NASA/SDO) muestreada con
+ * UVs DISTORSIONADAS por el domain-warp animado → la fotografía HIERVE. El
+ * calor procedural modula el brillo (fáculas vivas); solo el núcleo y el limbo
+ * pasan de 1.0 → el bloom encandila sin lavar el detalle fotográfico. */
 const sunFragmentFull = /* glsl */ `
   precision highp float;
   uniform float uTime;
   uniform float uBright;
   uniform float uInvR;
+  uniform sampler2D uMap;
   varying vec3 vView;
   varying vec3 vLocal;
+  varying vec2 vUv;
   ${CHUNK_NOISE}
 
   void main() {
@@ -89,38 +108,43 @@ const sunFragmentFull = /* glsl */ `
     );
     float v = fbm(p * 1.9 + q * 1.5);
     float g = fbm(p * 4.6 + q * 2.2 + vec3(0.0, t * 2.6, 0.0)); // granulación
+    float heat = clamp(v * 0.8 + g * 0.5, 0.0, 1.25);
 
-    // Paleta de la referencia: rojo profundo → naranja fuego → oro. El grueso
-    // del disco queda en rango LDR (textura visible); SOLO el núcleo y el limbo
-    // pasan de 1.0 → el bloom recorta ahí (encandila sin lavar el plasma).
-    float heat = clamp(v * 0.85 + g * 0.55, 0.0, 1.3);
-    vec3 col = mix(vec3(0.45, 0.05, 0.0), vec3(1.0, 0.33, 0.02), smoothstep(0.1, 0.75, heat));
-    col = mix(col, vec3(1.0, 0.72, 0.25), smoothstep(0.62, 1.15, heat));
+    // La foto real, hirviendo: UVs desplazadas por el warp + deriva lenta
+    // (rotación diferencial del plasma sobre la superficie).
+    vec2 uv = vUv + (vec2(q.x, q.y) - 0.5) * 0.06 + vec2(uTime * 0.0035, 0.0);
+    vec3 tex = texture2D(uMap, uv).rgb;
+
+    vec3 col = tex * (0.72 + 0.75 * heat);
+    col = mix(col, vec3(1.0, 0.72, 0.25), smoothstep(0.78, 1.2, heat) * 0.3);
     // Núcleo blanco-caliente FOCALIZADO (no baña todo el disco)
-    col = mix(col, vec3(1.0, 0.96, 0.85), pow(facing, 5.0) * 0.75);
+    col = mix(col, vec3(1.0, 0.96, 0.88), pow(facing, 5.0) * 0.55);
     // Limbo naranja intenso en la silueta
-    col += vec3(1.0, 0.3, 0.04) * pow(1.0 - facing, 2.0) * 0.85;
+    col += vec3(1.0, 0.32, 0.05) * pow(1.0 - facing, 2.0) * 0.8;
 
     gl_FragColor = vec4(col * uBright, 1.0);
   }
 `;
 
-/** Superficie LITE (render por software): un solo fbm estático, misma paleta. */
+/** Superficie LITE (render por software): la foto + un fbm estático. */
 const sunFragmentLite = /* glsl */ `
   precision highp float;
   uniform float uTime;  // sin uso (interfaz uniforme)
   uniform float uBright;
   uniform float uInvR;
+  uniform sampler2D uMap;
   varying vec3 vView;
   varying vec3 vLocal;
+  varying vec2 vUv;
   ${CHUNK_NOISE}
 
   void main() {
     float facing = clamp(vView.z, 0.0, 1.0);
+    vec3 tex = texture2D(uMap, vUv).rgb;
     float v = fbm(vLocal * uInvR * 4.0);
-    vec3 col = mix(vec3(0.7, 0.16, 0.0), vec3(1.0, 0.62, 0.16), v);
-    col = mix(col, vec3(1.0, 0.95, 0.82), pow(facing, 5.0) * 0.8);
-    col += vec3(1.0, 0.32, 0.05) * pow(1.0 - facing, 2.2) * 0.8;
+    vec3 col = tex * (0.8 + 0.45 * v);
+    col = mix(col, vec3(1.0, 0.95, 0.85), pow(facing, 5.0) * 0.6);
+    col += vec3(1.0, 0.32, 0.05) * pow(1.0 - facing, 2.2) * 0.7;
     gl_FragColor = vec4(col * uBright, 1.0);
   }
 `;
@@ -217,6 +241,7 @@ export type EjectaSpec = {
   size: number; // tamaño base (en radios del sol)
   curl: number; // giro total de la trayectoria (rad)
   fallback: boolean; // ¿recae al sol? (arco balístico, como una prominencia)
+  hot: boolean; // chispa incandescente (aditiva) vs. bloque de plasma (normal)
 };
 
 /** RNG determinista (mulberry32): specs estables entre renders/SSR, sin
@@ -249,12 +274,13 @@ export function makeEjectaSpecs(count: number, seed: number): EjectaSpec[] {
     specs.push({
       dir,
       axis,
-      life: 3.5 + r() * 4,
+      life: 2.8 + r() * 2.8,
       phase: r() * 12,
-      travel: 0.5 + r() * 0.9,
-      size: 0.16 + r() * 0.2,
+      travel: 0.7 + r() * 0.9,
+      size: 0.28 + r() * 0.3,
       curl: (r() - 0.5) * 1.6,
       fallback: r() < 0.45,
+      hot: r() < 0.45,
     });
   }
   return specs;
@@ -290,7 +316,8 @@ export function updateEjecta(
     s.scale.set(sc, sc, 1);
     // entrada rápida, desvanecimiento largo
     const o = Math.min(p * 6, 1) * Math.pow(1 - p, 1.6);
-    (s.material as THREE.SpriteMaterial).opacity = o * 0.7 * strength;
+    (s.material as THREE.SpriteMaterial).opacity =
+      o * (e.hot ? 0.95 : 0.85) * strength;
   }
 }
 
@@ -300,6 +327,7 @@ export function makeSunMaterial(opts: {
   bright: number;
   invR: number;
   animated: boolean;
+  map: THREE.Texture;
 }): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: sunVertex,
@@ -309,6 +337,7 @@ export function makeSunMaterial(opts: {
       uTime: { value: 0 },
       uBright: { value: opts.bright },
       uInvR: { value: opts.invR },
+      uMap: { value: opts.map },
     },
   });
 }
