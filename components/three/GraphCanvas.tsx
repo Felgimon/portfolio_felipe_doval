@@ -3,7 +3,14 @@ import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, useTexture, Text, Billboard, Environment } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
+import {
+  makeSunMaterial,
+  makeFlameMaterial,
+  makeCoronaTexture,
+  tickSuns,
+} from "./sun";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
@@ -21,9 +28,11 @@ const SKY_ROT = 2.35;
 /** Escala del grafo. El balón queda centrado; la CÁMARA hace todo el movimiento. */
 const S = 1.4;
 
-/** Estado de cámara derivado del scroll: nodo activo (0 = overview) + cuánto
- * "buceó" hacia él (0..1). */
-export type CamState = { active: number; dive: number };
+/** Estado de cámara derivado del scroll. `t` es el progreso CONTINUO por la
+ * ruta de waypoints (0 = portada, 1..N = nodo N de lleno; los decimales son la
+ * transición suave entre waypoints — sin saltos al cruzar secciones). `active`
+ * es la sección discreta (para HUD / sol activo). */
+export type CamState = { t: number; active: number };
 export type NodeProj = { x: number; y: number; front: boolean };
 
 /* Setup imperativo de three (fuera del componente: API mutable de la escena). */
@@ -62,10 +71,117 @@ function useBallRadius(): number {
   }, [geometry]);
 }
 
-/** Malla del balón + el logo FD flotando en el centro 3D + los nodos. Grupo
- * ESTÁTICO (sin rotación): así las direcciones de los nodos son fijas en el
- * mundo y la cámara los encara con precisión. El logo FD solo se muestra en la
- * portada (overview); en un tópico el mini-sol activo toma el centro. */
+/* Transición del sol central (mutación imperativa, fuera del componente):
+ * en un tópico se ACHICA y el FD se desvanece (el sol del tópico es el
+ * protagonista y quedan alineados en el eje de cámara); en la portada vuelve a
+ * crecer con el logo. Corre en frames renderizados (la cámara siempre está en
+ * movimiento cuando esto cambia, así que nunca queda a medio camino). */
+function easeSunCore(
+  g: THREE.Group,
+  fd: THREE.MeshBasicMaterial | null,
+  inTopic: boolean,
+  delta: number,
+) {
+  const k = 1 - Math.pow(0.000001, Math.min(delta, 0.05));
+  const target = inTopic ? 0.45 : 1;
+  const s = g.scale.x + (target - g.scale.x) * k;
+  g.scale.setScalar(s);
+  if (fd) {
+    const o = inTopic ? 0 : 1;
+    fd.opacity += (o - fd.opacity) * k;
+    fd.visible = fd.opacity > 0.02;
+  }
+}
+
+/**
+ * SOL CENTRAL — el corazón del grafo, con el logo FD adentro (silueta oscura
+ * sobre el disco ardiente, como un eclipse). Capas, de adentro hacia afuera:
+ * superficie de plasma animada (domain-warp, HDR) → shell de LLAMAS
+ * (prominencias animadas en el borde) → corona aditiva → una luz puntual que
+ * ilumina el balón desde adentro. El FD va en un Billboard entre el sol y la
+ * cámara (siempre legible). En lite: superficie estática, sin llamas.
+ */
+function SunCore({
+  radius,
+  lite,
+  activeIndex,
+}: {
+  radius: number;
+  lite: boolean;
+  activeIndex: number;
+}) {
+  const R = radius * 0.36;
+  const group = useRef<THREE.Group>(null);
+  const fdMat = useRef<THREE.MeshBasicMaterial>(null);
+  const mat = useMemo(
+    () => makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite }),
+    [R, lite],
+  );
+  const flame = useMemo(
+    () => (lite ? null : makeFlameMaterial(1 / (R * 1.32))),
+    [R, lite],
+  );
+  const corona = useMemo(() => makeCoronaTexture(), []);
+  useEffect(() => {
+    return () => {
+      mat.dispose();
+      flame?.dispose();
+      corona.dispose();
+    };
+  }, [mat, flame, corona]);
+
+  useFrame((s, delta) => {
+    tickSuns(s.clock.elapsedTime, mat, flame);
+    if (group.current) {
+      easeSunCore(group.current, fdMat.current, activeIndex >= 0, delta);
+    }
+  });
+
+  return (
+    <group ref={group}>
+      <mesh material={mat}>
+        <sphereGeometry args={[R, 48, 48]} />
+      </mesh>
+      {flame && (
+        <mesh material={flame} scale={1.32}>
+          <sphereGeometry args={[R, 32, 32]} />
+        </mesh>
+      )}
+      {/* Un solo halo amplio y suave: el resplandor cercano lo hacen las llamas
+          + el bloom (dos coronas encimadas lavaban la textura del disco). */}
+      <sprite scale={R * 4.6}>
+        <spriteMaterial
+          map={corona}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          transparent
+          opacity={0.5}
+          toneMapped={false}
+        />
+      </sprite>
+      {/* El sol ilumina el balón desde el centro (luz real en la escena). */}
+      <pointLight color="#ffb45c" intensity={1.2} distance={radius * 2.4} decay={1.8} />
+      {/* FD entre el sol y la cámara: silueta tinta sobre el disco ardiente. */}
+      <Billboard>
+        <Text
+          font={LOGO_FONT}
+          fontSize={R * 0.72}
+          position={[0, 0, R * 1.18]}
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={-0.02}
+        >
+          FD
+          <meshBasicMaterial ref={fdMat} color="#122a3e" transparent />
+        </Text>
+      </Billboard>
+    </group>
+  );
+}
+
+/** Malla del balón + el sol central (con el FD) + los nodos. Grupo ESTÁTICO
+ * (sin rotación): así las direcciones de los nodos son fijas en el mundo y la
+ * cámara los encara con precisión. */
 function GraphGroup({
   activeIndex,
   lite,
@@ -76,7 +192,7 @@ function GraphGroup({
   const { nodes } = useGLTF(MODEL) as unknown as {
     nodes: Record<string, THREE.Mesh>;
   };
-  const overview = activeIndex < 0;
+  const radius = useBallRadius();
   return (
     <group scale={S}>
       {/* Balón blanco nacarado: el environment map del cielo se refleja en los
@@ -96,37 +212,8 @@ function GraphGroup({
           />
         )}
       </mesh>
-      <GraphNodes activeIndex={activeIndex} />
-      {/* Logo FD flotando en el centro 3D: metal tinta pulido (refleja el cielo)
-          + punto oro. Solo en la portada. */}
-      {overview && (
-        <Billboard>
-          <Text
-            font={LOGO_FONT}
-            fontSize={0.42}
-            anchorX="center"
-            anchorY="middle"
-            letterSpacing={-0.02}
-          >
-            FD
-            <meshStandardMaterial
-              color="#0e2233"
-              metalness={0.9}
-              roughness={0.25}
-              envMapIntensity={1.2}
-            />
-          </Text>
-          <mesh position={[0.46, -0.13, 0]}>
-            <sphereGeometry args={[0.075, 20, 20]} />
-            <meshStandardMaterial
-              color="#e8a83f"
-              metalness={0.85}
-              roughness={0.25}
-              envMapIntensity={1.2}
-            />
-          </mesh>
-        </Billboard>
-      )}
+      <GraphNodes activeIndex={activeIndex} lite={lite} />
+      <SunCore radius={radius} lite={lite} activeIndex={activeIndex} />
     </group>
   );
 }
@@ -162,12 +249,30 @@ const TAN_HALF_FOV = Math.tan((40 * Math.PI) / 360);
  * lado del texto. */
 const PAN_F = 0.3;
 
+/* Waypoints de la ruta de cámara: 0 = overview (frente, lejos, centrado);
+ * k = 1..N = nodo k (su dirección, cerca, paneado a su lado). */
+function wpDir(k: number, out: THREE.Vector3) {
+  if (k <= 0) {
+    out.copy(_z);
+  } else {
+    const d = nodos[k - 1].dir;
+    out.set(d[0], d[1], d[2]).normalize();
+  }
+}
+function wpPan(k: number): number {
+  if (k <= 0) return 0;
+  return (ladoModelo(k - 1) === "right" ? -1 : 1) * PAN_F;
+}
+
 /**
- * Rig de cámara scroll-driven, estilo escena 3D real: la cámara ORBITA (ve otra
- * parte del skybox por sección) y PANEA el punto de mira (el balón queda a un
- * costado — se mueve la cámara, nunca el modelo). En overview ve el balón entero
- * y centrado. On-demand: pide un frame más SOLO mientras algo se movió
- * perceptiblemente; después hace snap y se calla → el render se pausa.
+ * Rig de cámara scroll-driven, estilo escena 3D real: la cámara recorre una
+ * RUTA CONTINUA de waypoints (overview → nodo 1 → … → nodo N) según `t`. Entre
+ * waypoints interpola dirección (orbita el skybox), distancia (con un leve
+ * retroceso a mitad de camino entre nodos: respira, no látiga) y pan lateral
+ * (pasa por el centro al cambiar de lado). `t` es continuo a través de los
+ * bordes de sección → NUNCA hay un salto de objetivo abrupto. On-demand: pide
+ * un frame más SOLO mientras algo se movió perceptiblemente; después hace snap
+ * y se calla → el render se pausa.
  */
 function CameraRig({
   camRef,
@@ -189,27 +294,37 @@ function CameraRig({
 
   useFrame((_, delta) => {
     const st = camRef.current;
-    const active = reduced ? 0 : st.active;
-    const dive = reduced ? 0 : st.dive;
+    const N = nodos.length;
+    const t = reduced ? 0 : THREE.MathUtils.clamp(st.t, 0, N);
 
-    if (active <= 0) {
-      _dir.copy(_z);
-      _target.copy(_dir).multiplyScalar(OVER);
-      _lookGoal.set(0, 0, 0);
-    } else {
-      const nd = nodos[active - 1].dir;
-      _node.set(nd[0], nd[1], nd[2]).normalize();
-      _dir.copy(_z).lerp(_node, dive).normalize();
-      const dist = THREE.MathUtils.lerp(OVER, CLOSE, dive);
-      _target.copy(_dir).multiplyScalar(dist);
-      // Pan lateral: mirar a un costado del balón → el balón se corre al lado
-      // del modelo (opuesto al texto) sin mover la escena.
-      _fwd.copy(_dir).negate();
-      _right.crossVectors(_fwd, _up).normalize();
-      const half = dist * TAN_HALF_FOV * (size.width / size.height);
-      const sign = ladoModelo(active - 1) === "right" ? -1 : 1;
-      _lookGoal.copy(_right).multiplyScalar(sign * half * PAN_F * dive);
+    // Segmento actual [iA → iB] + progreso local con easing (suave en ambas
+    // puntas del segmento).
+    const iA = Math.min(Math.floor(t), N);
+    const iB = Math.min(iA + 1, N);
+    const f = t - iA;
+    const fs = f * f * (3 - 2 * f); // smoothstep
+
+    wpDir(iA, _node);
+    wpDir(iB, _v);
+    _dir.copy(_node).lerp(_v, fs).normalize();
+
+    const dA = iA === 0 ? OVER : CLOSE;
+    const dB = iB === 0 ? OVER : CLOSE;
+    let dist = THREE.MathUtils.lerp(dA, dB, fs);
+    // Entre dos NODOS la cámara retrocede un poco a mitad de camino (arco de
+    // respiro) en vez de rozar el balón.
+    if (iA >= 1 && iB >= 1 && iA !== iB) {
+      dist += Math.sin(Math.PI * fs) * (OVER - CLOSE) * 0.45;
     }
+    _target.copy(_dir).multiplyScalar(dist);
+
+    // Pan lateral: mirar a un costado del balón → el balón queda del lado del
+    // modelo (opuesto al texto) sin mover la escena.
+    const pan = THREE.MathUtils.lerp(wpPan(iA), wpPan(iB), fs);
+    _fwd.copy(_dir).negate();
+    _right.crossVectors(_fwd, _up).normalize();
+    const half = dist * TAN_HALF_FOV * (size.width / size.height);
+    _lookGoal.copy(_right).multiplyScalar(pan * half);
 
     if (reduced) {
       camera.position.copy(_target);
@@ -387,6 +502,21 @@ export default function GraphCanvas({
           onActivity={onActivity}
         />
       </Suspense>
+      {/* Bloom HDR SELECTIVO: umbral > 1 → solo los píxeles HDR de los soles
+          (uBright > 1, toneMapped=false) derraman luz. El cielo, el vidrio y el
+          balón quedan limpios. Esto es el "encandila": luz renderizada real del
+          modelo, no un halo pegado. En software rendering se omite. */}
+      {!lite && (
+        <EffectComposer multisampling={4}>
+          <Bloom
+            intensity={0.7}
+            luminanceThreshold={1.0}
+            luminanceSmoothing={0.3}
+            mipmapBlur
+            radius={0.75}
+          />
+        </EffectComposer>
+      )}
     </Canvas>
   );
 }

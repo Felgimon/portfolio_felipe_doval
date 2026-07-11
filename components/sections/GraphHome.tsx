@@ -182,7 +182,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const { marcarHeroCargado } = useAppReady();
   const { scrollTo } = useSmoothScroll();
 
-  const camRef = useRef<CamState>({ active: 0, dive: 0 });
+  const camRef = useRef<CamState>({ t: 0, active: 0 });
   const projRef = useRef<NodeProj[]>([]);
   const [activeIdx, setActiveIdx] = useState(-1); // -1 = portada; 0..4 = nodos
   // El canvas renderiza solo mientras hay actividad (scroll / cámara moviéndose);
@@ -191,7 +191,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const activityRef = useRef<(() => void) | null>(null);
   const onActivity = useCallback(() => activityRef.current?.(), []);
 
-  // Scroll → estado de cámara (active/dive) + índice activo (para HUD y glow).
+  // Scroll → estado de cámara (t continuo + sección activa para HUD/sol).
   // Los offsets de sección se CACHEAN (en mount / resize / tras la carga): así el
   // handler de scroll NO fuerza layout por frame (nada de getBoundingClientRect
   // en cada scroll) → scroll fluido, sin thrash de layout.
@@ -211,21 +211,35 @@ export function GraphHome({ children }: { children: ReactNode }) {
       });
     };
 
+    // Progreso CONTINUO `t` por la ruta de waypoints: dentro de la sección i,
+    // el primer 42% transiciona del waypoint anterior (i-1) al propio (i); el
+    // resto sostiene t = i. La función es continua al cruzar bordes de sección
+    // → la cámara nunca recibe un objetivo que salta (adiós al latigazo).
     const update = () => {
       const center = window.scrollY + window.innerHeight * 0.5;
       let sec = 0;
-      let dive = 0;
+      let t = 0;
+      let matched = false;
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
         if (center >= b.top && center < b.top + b.height) {
           sec = i;
-          const local = (center - b.top) / Math.max(1, b.height);
-          dive = i === 0 ? 0 : Math.min(1, Math.max(0, local / 0.42));
+          if (i > 0) {
+            const local = (center - b.top) / Math.max(1, b.height);
+            t = i - 1 + Math.min(1, Math.max(0, local / 0.42));
+          }
+          matched = true;
           break;
         }
       }
+      // Debajo de la última sección (footer): la cámara se queda en el último
+      // nodo (antes volvía de golpe al overview).
+      if (!matched && boxes.length > 1 && center >= boxes[boxes.length - 1].top) {
+        sec = boxes.length - 1;
+        t = boxes.length - 1;
+      }
+      camRef.current.t = t;
       camRef.current.active = sec;
-      camRef.current.dive = dive;
       const ai = sec - 1;
       if (ai !== last) {
         last = ai;

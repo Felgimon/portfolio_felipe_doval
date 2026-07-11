@@ -3,8 +3,59 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v3.1.0** es la vigente. Debajo quedan v3.0.0, v2.x y la v1 como
-> registro histórico.
+> La sección **v3.2.0** es la vigente. Debajo quedan v3.1, v3.0, v2.x y la v1
+> como registro histórico.
+
+---
+
+## v3.2.0 — Cámara continua + soles de plasma con bloom + sol central FD
+
+Feedback de Felipe sobre v3.1: (a) al cruzar de una sección a otra con un solo
+scroll el modelo pegaba un latigazo; (b) los soles no encandilaban; (c) quería
+un SOL CENTRAL más grande con el FD adentro y llamas hiperrealistas (referencia:
+foto de un sol naranja turbulento).
+
+### Cámara: ruta continua por waypoints (fin del salto abrupto)
+- Causa del latigazo: el estado (active, dive) era DISCRETO por sección — al
+  cruzar el borde, el objetivo saltaba de "pegado al nodo A" a "overview" de
+  golpe, y con el settle snappy eso era un latigazo.
+- Ahora el scroll produce un progreso **continuo `t`** (0 = portada, k = nodo k;
+  decimales = transición). `CameraRig` interpola entre waypoints: dirección
+  (lerp+normalize), distancia (con un **retroceso a mitad de camino** entre
+  nodos — arco de respiro, `sin(π·f)·0.45`), y pan lateral (pasa por el centro
+  al cambiar de lado), todo con smoothstep por segmento. `t` es continuo a
+  través de los bordes → **nunca hay salto de objetivo**.
+- Bonus: debajo de la última sección (footer) la cámara se queda en Contacto
+  (antes volvía de golpe al overview).
+
+### Soles de plasma (la referencia de Felipe)
+- **Superficie con domain-warping animado** (`sun.ts`: fbm alimentado por fbm +
+  granulación): la turbulencia del sol real. Paleta rojo profundo → naranja
+  fuego → oro; el grueso del disco queda en rango LDR (la textura SE VE) y solo
+  el núcleo y el limbo pasan de 1.0 (HDR).
+- **Bloom selectivo reactivado** (umbral de luminancia 1.0, HDR buffer): SOLO
+  los píxeles calientes de los soles derraman luz → **encandilan de verdad**
+  (luz renderizada del render real, no un halo pegado). El cielo, el vidrio y
+  el balón quedan limpios. En lite (software) se omite; el sol usa la variante
+  estática barata.
+- La animación corre SOLO en frames renderizados (`tickSuns` desde `useFrame`)
+  → compatible con el render on-demand; en reposo el sol queda como foto.
+
+### Sol central con el FD adentro
+- `SunCore`: superficie de plasma (48 seg) + **shell de LLAMAS** (prominencias:
+  máscara Fresnel × fbm animado con deriva ascendente, aditivo) + corona + una
+  **pointLight que ilumina el balón desde adentro**. El **FD** va en Billboard
+  entre el sol y la cámara: silueta tinta sobre el disco ardiente (eclipse).
+- En un tópico el sol central **se achica y el FD se desvanece** (quedaban
+  alineados con el sol del tópico en el eje de cámara y competían); al volver a
+  la portada crece de nuevo (`easeSunCore`, lerp en frames renderizados).
+- Reemplaza al FD metálico + punto dorado de v3.1 (el punto del logo ahora ES
+  el sol central).
+
+### QA
+Gate verde · smoke desktop+mobile 0 errores · perf: 60 reposo / ~30 moviendo
+bajo SwiftShader (lite sin bloom/llamas; GPU real vuela). Sin dependencias
+nuevas (el bloom ya estaba en @react-three/postprocessing).
 
 ---
 
