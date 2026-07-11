@@ -74,6 +74,28 @@ como referencia visual).
 - El FD ahora se anima por ESCALA de su grupo (la opacidad del material de
   troika-text no es confiable de mutar).
 
+### v3.5.0 — Eyecciones de plasma + fin del "acomodón" post-click
+- **Ráfagas que se DESPRENDEN** (`makeEjectaSpecs`/`updateEjecta` en `sun.ts`):
+  pool de partículas (10 el sol central + 3 por mini-sol) con física de
+  eyección real: nacen en el limbo, salen **desacelerando** (√p, como plasma
+  contra la gravedad), con **curl turbulento** en la trayectoria; se hinchan y
+  se **desvanecen** (entrada rápida, fade largo). ~45% son "fallback": suben y
+  **recaen al sol** (arco balístico de prominencia). Specs deterministas
+  (mulberry32 con semilla) → estables entre renders, sin Math.random. En los
+  mini-soles la intensidad va atada al FOCO (sutiles en reposo, protagonistas
+  en el activo). Solo GPU real.
+- **Fin del teletransporte post-click (root cause):** el snap de asentado se
+  disparaba cuando el movimiento POR FRAME era chico — pero con el damping
+  adaptativo el planeo lejano es lento, y el snap saltaba con ~30px todavía
+  pendientes ("el modelo se acomoda de golpe"). Ahora el snap exige que la
+  **distancia RESTANTE** sea sub-pixel (`SNAP_EPS 0.012` ≈ 2-3px) — el planeo
+  termina completo, siempre.
+- **Aterrizaje exacto del click en secciones altas:** la rampa de transición
+  era 42% de la sección; al clickear, el scroll aterriza en el tope (centro =
+  media pantalla), que en secciones altas caía DENTRO de la rampa → t < k y el
+  nodo no terminaba de centrarse. La rampa ahora se capa a **media pantalla**
+  (`min(0.42·h, vh/2 − 24)`) → el click siempre aterriza con el nodo centrado.
+
 ### v3.4.1 — Fix del parpadeo negro (fuera transmission + MSAA)
 Felipe reportó frames NEGROS intermitentes en GPU real (no reproducible en
 headless/SwiftShader → problema de driver). Las dos fuentes conocidas de black

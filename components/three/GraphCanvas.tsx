@@ -11,6 +11,8 @@ import {
   makeFlameMaterial,
   makeProminenceMaterial,
   makeCoronaTexture,
+  makeEjectaSpecs,
+  updateEjecta,
   advanceSuns,
   spinSun,
   burst,
@@ -130,8 +132,11 @@ function SunCore({
   const flameMesh = useRef<THREE.Mesh>(null);
   const flareGroup = useRef<THREE.Group>(null);
   const jetRefs = useRef<(THREE.Sprite | null)[]>([]);
+  const ejRefs = useRef<(THREE.Sprite | null)[]>([]);
   const fdGroup = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
+  // Ráfagas desprendidas: 10 partículas con trayectorias/vidas propias.
+  const ejSpecs = useMemo(() => makeEjectaSpecs(10, 7), []);
   const mat = useMemo(
     () => makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite }),
     [R, lite],
@@ -179,6 +184,7 @@ function SunCore({
       if (flameMesh.current) spinSun(flameMesh.current, -0.04, delta);
       if (flareGroup.current) spinSun(flareGroup.current, 0.045, delta);
       pulseJets(jetRefs.current, timeRef.current, R);
+      updateEjecta(ejRefs.current, ejSpecs, timeRef.current, R, 1);
     }
     if (group.current) {
       easeSunCore(group.current, fdGroup.current, activeIndex >= 0, delta);
@@ -218,6 +224,26 @@ function SunCore({
               <spriteMaterial
                 map={corona}
                 rotation={j.rot}
+                depthWrite={false}
+                transparent
+                opacity={0}
+                toneMapped={false}
+              />
+            </sprite>
+          ))}
+          {/* Ráfagas que se DESPRENDEN: nacen en el limbo, se alejan
+              desacelerando con curl, se hinchan y se desvanecen; algunas
+              recaen al sol (arco de prominencia). Animadas en updateEjecta. */}
+          {ejSpecs.map((_, i) => (
+            <sprite
+              key={`ej-${i}`}
+              ref={(el) => {
+                ejRefs.current[i] = el;
+              }}
+              scale={[R * 0.2, R * 0.2, 1]}
+            >
+              <spriteMaterial
+                map={corona}
                 depthWrite={false}
                 transparent
                 opacity={0}
@@ -292,7 +318,6 @@ function GraphGroup({
 const _dir = new THREE.Vector3();
 const _node = new THREE.Vector3();
 const _target = new THREE.Vector3();
-const _prev = new THREE.Vector3();
 const _v = new THREE.Vector3();
 const _nd = new THREE.Vector3();
 const _cam = new THREE.Vector3();
@@ -302,16 +327,15 @@ const _fwd = new THREE.Vector3();
 const _right = new THREE.Vector3();
 const _lookGoal = new THREE.Vector3();
 const _lookCur = new THREE.Vector3(); // estado persistente del punto de mira
-const _prevLook = new THREE.Vector3();
 
 /** Respuesta de la cámara: base de la caída exponiencial por segundo. Más chico
  * = más "snappy" (buceo rápido + tracking ajustado del scroll → menos residuo al
  * frenar → asienta antes). */
 const SETTLE = 0.00002;
-/** Umbral de "ya no se mueve": si el desplazamiento por frame es menor a esto,
- * la cámara hace snap al objetivo y DEJA de pedir frames → el canvas se pausa.
- * ~0.009 unidades sobre una cámara a distancia ~5 = sub-pixel (invisible). */
-const MOVE_EPS2 = 0.009 * 0.009;
+/** Umbral de asentado: la cámara hace snap recién cuando la distancia RESTANTE
+ * al objetivo es menor a esto (~0.012 unidades a distancia ~5 = ~2-3px,
+ * invisible). En lite además deja de pedir frames → el canvas se pausa. */
+const SNAP_EPS2 = 0.012 * 0.012;
 /** tan(fov/2) del canvas (fov 40). */
 const TAN_HALF_FOV = Math.tan((40 * Math.PI) / 360);
 /** Cuánto panea la cámara en un tópico (fracción del semiancho visible). El
@@ -404,8 +428,6 @@ function CameraRig({
       return; // reduced-motion: instantáneo, sin pings → pausa inmediata
     }
 
-    _prev.copy(camera.position);
-    _prevLook.copy(_lookCur);
     // Damping ADAPTATIVO: cerca del objetivo (scroll) = tracking ajustado;
     // lejos (click directo a otra sección: t salta) = planeo suave (~1s) en
     // línea directa — la cámara orbita derecho al nodo, SIN recorrer los
@@ -418,11 +440,13 @@ function CameraRig({
     _lookCur.lerp(_lookGoal, k);
     camera.lookAt(_lookCur);
 
-    // ¿Se movió algo perceptible este frame (posición O punto de mira)? Si sí,
-    // pedí otro. Si no, cerrá: snap a los objetivos y dejá pausar.
+    // Asentado: SOLO cuando la distancia RESTANTE es sub-pixel. (Antes se
+    // snapeaba cuando el movimiento POR FRAME era chico — con el damping
+    // adaptativo el planeo lejano es lento y eso disparaba el snap con ~30px
+    // todavía pendientes: el "teletransporte" al final del click.)
     if (
-      camera.position.distanceToSquared(_prev) > MOVE_EPS2 ||
-      _lookCur.distanceToSquared(_prevLook) > MOVE_EPS2
+      camera.position.distanceToSquared(_target) > SNAP_EPS2 ||
+      _lookCur.distanceToSquared(_lookGoal) > SNAP_EPS2
     ) {
       onActivity?.();
     } else {

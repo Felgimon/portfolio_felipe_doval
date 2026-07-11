@@ -206,6 +206,94 @@ export function burst(time: number, period: number, phase: number): number {
   return Math.pow(Math.max(0, s), 8);
 }
 
+/* ---------- ráfagas que se DESPRENDEN (eyecciones de plasma) ---------- */
+
+export type EjectaSpec = {
+  dir: THREE.Vector3; // dirección radial de salida
+  axis: THREE.Vector3; // eje de curl (turbulencia en la trayectoria)
+  life: number; // duración del ciclo (s)
+  phase: number; // desfase (s) — nunca en sincronía
+  travel: number; // distancia máxima (en radios del sol)
+  size: number; // tamaño base (en radios del sol)
+  curl: number; // giro total de la trayectoria (rad)
+  fallback: boolean; // ¿recae al sol? (arco balístico, como una prominencia)
+};
+
+/** RNG determinista (mulberry32): specs estables entre renders/SSR, sin
+ * Math.random en el cuerpo del componente. */
+function rng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function makeEjectaSpecs(count: number, seed: number): EjectaSpec[] {
+  const r = rng(seed);
+  const specs: EjectaSpec[] = [];
+  for (let i = 0; i < count; i++) {
+    // Sesgo hacia el hemisferio frontal (+z): que se vean desde la cámara.
+    const dir = new THREE.Vector3(
+      r() * 2 - 1,
+      r() * 2 - 1,
+      r() * 0.9 + 0.15,
+    ).normalize();
+    const ref =
+      Math.abs(dir.y) < 0.9
+        ? new THREE.Vector3(0, 1, 0)
+        : new THREE.Vector3(1, 0, 0);
+    const axis = new THREE.Vector3().crossVectors(dir, ref).normalize();
+    specs.push({
+      dir,
+      axis,
+      life: 3.5 + r() * 4,
+      phase: r() * 12,
+      travel: 0.5 + r() * 0.9,
+      size: 0.16 + r() * 0.2,
+      curl: (r() - 0.5) * 1.6,
+      fallback: r() < 0.45,
+    });
+  }
+  return specs;
+}
+
+const _ejDir = new THREE.Vector3();
+
+/**
+ * Anima un pool de ráfagas desprendidas: cada partícula nace en el limbo, se
+ * DESPRENDE desacelerando (√p: rápida al salir, se frena — como plasma contra
+ * la gravedad), con curl turbulento en la trayectoria; se hincha y se DESVANECE.
+ * Las "fallback" suben y RECAEN al sol (arco balístico de prominencia real).
+ * `strength` 0..1 escala la opacidad (p.ej. el foco del sol).
+ */
+export function updateEjecta(
+  sprites: (THREE.Sprite | null)[],
+  specs: EjectaSpec[],
+  time: number,
+  R: number,
+  strength: number,
+) {
+  for (let i = 0; i < specs.length; i++) {
+    const s = sprites[i];
+    if (!s) continue;
+    const e = specs[i];
+    const p = ((time + e.phase) % e.life) / e.life; // progreso 0..1
+    const up = e.fallback ? Math.sin(Math.PI * p) : Math.sqrt(p);
+    const rad = R * (1.02 + e.travel * up);
+    _ejDir.copy(e.dir).applyAxisAngle(e.axis, e.curl * p);
+    s.position.copy(_ejDir).multiplyScalar(rad);
+    const grow = Math.sin(Math.PI * Math.min(p * 1.25, 1));
+    const sc = R * e.size * (0.5 + grow);
+    s.scale.set(sc, sc, 1);
+    // entrada rápida, desvanecimiento largo
+    const o = Math.min(p * 6, 1) * Math.pow(1 - p, 1.6);
+    (s.material as THREE.SpriteMaterial).opacity = o * 0.7 * strength;
+  }
+}
+
 /* ---------- factorías de materiales / texturas ---------- */
 
 export function makeSunMaterial(opts: {

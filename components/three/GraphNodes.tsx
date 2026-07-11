@@ -7,6 +7,8 @@ import { BALL_R } from "./Lattice";
 import {
   makeSunMaterial,
   makeCoronaTexture,
+  makeEjectaSpecs,
+  updateEjecta,
   advanceSuns,
   spinSun,
   burst,
@@ -99,9 +101,15 @@ export function GraphNodes({
 
   const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
   const spriteRefs = useRef<(THREE.Sprite | null)[]>([]);
+  const ejRefs = useRef<(THREE.Sprite | null)[][]>(nodos.map(() => []));
   const lightRef = useRef<THREE.PointLight>(null);
   const focus = useRef<number[]>(nodos.map(() => 0));
   const timeRef = useRef(0);
+  // Ráfagas desprendidas por sol (3 c/u, semilla propia → patrones distintos).
+  const ejSpecs = useMemo(
+    () => nodos.map((_, i) => makeEjectaSpecs(3, 20 + i)),
+    [],
+  );
 
   useFrame((_, delta) => {
     if (!reduced) {
@@ -126,6 +134,16 @@ export function GraphNodes({
       );
       const m = meshRefs.current[i];
       if (!reduced && m) spinSun(m, 0.22, delta);
+      // Eyecciones: sutiles en reposo, protagonistas cuando el sol tiene foco.
+      if (!reduced && !lite) {
+        updateEjecta(
+          ejRefs.current[i],
+          ejSpecs[i],
+          timeRef.current,
+          base,
+          0.25 + 0.75 * f[i],
+        );
+      }
     }
     moveLight(
       lightRef.current,
@@ -161,6 +179,25 @@ export function GraphNodes({
               toneMapped={false}
             />
           </sprite>
+          {/* Ráfagas desprendidas (animadas en updateEjecta; solo GPU real). */}
+          {!lite &&
+            ejSpecs[i].map((_, j) => (
+              <sprite
+                key={`ej-${j}`}
+                ref={(el) => {
+                  ejRefs.current[i][j] = el;
+                }}
+                scale={[base * 0.3, base * 0.3, 1]}
+              >
+                <spriteMaterial
+                  map={corona}
+                  depthWrite={false}
+                  transparent
+                  opacity={0}
+                  toneMapped={false}
+                />
+              </sprite>
+            ))}
         </group>
       ))}
       {/* La luz que baña el contenedor: viaja con el foco, intensidad 0 en la

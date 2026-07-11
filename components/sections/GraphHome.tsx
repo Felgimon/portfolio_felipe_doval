@@ -261,8 +261,16 @@ export function GraphHome({ children }: { children: ReactNode }) {
         if (center >= b.top && center < b.top + b.height) {
           sec = i;
           if (i > 0) {
-            const local = (center - b.top) / Math.max(1, b.height);
-            t = i - 1 + Math.min(1, Math.max(0, local / 0.42));
+            // La rampa de transición dura 42% de la sección pero NUNCA más de
+            // media pantalla: el click directo aterriza en el tope de la
+            // sección (centro = top + vh/2) y así SIEMPRE cae en la zona de
+            // "nodo centrado" (t = i), también en secciones altas — el planeo
+            // de cámara termina exactamente en el nodo, sin residuo.
+            const ramp = Math.min(
+              0.42 * b.height,
+              window.innerHeight * 0.5 - 24,
+            );
+            t = i - 1 + Math.min(1, Math.max(0, (center - b.top) / Math.max(1, ramp)));
           }
           matched = true;
           break;
