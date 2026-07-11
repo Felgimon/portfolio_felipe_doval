@@ -72,7 +72,8 @@ function easeSunCore(
   inTopic: boolean,
   delta: number,
 ) {
-  const k = 1 - Math.pow(0.000001, Math.min(delta, 0.05));
+  // Misma curva "épica" que el foco de los nodos (~95% en 0.7s).
+  const k = 1 - Math.pow(0.014, Math.min(delta, 0.1));
   const target = inTopic ? 0.45 : 1;
   const s = g.scale.x + (target - g.scale.x) * k;
   g.scale.setScalar(s);

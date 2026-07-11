@@ -6,12 +6,52 @@ import { nodos } from "@/lib/navigation";
 import { BALL_R } from "./Lattice";
 import { makeSunMaterial, makeCoronaTexture, advanceSuns, spinSun } from "./sun";
 
+const GROW = 0.5; // escala extra del sol activo
+const BRIGHT_0 = 1.1; // brillo en reposo
+const BRIGHT_1 = 1.5; // brillo activo
+/** Easing del "crecimiento épico": ~95% del camino en 0.7s (rápido, no abrupto). */
+const FOCUS_BASE = 0.014;
+
+/* Aplica el estado de foco (0..1) a un sol: escala, brillo del plasma y corona
+ * crecen JUNTOS con la misma curva (mutación imperativa fuera del componente). */
+function applyFocus(
+  mesh: THREE.Mesh | null,
+  sprite: THREE.Sprite | null,
+  mat: THREE.ShaderMaterial,
+  base: number,
+  f: number,
+) {
+  if (mesh) mesh.scale.setScalar(1 + GROW * f);
+  mat.uniforms.uBright.value = BRIGHT_0 + (BRIGHT_1 - BRIGHT_0) * f;
+  if (sprite) {
+    const s = base * (4.2 + 2.8 * f);
+    sprite.scale.set(s, s, 1);
+    (sprite.material as THREE.SpriteMaterial).opacity = 0.5 + 0.35 * f;
+  }
+}
+
+/* La luz cálida VIAJA hacia el sol activo (y se apaga en la portada): nunca
+ * aparece/desaparece de golpe. */
+function moveLight(
+  light: THREE.PointLight | null,
+  target: THREE.Vector3 | null,
+  k: number,
+) {
+  if (!light) return;
+  if (target) {
+    light.position.lerp(target, k);
+    light.intensity += (2.4 - light.intensity) * k;
+  } else {
+    light.intensity += (0 - light.intensity) * k;
+  }
+}
+
 /**
- * Las 5 esferas-nodo como MINI-SOLES: plasma animado con domain-warping (shader
- * `sun`, HDR → el bloom los hace encandilar de verdad) + corona aditiva + una
- * LUZ PUNTUAL en el sol activo que baña el contenedor (reacción física real).
- * En GPU real el canvas corre continuo → el plasma hierve a framerate completo;
- * en lite/reduced el sol es estático.
+ * Las 5 esferas-nodo como MINI-SOLES: plasma animado (shader `sun`, HDR → el
+ * bloom los hace encandilar) + corona aditiva + una luz puntual que viaja al
+ * sol activo. El foco (tamaño + brillo + corona + luz) crece GRADUALMENTE
+ * (~1s): una etapa de crecimiento épica, no un salto. Cada sol tiene su propio
+ * material para poder animar el brillo por-nodo.
  */
 export function GraphNodes({
   activeIndex,
@@ -33,71 +73,82 @@ export function GraphNodes({
   );
   const base = radius * 0.085;
 
-  const matNormal = useMemo(
-    () => makeSunMaterial({ bright: 1.1, invR: 1 / base, animated: !lite }),
-    [base, lite],
-  );
-  const matActive = useMemo(
-    () => makeSunMaterial({ bright: 1.45, invR: 1 / base, animated: !lite }),
+  const mats = useMemo(
+    () =>
+      nodos.map(() =>
+        makeSunMaterial({ bright: BRIGHT_0, invR: 1 / base, animated: !lite }),
+      ),
     [base, lite],
   );
   const corona = useMemo(() => makeCoronaTexture(), []);
   useEffect(() => {
     return () => {
-      matNormal.dispose();
-      matActive.dispose();
+      for (const m of mats) m.dispose();
       corona.dispose();
     };
-  }, [matNormal, matActive, corona]);
+  }, [mats, corona]);
 
   const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const spriteRefs = useRef<(THREE.Sprite | null)[]>([]);
+  const lightRef = useRef<THREE.PointLight>(null);
+  const focus = useRef<number[]>(nodos.map(() => 0));
+
   useFrame((_, delta) => {
-    if (reduced) return;
-    advanceSuns(delta, matNormal, matActive);
-    for (const m of meshRefs.current) {
-      if (m) spinSun(m, 0.22, delta);
+    if (!reduced) advanceSuns(delta, ...mats);
+    // reduced: snap instantáneo (sin animación); si no, easing exponencial.
+    const k = reduced ? 1 : 1 - Math.pow(FOCUS_BASE, Math.min(delta, 0.1));
+    const f = focus.current;
+    for (let i = 0; i < nodos.length; i++) {
+      f[i] += ((i === activeIndex ? 1 : 0) - f[i]) * k;
+      applyFocus(meshRefs.current[i], spriteRefs.current[i], mats[i], base, f[i]);
+      const m = meshRefs.current[i];
+      if (!reduced && m) spinSun(m, 0.22, delta);
     }
+    moveLight(
+      lightRef.current,
+      activeIndex >= 0 ? positions[activeIndex] : null,
+      k,
+    );
   });
 
   return (
     <>
-      {positions.map((p, i) => {
-        const active = i === activeIndex;
-        return (
-          <group key={nodos[i].id} position={p}>
-            <mesh
-              ref={(el) => {
-                meshRefs.current[i] = el;
-              }}
-              scale={active ? 1.5 : 1}
-              material={active ? matActive : matNormal}
-            >
-              <sphereGeometry args={[base, 24, 24]} />
-            </mesh>
-            <sprite scale={active ? base * 7 : base * 4.2}>
-              <spriteMaterial
-                map={corona}
-                blending={THREE.AdditiveBlending}
-                depthWrite={false}
-                transparent
-                opacity={active ? 0.85 : 0.5}
-                toneMapped={false}
-              />
-            </sprite>
-          </group>
-        );
-      })}
-      {/* El sol activo ILUMINA el contenedor: los struts cercanos se tiñen de
-          luz cálida (reacción real del material, como una luz en Blender). */}
-      {activeIndex >= 0 && activeIndex < positions.length && (
-        <pointLight
-          position={positions[activeIndex]}
-          color="#ffbe6a"
-          intensity={2.4}
-          distance={radius * 2.6}
-          decay={1.6}
-        />
-      )}
+      {positions.map((p, i) => (
+        <group key={nodos[i].id} position={p}>
+          <mesh
+            ref={(el) => {
+              meshRefs.current[i] = el;
+            }}
+            material={mats[i]}
+          >
+            <sphereGeometry args={[base, 24, 24]} />
+          </mesh>
+          <sprite
+            ref={(el) => {
+              spriteRefs.current[i] = el;
+            }}
+            scale={[base * 4.2, base * 4.2, 1]}
+          >
+            <spriteMaterial
+              map={corona}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+              transparent
+              opacity={0.5}
+              toneMapped={false}
+            />
+          </sprite>
+        </group>
+      ))}
+      {/* La luz que baña el contenedor: viaja con el foco, intensidad 0 en la
+          portada (siempre montada → sin pops). */}
+      <pointLight
+        ref={lightRef}
+        color="#ffbe6a"
+        intensity={0}
+        distance={radius * 2.6}
+        decay={1.6}
+      />
     </>
   );
 }

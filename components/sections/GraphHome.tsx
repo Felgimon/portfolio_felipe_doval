@@ -126,8 +126,10 @@ function NodeOverlay({
   );
 }
 
-/** HUD de navegación: los 5 tópicos, sin números ni "slides". Nav futurista +
- * fallback accesible (teclado / mobile / sin-WebGL). */
+/** HUD de navegación: los 5 tópicos, sin números ni "slides". El subrayado es
+ * UNO solo y está vivo: se DESLIZA horizontalmente hasta la sección activa
+ * (medido contra el botón real, con transición de transform + width). Fallback
+ * accesible (teclado / mobile / sin-WebGL). */
 function HudRail({
   activeIdx,
   onGoto,
@@ -135,6 +137,33 @@ function HudRail({
   activeIdx: number;
   onGoto: (id: string) => void;
 }) {
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [bar, setBar] = useState({ x: 0, w: 0, on: false });
+
+  const medir = useCallback(() => {
+    const b = btnRefs.current[activeIdx];
+    if (!b) {
+      setBar((s) => (s.on ? { ...s, on: false } : s));
+      return;
+    }
+    // El subrayado cubre el TEXTO del botón (descuenta el padding real).
+    const cs = getComputedStyle(b);
+    const pl = parseFloat(cs.paddingLeft);
+    const pr = parseFloat(cs.paddingRight);
+    setBar({ x: b.offsetLeft + pl, w: b.offsetWidth - pl - pr, on: true });
+  }, [activeIdx]);
+
+  useEffect(() => {
+    medir();
+    // Re-medir si cambia el layout (resize / carga de la fuente mono).
+    const t = window.setTimeout(medir, 700);
+    window.addEventListener("resize", medir);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", medir);
+    };
+  }, [medir]);
+
   return (
     <nav
       aria-label="Secciones"
@@ -147,6 +176,9 @@ function HudRail({
             <button
               key={n.id}
               type="button"
+              ref={(el) => {
+                btnRefs.current[i] = el;
+              }}
               onClick={() => onGoto(n.id)}
               aria-label={`${n.label} — ${n.hint}`}
               aria-current={active ? "true" : undefined}
@@ -156,15 +188,19 @@ function HudRail({
               )}
             >
               {n.label}
-              {active && (
-                <span
-                  aria-hidden
-                  className="absolute inset-x-2.5 -bottom-0.5 h-0.5 rounded-full bg-acento sm:inset-x-4"
-                />
-              )}
             </button>
           );
         })}
+        {/* El subrayado vivo: viaja hasta la sección activa. */}
+        <span
+          aria-hidden
+          className="absolute bottom-1.5 left-0 h-0.5 rounded-full bg-acento transition-[transform,width,opacity] duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
+          style={{
+            transform: `translateX(${bar.x}px)`,
+            width: bar.w,
+            opacity: bar.on ? 1 : 0,
+          }}
+        />
       </div>
     </nav>
   );

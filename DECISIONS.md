@@ -50,6 +50,19 @@ bajo SwiftShader (la pausa lite sigue activa). Los `.glb` quedan en
 `public/models/` como material histórico (el poster sin-WebGL sigue usándolos
 como referencia visual).
 
+### v3.3.2 — Crecimiento épico del sol activo + subrayado vivo del HUD
+- **Foco gradual por nodo**: cada mini-sol tiene su PROPIO material y un valor
+  de foco (0..1) animado por frame (easing exponencial, ~95% en 0.7s): escala,
+  brillo del plasma (`uBright`), corona (tamaño+opacidad) y la LUZ crecen
+  juntos — "una etapa de crecimiento épica en 1s", no un salto. La pointLight
+  es una sola, siempre montada, que **viaja** hacia el sol activo y se apaga en
+  la portada (cero pops). El sol central usa la misma curva. reduced-motion:
+  snap instantáneo.
+- **Subrayado vivo del HUD**: un único indicador absoluto que se DESLIZA
+  horizontalmente hasta el botón activo (medido contra el DOM real, descontando
+  el padding; transición de transform+width con cubic-bezier). Se re-mide en
+  resize y tras la carga de la fuente.
+
 ### v3.3.1 — La animación del sol, verificada con píxeles
 Felipe reportó el sol totalmente estático. Endurecimiento + prueba:
 - **Tiempo propio por delta** (`advanceSuns`): el uniform `uTime` acumula el
