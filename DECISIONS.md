@@ -3,8 +3,52 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v3.2.0** es la vigente. Debajo quedan v3.1, v3.0, v2.x y la v1
-> como registro histórico.
+> La sección **v3.3.0** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> la v1 como registro histórico.
+
+---
+
+## v3.3.0 — Sol vivo a 60fps + contenedor fullereno (cromo + vidrio)
+
+Feedback de Felipe sobre v3.2: (a) el sol se animaba a <1fps (quedaba congelado
+y saltaba cada varios segundos); (b) el contenedor (el balón GLB de v1) era feo
+— quería un contenedor más realista y futurista.
+
+### El sol hierve a framerate completo
+- Causa del <1fps: el render on-demand pausaba el canvas en reposo → el plasma
+  solo avanzaba en los pocos frames del scroll. Ahora **en GPU real el canvas
+  corre SIEMPRE** (`frameloop="always"`): el sol se anima continuo a 60fps+. El
+  costo es trivial para cualquier GPU (escena chica + bloom mipmap).
+- La **pausa on-demand queda solo para software rendering y reduced-motion**
+  (`paused && (lite || reduced)`): ahí el sol ya es estático (shader lite / uTime
+  congelado), así que pausar ahorra CPU sin congelar nada visible.
+
+### Contenedor nuevo: fullereno de cromo + vidrio (fuera el GLB)
+- Sobre "buscar un modelo certificado": los marketplaces con descarga de modelos
+  (Sketchfab etc.) requieren OAuth — no descargable desde acá. En su lugar, el
+  contenedor se construye con **matemática exacta**: un **icosaedro truncado**
+  (la pelota de fútbol / fullereno C60 — la marca de Felipe): 60 vértices / 90
+  aristas (12 pentágonos + 20 hexágonos), **orientado con un hexágono de frente**
+  → el sol y el FD quedan en una ventana limpia, sin struts cruzando el centro.
+  (`components/three/Lattice.tsx`; primero se probó un geodésico detail-1 pero
+  sus triángulos tapaban el centro.)
+- **Materiales**: struts finos de cromo claro con juntas esféricas (mergeado en
+  1 draw call; el envmap del cielo les da el realismo) + **esfera de vidrio
+  físico** (`transmission`, ior bajo 1.08 para no hacer efecto lupa) — el sol se
+  ve a través del vidrio y el cielo se refleja en él. En lite: metal simple, sin
+  vidrio (transmission re-renderiza la escena).
+- **Radio canónico `BALL_R = 1`**: se eliminó el GLB de la home (y su
+  `useGLTF`); la boundingSphere del GLB estaba inflada respecto del radio
+  visual, así que las distancias de cámara se recalibraron (OVER 5.0 / CLOSE
+  3.6) y los soles-nodo ahora orbitan DESPEGADOS del contenedor (r×1.32, halo
+  alrededor del vidrio). El FD se movió fuera del shell de llamas (R×1.5) para
+  que no lo lave el fuego.
+
+### QA
+Gate verde · smoke desktop+mobile 0 errores · perf: 60 reposo / ~29 moviendo
+bajo SwiftShader (la pausa lite sigue activa). Los `.glb` quedan en
+`public/models/` como material histórico (el poster sin-WebGL sigue usándolos
+como referencia visual).
 
 ---
 

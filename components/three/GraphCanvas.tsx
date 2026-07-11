@@ -2,9 +2,10 @@
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, useTexture, Text, Billboard, Environment } from "@react-three/drei";
+import { useTexture, Text, Billboard, Environment } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
+import { Lattice, BALL_R } from "./Lattice";
 import {
   makeSunMaterial,
   makeFlameMaterial,
@@ -14,7 +15,6 @@ import {
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
-const MODEL = "/models/pelota-estructura-transformed.glb";
 const LOGO_FONT = "/fonts/logo.ttf";
 /** Skybox fotorealista: "Kloofendal partly cloudy puresky" (Poly Haven, CC0).
  * El JPG 4K es el FONDO (cielo real con nubes); el HDR 1K es la LUZ (environment
@@ -60,17 +60,6 @@ function SkyDome({ lite }: { lite: boolean }) {
   return null;
 }
 
-function useBallRadius(): number {
-  const { nodes } = useGLTF(MODEL) as unknown as {
-    nodes: Record<string, THREE.Mesh>;
-  };
-  const geometry = nodes.geometry_0.geometry;
-  return useMemo(() => {
-    if (!geometry.boundingSphere) geometry.computeBoundingSphere();
-    return geometry.boundingSphere?.radius ?? 1;
-  }, [geometry]);
-}
-
 /* Transición del sol central (mutación imperativa, fuera del componente):
  * en un tópico se ACHICA y el FD se desvanece (el sol del tópico es el
  * protagonista y quedan alineados en el eje de cámara); en la portada vuelve a
@@ -104,13 +93,15 @@ function easeSunCore(
 function SunCore({
   radius,
   lite,
+  reduced,
   activeIndex,
 }: {
   radius: number;
   lite: boolean;
+  reduced: boolean;
   activeIndex: number;
 }) {
-  const R = radius * 0.36;
+  const R = radius * 0.5;
   const group = useRef<THREE.Group>(null);
   const fdMat = useRef<THREE.MeshBasicMaterial>(null);
   const mat = useMemo(
@@ -131,7 +122,7 @@ function SunCore({
   }, [mat, flame, corona]);
 
   useFrame((s, delta) => {
-    tickSuns(s.clock.elapsedTime, mat, flame);
+    if (!reduced) tickSuns(s.clock.elapsedTime, mat, flame);
     if (group.current) {
       easeSunCore(group.current, fdMat.current, activeIndex >= 0, delta);
     }
@@ -166,7 +157,7 @@ function SunCore({
         <Text
           font={LOGO_FONT}
           fontSize={R * 0.72}
-          position={[0, 0, R * 1.18]}
+          position={[0, 0, R * 1.5]}
           anchorX="center"
           anchorY="middle"
           letterSpacing={-0.02}
@@ -179,41 +170,28 @@ function SunCore({
   );
 }
 
-/** Malla del balón + el sol central (con el FD) + los nodos. Grupo ESTÁTICO
- * (sin rotación): así las direcciones de los nodos son fijas en el mundo y la
- * cámara los encara con precisión. */
+/** El contenedor geodésico (cromo + vidrio) + el sol central (con el FD) + los
+ * nodos. Grupo ESTÁTICO (sin rotación): así las direcciones de los nodos son
+ * fijas en el mundo y la cámara los encara con precisión. */
 function GraphGroup({
   activeIndex,
   lite,
+  reduced,
 }: {
   activeIndex: number;
   lite: boolean;
+  reduced: boolean;
 }) {
-  const { nodes } = useGLTF(MODEL) as unknown as {
-    nodes: Record<string, THREE.Mesh>;
-  };
-  const radius = useBallRadius();
   return (
     <group scale={S}>
-      {/* Balón blanco nacarado: el environment map del cielo se refleja en los
-          struts (clearcoat) → material con vida, no plástico plano. En software
-          rendering el clearcoat se paga caro → material estándar. */}
-      <mesh geometry={nodes.geometry_0.geometry}>
-        {lite ? (
-          <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.4} />
-        ) : (
-          <meshPhysicalMaterial
-            color="#ffffff"
-            metalness={0.05}
-            roughness={0.3}
-            clearcoat={1}
-            clearcoatRoughness={0.22}
-            envMapIntensity={1.15}
-          />
-        )}
-      </mesh>
-      <GraphNodes activeIndex={activeIndex} lite={lite} />
-      <SunCore radius={radius} lite={lite} activeIndex={activeIndex} />
+      <Lattice lite={lite} />
+      <GraphNodes activeIndex={activeIndex} lite={lite} reduced={reduced} />
+      <SunCore
+        radius={BALL_R}
+        lite={lite}
+        reduced={reduced}
+        activeIndex={activeIndex}
+      />
     </group>
   );
 }
@@ -289,8 +267,10 @@ function CameraRig({
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   const rBall = radius * S;
-  const OVER = rBall * 3.6; // overview: balón entero, de frente
-  const CLOSE = rBall * 2.55; // en tópico: balón grande, sol activo de frente
+  // Calibrado contra BALL_R exacto (el GLB viejo tenía boundingSphere inflada,
+  // por eso estos factores son mayores que los históricos 3.6/2.55).
+  const OVER = rBall * 5.0; // overview: contenedor entero, de frente
+  const CLOSE = rBall * 3.6; // en tópico: contenedor grande, sol activo de frente
 
   useFrame((_, delta) => {
     const st = camRef.current;
@@ -366,7 +346,7 @@ function NodeProjector({
 }) {
   const { camera, size } = useThree();
   const buf = useRef<NodeProj[]>([]);
-  const rNode = radius * 1.04 * S;
+  const rNode = radius * 1.32 * S;
   useFrame(() => {
     if (!onProject) return;
     _cam.copy(camera.position).normalize();
@@ -415,33 +395,32 @@ function Scene({
   onProject?: (p: NodeProj[]) => void;
   onActivity?: () => void;
 }) {
-  const radius = useBallRadius();
   return (
     <>
       {/* El cielo fotográfico de fondo (siempre: ES el diseño). */}
       <SkyDome lite={lite} />
-      {/* Iluminación: environment map del cielo (reflejos reales en el balón).
-          En render por SOFTWARE el shading PBR con envmap se paga carísimo →
+      {/* Iluminación: environment map del cielo (reflejos reales en el cromo y
+          el vidrio). En render por SOFTWARE el PBR con envmap se paga carísimo →
           luces simples equivalentes (mismo clima, fracción del costo). */}
       {lite ? (
         <ambientLight intensity={0.85} color="#eaf5fb" />
       ) : (
         <Environment files={SKY_HDR} environmentRotation={[0, SKY_ROT, 0]} />
       )}
-      {/* Un sol direccional cálido refuerza los highlights del clearcoat. */}
+      {/* Un sol direccional cálido refuerza los highlights del cromo. */}
       <directionalLight
         position={[2.5, 4.5, 2]}
         intensity={lite ? 1.15 : 0.7}
         color="#fff3dd"
       />
-      <GraphGroup activeIndex={activeIndex} lite={lite} />
+      <GraphGroup activeIndex={activeIndex} lite={lite} reduced={reduced} />
       <CameraRig
         camRef={camRef}
         reduced={reduced}
-        radius={radius}
+        radius={BALL_R}
         onActivity={onActivity}
       />
-      <NodeProjector onProject={onProject} radius={radius} />
+      <NodeProjector onProject={onProject} radius={BALL_R} />
       <SignalReady onReady={onReady} />
     </>
   );
@@ -451,8 +430,10 @@ export type GraphCanvasProps = {
   camRef: RefObject<CamState>;
   activeIndex?: number;
   reduced?: boolean;
-  /** true → frameloop "never" (0 frames en reposo). GraphHome lo prende con la
-   * actividad de scroll y lo apaga cuando la cámara se asentó. */
+  /** Solicitud de pausa de GraphHome (sin actividad de scroll/cámara). Solo se
+   * respeta en software rendering o reduced-motion — ahí el sol es estático y
+   * pausar ahorra CPU. En GPU real el canvas corre SIEMPRE: el plasma del sol
+   * hierve a framerate completo (el costo es trivial para cualquier GPU). */
   paused?: boolean;
   onReady?: () => void;
   onProject?: (p: NodeProj[]) => void;
@@ -469,8 +450,8 @@ export default function GraphCanvas({
   onProject,
   onActivity,
 }: GraphCanvasProps) {
-  // Sin postproceso: la escena es liviana en cualquier GPU. En render por
-  // software (SwiftShader) se capa DPR a 1 y sin antialias para sostener FPS.
+  // En render por software (SwiftShader) se capa DPR a 1 y sin antialias para
+  // sostener FPS; en GPU real, calidad completa.
   const lite = useMemo(() => isSoftwareRenderer(), []);
   const dpr = lite
     ? 1
@@ -480,7 +461,7 @@ export default function GraphCanvas({
 
   return (
     <Canvas
-      frameloop={paused ? "never" : "always"}
+      frameloop={paused && (lite || reduced) ? "never" : "always"}
       dpr={dpr}
       camera={{ position: [0, 0, 6], fov: 40 }}
       gl={{
@@ -521,4 +502,3 @@ export default function GraphCanvas({
   );
 }
 
-useGLTF.preload(MODEL);

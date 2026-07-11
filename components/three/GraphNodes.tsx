@@ -2,42 +2,36 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
 import { nodos } from "@/lib/navigation";
+import { BALL_R } from "./Lattice";
 import { makeSunMaterial, makeCoronaTexture, tickSuns } from "./sun";
-
-const MODEL = "/models/pelota-estructura-transformed.glb";
 
 /**
  * Las 5 esferas-nodo como MINI-SOLES: plasma animado con domain-warping (shader
  * `sun`, HDR → el bloom los hace encandilar de verdad) + corona aditiva + una
- * LUZ PUNTUAL en el sol activo que baña los struts del balón (reacción física
- * real). La animación corre solo en frames renderizados (render on-demand).
+ * LUZ PUNTUAL en el sol activo que baña el contenedor (reacción física real).
+ * En GPU real el canvas corre continuo → el plasma hierve a framerate completo;
+ * en lite/reduced el sol es estático.
  */
 export function GraphNodes({
   activeIndex,
   lite,
+  reduced,
 }: {
   activeIndex: number;
   lite: boolean;
+  reduced: boolean;
 }) {
-  const { nodes } = useGLTF(MODEL) as unknown as {
-    nodes: Record<string, THREE.Mesh>;
-  };
-  const geometry = nodes.geometry_0.geometry;
-  const radius = useMemo(() => {
-    if (!geometry.boundingSphere) geometry.computeBoundingSphere();
-    return geometry.boundingSphere?.radius ?? 1;
-  }, [geometry]);
-
+  const radius = BALL_R;
+  // Los soles orbitan DESPEGADOS del contenedor (halo alrededor del vidrio).
   const positions = useMemo(
     () =>
       nodos.map((n) =>
-        new THREE.Vector3(...n.dir).normalize().multiplyScalar(radius * 1.04),
+        new THREE.Vector3(...n.dir).normalize().multiplyScalar(radius * 1.32),
       ),
     [radius],
   );
-  const base = radius * 0.062;
+  const base = radius * 0.085;
 
   const matNormal = useMemo(
     () => makeSunMaterial({ bright: 1.1, invR: 1 / base, animated: !lite }),
@@ -56,7 +50,9 @@ export function GraphNodes({
     };
   }, [matNormal, matActive, corona]);
 
-  useFrame((s) => tickSuns(s.clock.elapsedTime, matNormal, matActive));
+  useFrame((s) => {
+    if (!reduced) tickSuns(s.clock.elapsedTime, matNormal, matActive);
+  });
 
   return (
     <>
@@ -80,8 +76,8 @@ export function GraphNodes({
           </group>
         );
       })}
-      {/* El sol activo ILUMINA el balón: los struts cercanos se tiñen de luz
-          cálida (reacción real del material, como una luz en Blender). */}
+      {/* El sol activo ILUMINA el contenedor: los struts cercanos se tiñen de
+          luz cálida (reacción real del material, como una luz en Blender). */}
       {activeIndex >= 0 && activeIndex < positions.length && (
         <pointLight
           position={positions[activeIndex]}
@@ -94,5 +90,3 @@ export function GraphNodes({
     </>
   );
 }
-
-useGLTF.preload(MODEL);
