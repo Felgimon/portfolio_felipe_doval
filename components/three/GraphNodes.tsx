@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { nodos } from "@/lib/navigation";
 import { BALL_R } from "./Lattice";
-import { makeSunMaterial, makeCoronaTexture, tickSuns } from "./sun";
+import { makeSunMaterial, makeCoronaTexture, advanceSuns, spinSun } from "./sun";
 
 /**
  * Las 5 esferas-nodo como MINI-SOLES: plasma animado con domain-warping (shader
@@ -50,8 +50,13 @@ export function GraphNodes({
     };
   }, [matNormal, matActive, corona]);
 
-  useFrame((s) => {
-    if (!reduced) tickSuns(s.clock.elapsedTime, matNormal, matActive);
+  const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
+  useFrame((_, delta) => {
+    if (reduced) return;
+    advanceSuns(delta, matNormal, matActive);
+    for (const m of meshRefs.current) {
+      if (m) spinSun(m, 0.22, delta);
+    }
   });
 
   return (
@@ -60,7 +65,13 @@ export function GraphNodes({
         const active = i === activeIndex;
         return (
           <group key={nodos[i].id} position={p}>
-            <mesh scale={active ? 1.5 : 1} material={active ? matActive : matNormal}>
+            <mesh
+              ref={(el) => {
+                meshRefs.current[i] = el;
+              }}
+              scale={active ? 1.5 : 1}
+              material={active ? matActive : matNormal}
+            >
               <sphereGeometry args={[base, 24, 24]} />
             </mesh>
             <sprite scale={active ? base * 7 : base * 4.2}>

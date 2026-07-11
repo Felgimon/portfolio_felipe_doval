@@ -34,8 +34,15 @@ export function rendererName(): string {
   return probe();
 }
 
-/** true → el WebGL NO usa la GPU (render por software) o no hay WebGL. */
+/** true → el WebGL NO usa la GPU (render por software) o no hay WebGL.
+ * Override de debug: `?fx=full` fuerza la ruta GPU completa (útil para probar
+ * shaders/animación en headless) y `?fx=lite` fuerza el modo lite. */
 export function isSoftwareRenderer(): boolean {
+  if (typeof window !== "undefined") {
+    const fx = new URLSearchParams(window.location.search).get("fx");
+    if (fx === "full") return false;
+    if (fx === "lite") return true;
+  }
   if (_soft !== null) return _soft;
   const n = probe().toLowerCase();
   _soft =

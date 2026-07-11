@@ -10,7 +10,8 @@ import {
   makeSunMaterial,
   makeFlameMaterial,
   makeCoronaTexture,
-  tickSuns,
+  advanceSuns,
+  spinSun,
 } from "./sun";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
@@ -103,6 +104,8 @@ function SunCore({
 }) {
   const R = radius * 0.5;
   const group = useRef<THREE.Group>(null);
+  const sunMesh = useRef<THREE.Mesh>(null);
+  const flameMesh = useRef<THREE.Mesh>(null);
   const fdMat = useRef<THREE.MeshBasicMaterial>(null);
   const mat = useMemo(
     () => makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite }),
@@ -121,8 +124,14 @@ function SunCore({
     };
   }, [mat, flame, corona]);
 
-  useFrame((s, delta) => {
-    if (!reduced) tickSuns(s.clock.elapsedTime, mat, flame);
+  useFrame((_, delta) => {
+    if (!reduced) {
+      advanceSuns(delta, mat, flame);
+      // Rotación lenta: el plasma gira (movimiento inequívoco); las llamas
+      // contra-rotan para que el fuego "viva" independiente del disco.
+      if (sunMesh.current) spinSun(sunMesh.current, 0.06, delta);
+      if (flameMesh.current) spinSun(flameMesh.current, -0.04, delta);
+    }
     if (group.current) {
       easeSunCore(group.current, fdMat.current, activeIndex >= 0, delta);
     }
@@ -130,11 +139,11 @@ function SunCore({
 
   return (
     <group ref={group}>
-      <mesh material={mat}>
+      <mesh ref={sunMesh} material={mat}>
         <sphereGeometry args={[R, 48, 48]} />
       </mesh>
       {flame && (
-        <mesh material={flame} scale={1.32}>
+        <mesh ref={flameMesh} material={flame} scale={1.32}>
           <sphereGeometry args={[R, 32, 32]} />
         </mesh>
       )}

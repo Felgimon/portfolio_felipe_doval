@@ -79,7 +79,7 @@ const sunFragmentFull = /* glsl */ `
   void main() {
     float facing = clamp(vView.z, 0.0, 1.0);
     vec3 p = vLocal * uInvR * 3.2;
-    float t = uTime * 0.05;
+    float t = uTime * 0.2;
 
     // Domain warp: fbm alimentado por fbm → turbulencia de plasma real.
     vec3 q = vec3(
@@ -88,7 +88,7 @@ const sunFragmentFull = /* glsl */ `
       fbm(p + vec3(2.1, 7.4, t * 0.7))
     );
     float v = fbm(p * 1.9 + q * 1.5);
-    float g = fbm(p * 4.6 + q * 2.2 + vec3(0.0, t * 3.0, 0.0)); // granulación
+    float g = fbm(p * 4.6 + q * 2.2 + vec3(0.0, t * 2.6, 0.0)); // granulación
 
     // Paleta de la referencia: rojo profundo → naranja fuego → oro. El grueso
     // del disco queda en rango LDR (textura visible); SOLO el núcleo y el limbo
@@ -140,7 +140,7 @@ const flameFragment = /* glsl */ `
     float facing = clamp(vView.z, 0.0, 1.0);
     float rim = pow(1.0 - facing, 1.5);
     vec3 p = vLocal * uInvR * 2.3;
-    float t = uTime * 0.12;
+    float t = uTime * 0.32;
 
     float n = fbm(p * 1.6 + vec3(0.0, t * 2.2, 0.0) + fbm(p * 3.1 - vec3(t, 0.0, t)) * 1.2);
     float tongue = smoothstep(0.42, 0.9, n * rim * 1.9);
@@ -205,10 +205,21 @@ export function makeCoronaTexture(): THREE.CanvasTexture {
   return t;
 }
 
-/** Avanza el tiempo de los shaders (llamar desde useFrame: la animación corre
- * solo en frames renderizados → compatible con el render on-demand). */
-export function tickSuns(time: number, ...mats: (THREE.ShaderMaterial | null)[]) {
+/** Avanza el tiempo de los shaders acumulando el DELTA de cada frame renderizado
+ * (tiempo propio: inmune a cualquier stop/reset del clock de fiber al alternar
+ * frameloop). Llamar desde useFrame. */
+export function advanceSuns(
+  delta: number,
+  ...mats: (THREE.ShaderMaterial | null)[]
+) {
+  const d = Math.min(delta, 0.1);
   for (const m of mats) {
-    if (m) m.uniforms.uTime.value = time;
+    if (m) m.uniforms.uTime.value += d;
   }
+}
+
+/** Rotación lenta de un sol (movimiento inequívoco del plasma: la textura vive
+ * en el espacio local del mesh, así que girar el mesh gira el plasma). */
+export function spinSun(obj: THREE.Object3D, radPerSec: number, delta: number) {
+  obj.rotation.y += radPerSec * Math.min(delta, 0.1);
 }

@@ -50,6 +50,20 @@ bajo SwiftShader (la pausa lite sigue activa). Los `.glb` quedan en
 `public/models/` como material histórico (el poster sin-WebGL sigue usándolos
 como referencia visual).
 
+### v3.3.1 — La animación del sol, verificada con píxeles
+Felipe reportó el sol totalmente estático. Endurecimiento + prueba:
+- **Tiempo propio por delta** (`advanceSuns`): el uniform `uTime` acumula el
+  delta de cada frame renderizado en vez de leer `clock.elapsedTime` de fiber
+  (inmune a cualquier stop/reset del clock al alternar `frameloop`).
+- **Velocidades ×4** (la deriva del plasma era demasiado sutil para percibirse
+  como movimiento) + **rotación real de los soles** (`spinSun`: el plasma vive
+  en espacio local → girar el mesh gira el plasma; las llamas contra-rotan).
+- **Override `?fx=full|lite`** en `lib/gpu.ts`: fuerza la ruta GPU completa o
+  el modo lite (debug + testing headless).
+- **`npm run anim`** (`scripts/anim.mjs`): prueba EMPÍRICA de animación — abre
+  `/?fx=full`, captura el sol central 3 veces separadas 3.5s y compara hashes
+  de píxeles; falla si el sol está estático. Verificado: 3 hashes distintos.
+
 ---
 
 ## v3.2.0 — Cámara continua + soles de plasma con bloom + sol central FD
