@@ -92,9 +92,17 @@ y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
   (romperían el certificado HTTPS de *.vercel.app). Para deploys futuros:
   `npx vercel --prod` desde la carpeta del proyecto, o conectá el repo de GitHub
   en el dashboard para deploy automático en cada push.
-- [ ] **Dominio propio:** si comprás uno (ej. `felipedoval.com`), cambialo en
-  `lib/site.ts` (`siteUrl`) y agregalo en el dashboard de Vercel. De ahí lo
-  toman metadata, OG, sitemap y robots.
+- [ ] **Dominio propio — TODO PRE-CABLEADO, falta solo tu compra:**
+  `felipedoval.com` está **disponible a USD 11,25/año** (renovación igual) y ya
+  quedó **asignado al proyecto** (apex + redirección de `www`). Vercel prohíbe
+  que un agente compre dominios (tenés que confirmar precio, auto-renovación y
+  datos de registrante vos). Para comprarlo, UNA de estas dos:
+  1. Terminal: `npx vercel domains buy felipedoval.com` (interactivo), o
+  2. Dashboard: https://vercel.com/dashboard/domains → Buy.
+  Apenas lo compres en tu cuenta, el DNS se configura solo y el sitio queda en
+  vivo en https://felipedoval.com al instante. Después avisá para cambiar
+  `lib/site.ts` (`siteUrl`) y redeployar (metadata, OG, sitemap y robots pasan
+  al dominio nuevo).
 - [ ] **Lighthouse mobile:** validalo sobre el preview de Vercel (ver
   DECISIONS.md, Fase 9). En local con Chromium por software da bajo el
   Performance mobile, pero desktop da 94 y A11y/BP/SEO 100.

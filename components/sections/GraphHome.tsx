@@ -54,35 +54,44 @@ function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   );
 }
 
-/** Hit-areas CIRCULARES invisibles sobre los propios soles 3D: se clickea el
- * sol directamente (la identificación la dan las etiquetas 3D en escena). El
- * hover dispara la mini-implosión del sol (via onHover). La proyección (x, y y
- * RADIO aparente en px) sale de la cámara real cada frame. Azúcar de puntero
- * (tabIndex -1); el teclado/lector usa el HUD. */
+/** Hit-areas CIRCULARES invisibles sobre los propios soles 3D: se clickea (o
+ * TOCA, en mobile) el sol directamente (la identificación la dan las etiquetas
+ * 3D en escena). El hover dispara la mini-implosión del sol (via onHover). La
+ * proyección (x, y y RADIO aparente en px) sale de la cámara real cada frame.
+ * En puntero grueso (touch) el target mínimo sube a 44px (guía de Apple/WCAG).
+ * `muted` apaga las hit-areas sin desmontar: en pantallas angostas dentro de un
+ * tópico el texto se lee SOBRE el modelo atenuado, y un botón invisible abajo
+ * del texto robaría los taps del contenido. Azúcar de puntero (tabIndex -1);
+ * el teclado/lector usa el HUD. */
 function NodeOverlay({
   projRef,
   onGoto,
   onHover,
+  muted,
 }: {
   projRef: RefObject<NodeProj[]>;
   onGoto: (id: string) => void;
   onHover: (i: number) => void;
+  muted: boolean;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   useEffect(() => {
     let raf = 0;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const minD = coarse ? 44 : 28; // target táctil mínimo
     const tick = () => {
       const proj = projRef.current;
       for (let i = 0; i < nodos.length; i++) {
         const b = refs.current[i];
         if (!b) continue;
         const p = proj[i];
-        if (!p || !p.front) {
-          // Cara de atrás: sin hit-area (clickear un sol que no ves confunde).
+        if (muted || !p || !p.front) {
+          // Apagado, o cara de atrás: sin hit-area (clickear un sol que no
+          // ves confunde).
           b.style.pointerEvents = "none";
           b.style.transform = "translate(-9999px, -9999px)";
         } else {
-          const d = Math.max(28, p.r * 2.6); // diámetro con margen de puntería
+          const d = Math.max(minD, p.r * 2.6); // diámetro con margen de puntería
           b.style.width = `${d}px`;
           b.style.height = `${d}px`;
           b.style.transform = `translate(${p.x - d / 2}px, ${p.y - d / 2}px)`;
@@ -93,11 +102,11 @@ function NodeOverlay({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [projRef]);
+  }, [projRef, muted]);
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-30 hidden overflow-hidden sm:block"
+      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
       aria-hidden
     >
       {nodos.map((n, i) => (
@@ -109,11 +118,16 @@ function NodeOverlay({
           ref={(el) => {
             refs.current[i] = el;
           }}
-          onClick={() => onGoto(n.id)}
+          onClick={() => {
+            onGoto(n.id);
+            // En touch no hay mouseleave: sin esto el sol quedaría "hovereado"
+            // para siempre después del tap.
+            if (window.matchMedia("(pointer: coarse)").matches) onHover(-1);
+          }}
           onMouseEnter={() => onHover(i)}
           onMouseLeave={() => onHover(-1)}
           style={{ willChange: "transform" }}
-          className="absolute top-0 left-0 cursor-pointer rounded-full"
+          className="absolute top-0 left-0 cursor-pointer touch-manipulation rounded-full"
         />
       ))}
     </div>
@@ -339,6 +353,19 @@ export function GraphHome({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Pantalla angosta = layout mobile: al entrar a un tópico el texto se lee
+  // SOBRE el modelo atenuado → ahí las hit-areas de los soles se apagan (si no,
+  // robarían los taps del contenido). En la portada quedan activas: tocar un
+  // sol navega, igual que en desktop.
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const usarCanvas = forceGl || webgl;
   // Click en nodo/HUD: el contenido salta YA (sin speed-scroll por las
   // secciones intermedias, que marea); la transición la hace la CÁMARA, que
@@ -380,7 +407,12 @@ export function GraphHome({ children }: { children: ReactNode }) {
       </div>
 
       {usarCanvas && (
-        <NodeOverlay projRef={projRef} onGoto={goto} onHover={onHover} />
+        <NodeOverlay
+          projRef={projRef}
+          onGoto={goto}
+          onHover={onHover}
+          muted={narrow && activeIdx >= 0}
+        />
       )}
 
       {/* Contenido */}

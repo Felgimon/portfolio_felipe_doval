@@ -12,6 +12,7 @@
     "smoke": "node scripts/smoke.ts",
     "perf": "node scripts/perf.ts",
     "anim": "node scripts/anim.mjs",
+    "touch": "node scripts/touch.mjs",
     "analyze": "cross-env ANALYZE=true next build",
     "gate": "npm run typecheck && npm run lint && npm run build"
   },
