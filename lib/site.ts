@@ -1,2 +1,3 @@
-/** URL de producción. TODO(FELI): cambiar por tu dominio real antes del deploy. */
-export const siteUrl = "https://felipedoval.com";
+/** URL de producción (Vercel). Si Feli compra un dominio propio, cambiarlo acá
+ * y agregarlo en el dashboard de Vercel. */
+export const siteUrl = "https://felipe-doval-portfolio.vercel.app";

@@ -334,10 +334,12 @@ function CameraRig({
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   const rBall = radius * S;
-  // Calibrado contra BALL_R exacto (el GLB viejo tenía boundingSphere inflada,
-  // por eso estos factores son mayores que los históricos 3.6/2.55).
-  const OVER = rBall * 5.0; // overview: contenedor entero, de frente
-  const CLOSE = rBall * 3.6; // en tópico: contenedor grande, sol activo de frente
+  const aspect = size.width / Math.max(1, size.height);
+  // Calibrado contra BALL_R exacto. En pantallas ANGOSTAS (mobile) la cámara se
+  // aleja más: el contenedor Y el halo de soles orbitando (r×1.32 + etiquetas)
+  // entran completos en el ancho. dist ≥ span/(0.8·tan(fov/2)·aspect).
+  const OVER = rBall * Math.max(5.0, 4.15 / aspect); // portada: entero, de frente
+  const CLOSE = rBall * Math.max(3.6, 2.6 / aspect); // tópico: grande, sol de frente
 
   useFrame((_, delta) => {
     const st = camRef.current;
