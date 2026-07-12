@@ -1,5 +1,5 @@
-/** URL de producción (Vercel — proyecto "felipe.doval.portfolio"). El dominio
- * canónico es el automático del proyecto (sigue cada deploy de producción);
- * https://felipe-doval-portfolio.vercel.app existe como alias. Si Feli compra
- * un dominio propio, cambiarlo acá y agregarlo en el dashboard de Vercel. */
-export const siteUrl = "https://felipedovalportfolio.vercel.app";
+/** URL de producción: dominio propio (comprado en Vercel el 2026-07-12,
+ * proyecto "felipe.doval.portfolio"). De acá salen metadata, OG, sitemap y
+ * robots. www.felipedoval.com redirige 308 al apex; los dominios
+ * *.vercel.app del proyecto siguen vivos como secundarios. */
+export const siteUrl = "https://felipedoval.com";
