@@ -969,3 +969,31 @@ pasando a alta velocidad y rotando sobre su propio eje al azar; además, cero
   `smoke` 0 errores ✓, `dashcheck` 0 ✓, screenshots desktop/tópico/footer/
   mobile revisados a ojo (etiqueta Trabajo con margen en 390px tras subir el
   factor de distancia mobile a 4.75/aspect).
+
+### v4.1 — Skybox de calidad real (feedback de Felipe: "la calidad es horrible")
+
+Diagnóstico: a fov 40 la pantalla ve ~75° del panorama → con 3200px de ancho
+eso era una franja de ~670px estirada casi 3× (mushy), la foto de Brunier es
+un cielo profundo con MILLONES de estrellas débiles que a escala web leen
+como ruido sal-y-pimienta gris, y el tonemapping ACES lavaba el contraste.
+Salida (tres capas, pipeline propio en `scratchpad/grade.mjs` re-ejecutable):
+
+1. **La foto aporta SOLO la nube galáctica**: EROSIÓN morfológica (min-filter
+   separable, radio 2 sobre la fuente ESO de 6000px) que borra todo punto
+   estelar de ≤5px conservando la estructura extendida de la banda; luego
+   blur 3px, grading (exp 1.1, black 0.045, gamma 1.12, sat 1.22) y export
+   4096×2048 q90 (~96 KB) + lite 1024 (~8 KB). Sin puntos que estirar, el
+   fondo es nube limpia a cualquier fov: cero grano, cero macrobloques.
+2. **Las estrellas puntuales son PROCEDURALES** (`Stars.tsx`): 2600 puntos 3D
+   (800 en lite) sobre una bóveda r=90, tamaño por ley de potencias, color
+   por temperatura (12% cálidas), ShaderMaterial aditivo sin tonemapping →
+   nítidas a resolución NATIVA en cualquier pantalla/DPR. Giran con la misma
+   deriva que el skybox (SKY_DRIFT compartido, exportado desde Stars).
+3. **Inclinación de la bóveda** (SKY_TILT 0.3): la banda cruza en diagonal
+   arriba, el resto del encuadre es espacio negro; el polo del equirect (donde
+   la proyección pincha y bloquea) queda fuera de la vista típica.
+
+Intentos descartados y por qué: servir 6000px nativo (el "ruido" son
+estrellas reales, sobreviven a cualquier crush y siguen leyendo como grano),
+blur global sin erosión (la banda se volvía niebla gris), crush de negros
+solo (las estrellas débiles son más brillantes que cualquier umbral útil).

@@ -6,6 +6,7 @@ import { useTexture, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
 import { Asteroids } from "./Asteroids";
+import { Stars, SKY_DRIFT } from "./Stars";
 import { Lattice, BALL_R } from "./Lattice";
 import {
   SUN_TEX,
@@ -23,16 +24,20 @@ import { ladoModelo, nodos } from "@/lib/navigation";
 
 const LOGO_FONT = "/fonts/logo.ttf";
 /** Skybox fotorealista del ESPACIO: panorámica 360° REAL de la Vía Láctea
- * (ESO/S. Brunier, CC BY 4.0). El JPG equirectangular es el FONDO y, en GPU
- * real, también la LUZ (environment map): la galaxia ilumina el cromo y el
- * vidrio, y se refleja en ellos. */
+ * (ESO/S. Brunier, CC BY 4.0), desde la fuente de 6000px con GRADING propio
+ * (negros aplastados + contraste + saturación: espacio profundo, no velo gris;
+ * compensa el lavado del tonemapping ACES). El JPG equirectangular es el FONDO
+ * y, en GPU real, también la LUZ (environment map): la galaxia ilumina el
+ * cromo y el vidrio, y se refleja en ellos. Las estrellas NÍTIDAS las pone la
+ * bóveda procedural (Stars): una foto estirada nunca da puntos nítidos. */
 const SKY_BG = "/hdri/espacio-fondo.jpg";
 const SKY_BG_LITE = "/hdri/espacio-fondo-1k.jpg"; /* render por software: menos bandwidth */
 /** Rotación del skybox (elige qué parte de la galaxia queda detrás del balón). */
 const SKY_ROT = 2.35;
-/** Deriva del cielo (rad/s): el espacio nunca está quieto, pero gira tan lento
- * que se percibe como vida, no como mareo (vuelta completa ≈ 21 min). */
-const SKY_DRIFT = 0.005;
+/** Inclinación de la bóveda: la banda galáctica cruza en DIAGONAL (composición
+ * dinámica) y la mayor parte del encuadre es espacio profundo con estrellas
+ * nítidas, no la franja brillante y granulada del ecuador del panorama. */
+const SKY_TILT = 0.3;
 
 /** Escala del grafo. El balón queda centrado; la CÁMARA hace todo el movimiento. */
 const S = 1.4;
@@ -52,13 +57,13 @@ function applySky(scene: THREE.Scene, tex: THREE.Texture, lite: boolean) {
   tex.colorSpace = THREE.SRGBColorSpace;
   scene.background = tex;
   scene.backgroundIntensity = 1.0;
-  scene.backgroundRotation.set(0, SKY_ROT, 0);
+  scene.backgroundRotation.set(SKY_TILT, SKY_ROT, 0);
   if (!lite) {
     // La galaxia como IBL: el cromo refleja el campo de estrellas real. En
     // software rendering el PBR con envmap se paga carísimo → luces simples.
     scene.environment = tex;
     scene.environmentIntensity = 0.6;
-    scene.environmentRotation.set(0, SKY_ROT, 0);
+    scene.environmentRotation.set(SKY_TILT, SKY_ROT, 0);
   }
 }
 function clearSky(scene: THREE.Scene) {
@@ -511,7 +516,9 @@ function Scene({
         intensity={lite ? 1.5 : 1.15}
         color="#fff2df"
       />
-      {/* El espacio vivo: asteroides en tránsito alrededor del grafo. */}
+      {/* El espacio vivo: bóveda de estrellas nítidas + asteroides en
+          tránsito alrededor del grafo. */}
+      <Stars lite={lite} reduced={reduced} />
       <Asteroids lite={lite} reduced={reduced} />
       <GraphGroup
         activeIndex={activeIndex}
