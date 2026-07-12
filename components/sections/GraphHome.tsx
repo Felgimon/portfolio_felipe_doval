@@ -54,26 +54,21 @@ function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   );
 }
 
-/** Etiquetas clickeables proyectadas sobre los nodos 3D. Se muestran SIEMPRE (no
- * solo en la portada) para que se pueda saltar a cualquier sección desde el
- * modelo en todo momento. La proyección sale de la cámara real, así que los
- * labels quedan pegados a los soles aunque la cámara orbite/panee. Los nodos de
- * la cara de atrás quedan atenuados pero igual clickeables. Azúcar de puntero
+/** Hit-areas CIRCULARES invisibles sobre los propios soles 3D: se clickea el
+ * sol directamente (la identificación la dan las etiquetas 3D en escena). El
+ * hover dispara la mini-implosión del sol (via onHover). La proyección (x, y y
+ * RADIO aparente en px) sale de la cámara real cada frame. Azúcar de puntero
  * (tabIndex -1); el teclado/lector usa el HUD. */
 function NodeOverlay({
   projRef,
-  activeIdx,
   onGoto,
+  onHover,
 }: {
   projRef: RefObject<NodeProj[]>;
-  activeIdx: number;
   onGoto: (id: string) => void;
+  onHover: (i: number) => void;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const activeRef = useRef(activeIdx);
-  useEffect(() => {
-    activeRef.current = activeIdx;
-  }, [activeIdx]);
   useEffect(() => {
     let raf = 0;
     const tick = () => {
@@ -82,14 +77,15 @@ function NodeOverlay({
         const b = refs.current[i];
         if (!b) continue;
         const p = proj[i];
-        // El nodo activo NO lleva label (el sol grande ya es su marca; ya estás ahí).
-        if (!p || i === activeRef.current) {
-          b.style.opacity = "0";
+        if (!p || !p.front) {
+          // Cara de atrás: sin hit-area (clickear un sol que no ves confunde).
           b.style.pointerEvents = "none";
+          b.style.transform = "translate(-9999px, -9999px)";
         } else {
-          b.style.transform = `translate(${p.x}px, ${p.y}px)`;
-          // Cara de frente = pleno; cara de atrás = atenuado pero clickeable.
-          b.style.opacity = p.front ? "1" : "0.4";
+          const d = Math.max(28, p.r * 2.6); // diámetro con margen de puntería
+          b.style.width = `${d}px`;
+          b.style.height = `${d}px`;
+          b.style.transform = `translate(${p.x - d / 2}px, ${p.y - d / 2}px)`;
           b.style.pointerEvents = "auto";
         }
       }
@@ -109,18 +105,16 @@ function NodeOverlay({
           key={n.id}
           type="button"
           tabIndex={-1}
+          aria-label={n.label}
           ref={(el) => {
             refs.current[i] = el;
           }}
           onClick={() => onGoto(n.id)}
-          style={{ opacity: 0, willChange: "transform, opacity" }}
-          className="group absolute top-0 left-0"
-        >
-          {/* El label flota DEBAJO del sol (no lo tapa); el sol 3D es el marcador. */}
-          <span className="glass glass-pill absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 font-mono text-xs tracking-wide whitespace-nowrap text-chalk transition-colors group-hover:text-acento">
-            {n.label}
-          </span>
-        </button>
+          onMouseEnter={() => onHover(i)}
+          onMouseLeave={() => onHover(-1)}
+          style={{ willChange: "transform" }}
+          className="absolute top-0 left-0 cursor-pointer rounded-full"
+        />
       ))}
     </div>
   );
@@ -221,11 +215,20 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const camRef = useRef<CamState>({ t: 0, active: 0 });
   const projRef = useRef<NodeProj[]>([]);
   const [activeIdx, setActiveIdx] = useState(-1); // -1 = portada; 0..4 = nodos
+  const [hoverIdx, setHoverIdx] = useState(-1); // sol bajo el puntero
   // El canvas renderiza solo mientras hay actividad (scroll / cámara moviéndose);
-  // en reposo se pausa (frameloop "never"). `activityRef` lo cablea el efecto.
+  // en reposo se pausa (frameloop "never"). `activityRef`/`wakeRef` los cablea
+  // el efecto.
   const [rendering, setRendering] = useState(true);
   const activityRef = useRef<(() => void) | null>(null);
+  const wakeRef = useRef<(() => void) | null>(null);
   const onActivity = useCallback(() => activityRef.current?.(), []);
+  // Hover sobre un sol: dispara la mini-implosión y despierta el render (para
+  // que también se vea en modo lite, donde el canvas duerme en reposo).
+  const onHover = useCallback((i: number) => {
+    setHoverIdx(i);
+    wakeRef.current?.();
+  }, []);
 
   // Scroll → estado de cámara (t continuo + sección activa para HUD/sol).
   // Los offsets de sección se CACHEAN (en mount / resize / tras la carga): así el
@@ -305,6 +308,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
       bump();
     };
     activityRef.current = bump; // la cámara (onActivity) mantiene vivo el render
+    wakeRef.current = wake; // el hover despierta el render (modo lite)
 
     const onScroll = () => {
       wake();
@@ -329,6 +333,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
       clearTimeout(t1);
       clearTimeout(t2);
       activityRef.current = null;
+      wakeRef.current = null;
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
     };
@@ -360,6 +365,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
           <GraphCanvas
             camRef={camRef}
             activeIndex={activeIdx}
+            hovered={hoverIdx}
             reduced={reduced}
             paused={!rendering}
             onReady={marcarHeroCargado}
@@ -374,7 +380,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
       </div>
 
       {usarCanvas && (
-        <NodeOverlay projRef={projRef} activeIdx={activeIdx} onGoto={goto} />
+        <NodeOverlay projRef={projRef} onGoto={goto} onHover={onHover} />
       )}
 
       {/* Contenido */}

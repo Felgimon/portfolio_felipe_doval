@@ -74,6 +74,29 @@ como referencia visual).
 - El FD ahora se anima por ESCALA de su grupo (la opacidad del material de
   troika-text no es confiable de mutar).
 
+### v3.7.0 — Protuberancias VIVAS + soles clickeables con implosión
+- **Fuera las partículas-sprite de eyección** (a Felipe no le parecían de un
+  sol). El fuego ahora es 100% mallas 3D + shaders.
+- **Protuberancias con CICLO DE VIDA** (`updateProminences` en `sun.ts`): 4
+  arcos (torus parciales) que ERUPCIONAN desde el limbo (crecen anclados a sus
+  pies), se sostienen mientras se siguen estirando, COLAPSAN y se desvanecen
+  (uAlpha por-arco) — y al renacer lo hacen en OTRO punto del limbo con otro
+  roll y otra escala (re-anclaje determinista por ciclo). Vidas distintas (9 a
+  17s) → siempre hay ráfagas nuevas formándose y muriendo, como en los
+  timelapses del SDO. Verificado contra las referencias de Felipe: erupción en
+  bucle visible en el limbo ✓.
+- **Los mini-soles se CLICKEAN directamente**: el overlay pasó de pastillas
+  laterales a hit-areas CIRCULARES invisibles sobre cada sol (el NodeProjector
+  ahora exporta también el radio aparente en px). Solo la cara frontal es
+  clickeable.
+- **Hover = mini-implosión**: brillo del plasma +0.5, escala +12%, corona
+  expandida (easing rápido ~0.25s) + una **ONDA EXPANSIVA 3D** (anillo
+  billboard que estalla desde el sol y se desvanece, una vez por hover). En
+  lite el hover despierta el render (wakeRef).
+- **Diferenciación**: cada sol lleva su **etiqueta 3D flotante** en escena
+  (troika Text billboard, tinta con halo claro, debajo del sol) — se sabe a qué
+  sección lleva cada uno sin pastillas de UI plana.
+
 ### v3.6.0 — Sol fotorealista (foto NASA/SDO hirviendo) + eyecciones visibles
 - Felipe no veía las eyecciones de v3.5 (opacidad efectiva ~0.25 contra fondo
   brillante) y pidió hiperrealismo con técnicas 3D reales.

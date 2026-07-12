@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { useTexture } from "@react-three/drei";
+import { useTexture, Text, Billboard } from "@react-three/drei";
 import { nodos } from "@/lib/navigation";
 import { BALL_R } from "./Lattice";
 import {
@@ -10,42 +10,43 @@ import {
   prepSunTexture,
   makeSunMaterial,
   makeCoronaTexture,
-  makeEjectaSpecs,
-  updateEjecta,
   advanceSuns,
   spinSun,
   burst,
 } from "./sun";
 
+const LABEL_FONT = "/fonts/logo.ttf";
+
 const GROW = 0.5; // escala extra del sol activo
 const BRIGHT_0 = 1.1; // brillo en reposo
 const BRIGHT_1 = 1.5; // brillo activo
-/** Easing del "crecimiento épico": ~95% del camino en 0.7s (rápido, no abrupto). */
+/** Easing del foco (~95% en 0.7s) y del hover (~95% en 0.25s, respuesta viva). */
 const FOCUS_BASE = 0.014;
+const HOVER_BASE = 0.0000045;
 
-/* Aplica el estado de foco (0..1) + la ráfaga periódica (0..1) a un sol:
- * escala, brillo del plasma y corona crecen JUNTOS con la misma curva; la
- * erupción suma un latigazo breve de brillo/corona (mutación imperativa). */
+/* Aplica foco (0..1) + hover (0..1) + ráfaga (0..1) a un sol: escala, brillo
+ * del plasma y corona reaccionan JUNTOS (mutación fuera del componente). */
 function applyFocus(
   mesh: THREE.Mesh | null,
   sprite: THREE.Sprite | null,
   mat: THREE.ShaderMaterial,
   base: number,
   f: number,
+  h: number,
   b: number,
 ) {
-  if (mesh) mesh.scale.setScalar(1 + GROW * f + 0.06 * b);
-  mat.uniforms.uBright.value = BRIGHT_0 + (BRIGHT_1 - BRIGHT_0) * f + 0.3 * b;
+  if (mesh) mesh.scale.setScalar(1 + GROW * f + 0.12 * h + 0.06 * b);
+  mat.uniforms.uBright.value =
+    BRIGHT_0 + (BRIGHT_1 - BRIGHT_0) * f + 0.5 * h + 0.3 * b;
   if (sprite) {
-    const s = base * (4.2 + 2.8 * f + 1.6 * b);
+    const s = base * (4.2 + 2.8 * f + 1.3 * h + 1.6 * b);
     sprite.scale.set(s, s, 1);
     (sprite.material as THREE.SpriteMaterial).opacity =
-      0.5 + 0.35 * f + 0.25 * b;
+      0.5 + 0.35 * f + 0.2 * h + 0.25 * b;
   }
 }
 
-/* La luz cálida VIAJA hacia el sol activo (y se apaga en la portada): nunca
- * aparece/desaparece de golpe. */
+/* La luz cálida VIAJA hacia el sol activo (y se apaga en la portada). */
 function moveLight(
   light: THREE.PointLight | null,
   target: THREE.Vector3 | null,
@@ -60,19 +61,42 @@ function moveLight(
   }
 }
 
+/* Onda expansiva del hover (la "mini-implosión"): un anillo 3D que estalla
+ * desde el sol, se expande y se desvanece — una vez por hover. */
+function updateShock(
+  m: THREE.Mesh | null,
+  start: number,
+  now: number,
+  base: number,
+) {
+  if (!m) return;
+  const mat = m.material as THREE.MeshBasicMaterial;
+  const T = 0.7;
+  const dt = now - start;
+  if (start < 0 || dt < 0 || dt > T) {
+    mat.opacity = 0;
+    return;
+  }
+  const p = dt / T;
+  m.scale.setScalar(base * (1.7 + 3.6 * p));
+  mat.opacity = 0.55 * (1 - p) * (1 - p);
+}
+
 /**
- * Las 5 esferas-nodo como MINI-SOLES: plasma animado (shader `sun`, HDR → el
- * bloom los hace encandilar) + corona aditiva + una luz puntual que viaja al
- * sol activo. El foco (tamaño + brillo + corona + luz) crece GRADUALMENTE
- * (~1s): una etapa de crecimiento épica, no un salto. Cada sol tiene su propio
- * material para poder animar el brillo por-nodo.
+ * Las 5 esferas-nodo como MINI-SOLES clickeables: superficie fotográfica
+ * hirviendo (shader `sun`) + corona + una luz que viaja al sol activo. El HOVER
+ * dispara una mini-implosión (contracción de brillo + ONDA EXPANSIVA 3D) y el
+ * foco crece gradualmente (~1s). Cada sol lleva su ETIQUETA 3D flotante
+ * (billboard, tinta con halo claro) para saber a qué sección lleva.
  */
 export function GraphNodes({
   activeIndex,
+  hovered,
   lite,
   reduced,
 }: {
   activeIndex: number;
+  hovered: number;
   lite: boolean;
   reduced: boolean;
 }) {
@@ -111,28 +135,31 @@ export function GraphNodes({
 
   const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
   const spriteRefs = useRef<(THREE.Sprite | null)[]>([]);
-  const ejRefs = useRef<(THREE.Sprite | null)[][]>(nodos.map(() => []));
+  const ringRefs = useRef<(THREE.Mesh | null)[]>([]);
   const lightRef = useRef<THREE.PointLight>(null);
   const focus = useRef<number[]>(nodos.map(() => 0));
+  const hoverV = useRef<number[]>(nodos.map(() => 0));
+  const shockStart = useRef<number[]>(nodos.map(() => -1));
+  const prevHover = useRef(-1);
   const timeRef = useRef(0);
-  // Ráfagas desprendidas por sol (3 c/u, semilla propia → patrones distintos).
-  const ejSpecs = useMemo(
-    () => nodos.map((_, i) => makeEjectaSpecs(3, 20 + i)),
-    [],
-  );
 
   useFrame((_, delta) => {
     if (!reduced) {
       timeRef.current += Math.min(delta, 0.1);
       advanceSuns(delta, ...mats);
     }
-    // reduced: snap instantáneo (sin animación); si no, easing exponencial.
+    // Al ENTRAR el hover en un sol, dispara su onda expansiva.
+    if (hovered !== prevHover.current) {
+      if (hovered >= 0) shockStart.current[hovered] = timeRef.current;
+      prevHover.current = hovered;
+    }
     const k = reduced ? 1 : 1 - Math.pow(FOCUS_BASE, Math.min(delta, 0.1));
+    const kh = reduced ? 1 : 1 - Math.pow(HOVER_BASE, Math.min(delta, 0.1));
     const f = focus.current;
+    const hv = hoverV.current;
     for (let i = 0; i < nodos.length; i++) {
       f[i] += ((i === activeIndex ? 1 : 0) - f[i]) * k;
-      // Erupción periódica propia de cada sol (períodos/fases distintos →
-      // nunca en sincronía, como estrellas reales).
+      hv[i] += ((i === hovered ? 1 : 0) - hv[i]) * kh;
       const b = reduced ? 0 : burst(timeRef.current, 6 + i * 1.3, i * 0.37);
       applyFocus(
         meshRefs.current[i],
@@ -140,20 +167,12 @@ export function GraphNodes({
         mats[i],
         base,
         f[i],
+        hv[i],
         b,
       );
       const m = meshRefs.current[i];
       if (!reduced && m) spinSun(m, 0.22, delta);
-      // Eyecciones: sutiles en reposo, protagonistas cuando el sol tiene foco.
-      if (!reduced && !lite) {
-        updateEjecta(
-          ejRefs.current[i],
-          ejSpecs[i],
-          timeRef.current,
-          base,
-          0.25 + 0.75 * f[i],
-        );
-      }
+      updateShock(ringRefs.current[i], shockStart.current[i], timeRef.current, base);
     }
     moveLight(
       lightRef.current,
@@ -189,27 +208,41 @@ export function GraphNodes({
               toneMapped={false}
             />
           </sprite>
-          {/* Ráfagas desprendidas (animadas en updateEjecta; solo GPU real). */}
-          {!lite &&
-            ejSpecs[i].map((e, j) => (
-              <sprite
-                key={`ej-${j}`}
-                ref={(el) => {
-                  ejRefs.current[i][j] = el;
-                }}
-                scale={[base * 0.3, base * 0.3, 1]}
-              >
-                <spriteMaterial
-                  map={corona}
-                  color={e.hot ? "#ffdda6" : "#ff8f36"}
-                  blending={e.hot ? THREE.AdditiveBlending : THREE.NormalBlending}
-                  depthWrite={false}
-                  transparent
-                  opacity={0}
-                  toneMapped={false}
-                />
-              </sprite>
-            ))}
+          {/* Onda expansiva del hover (anillo 3D, animado en updateShock). */}
+          <Billboard>
+            <mesh
+              ref={(el) => {
+                ringRefs.current[i] = el;
+              }}
+              scale={0.0001}
+            >
+              <ringGeometry args={[0.86, 1, 48]} />
+              <meshBasicMaterial
+                color="#ffd27a"
+                transparent
+                opacity={0}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+                toneMapped={false}
+              />
+            </mesh>
+          </Billboard>
+          {/* Etiqueta 3D flotante: a qué sección lleva este sol. */}
+          <Billboard position={[0, -base * 2.4, 0]}>
+            <Text
+              font={LABEL_FONT}
+              fontSize={base * 0.6}
+              letterSpacing={0.08}
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={base * 0.05}
+              outlineColor="#eef6fc"
+              outlineOpacity={0.85}
+            >
+              {nodos[i].label.toUpperCase()}
+              <meshBasicMaterial color="#10293b" transparent />
+            </Text>
+          </Billboard>
         </group>
       ))}
       {/* La luz que baña el contenedor: viaja con el foco, intensidad 0 en la

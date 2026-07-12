@@ -191,6 +191,7 @@ const prominenceFragment = /* glsl */ `
   precision highp float;
   uniform float uTime;
   uniform float uInvR;
+  uniform float uAlpha; // sobre de vida (erupción → colapso), desde JS
   varying vec2 vUv;
   varying vec3 vLocal;
   ${CHUNK_NOISE}
@@ -202,7 +203,7 @@ const prominenceFragment = /* glsl */ `
     float a = ends * smoothstep(0.18, 0.75, n);
     vec3 col = mix(vec3(0.82, 0.14, 0.02), vec3(1.0, 0.52, 0.1), n);
     col += vec3(1.0, 0.82, 0.45) * pow(n, 3.0) * 0.8;
-    gl_FragColor = vec4(col * 1.35, a);
+    gl_FragColor = vec4(col * 1.35, a * uAlpha);
   }
 `;
 
@@ -219,8 +220,74 @@ export function makeProminenceMaterial(invR: number): THREE.ShaderMaterial {
     uniforms: {
       uTime: { value: 0 },
       uInvR: { value: invR },
+      uAlpha: { value: 0 },
     },
   });
+}
+
+/* ---------- protuberancias VIVAS (erupción → colapso → renacen en otro lado) */
+
+const _pDir = new THREE.Vector3();
+const _pX = new THREE.Vector3(1, 0, 0);
+const _pQ = new THREE.Quaternion();
+const _pQr = new THREE.Quaternion();
+
+function hash1(n: number): number {
+  return Math.abs(Math.sin(n * 127.1 + 311.7) * 43758.5453) % 1;
+}
+
+/** Re-ancla un arco en un punto NUEVO del limbo: cada renacimiento erupciona en
+ * otro lugar, con otro roll — como las protuberancias reales del SDO. */
+function anchorProminence(
+  g: THREE.Group,
+  cycle: number,
+  slot: number,
+  R: number,
+) {
+  const n = cycle * 7.13 + slot * 131.71;
+  const az = hash1(n) * Math.PI * 2;
+  const z = 0.15 + 0.6 * hash1(n + 1.7); // sesgo frontal (que se vean)
+  const s = Math.sqrt(Math.max(0, 1 - z * z));
+  _pDir.set(Math.cos(az) * s, Math.sin(az) * s, z).normalize();
+  _pQ.setFromUnitVectors(_pX, _pDir);
+  _pQr.setFromAxisAngle(_pDir, hash1(n + 3.9) * Math.PI * 2);
+  g.quaternion.copy(_pQr.multiply(_pQ));
+  g.position.copy(_pDir).multiplyScalar(R * 0.9);
+}
+
+/**
+ * Ciclo de vida de las protuberancias: cada arco ERUPCIONA desde el limbo
+ * (crece anclado a sus pies), se sostiene mientras se sigue estirando, COLAPSA
+ * y se desvanece; al renacer lo hace en OTRO punto del limbo — siempre hay
+ * ráfagas nuevas formándose y muriendo, nunca en sincronía (vidas distintas).
+ */
+export function updateProminences(
+  groups: (THREE.Group | null)[],
+  mats: THREE.ShaderMaterial[],
+  lastCycle: number[],
+  time: number,
+  R: number,
+) {
+  for (let i = 0; i < mats.length; i++) {
+    const g = groups[i];
+    if (!g) continue;
+    const life = 9 + i * 2.6; // segundos por ciclo (distinto por arco)
+    const local = time + i * 4.3;
+    const cycle = Math.floor(local / life);
+    const p = (local % life) / life;
+    if (cycle !== lastCycle[i]) {
+      lastCycle[i] = cycle;
+      anchorProminence(g, cycle, i, R);
+    }
+    // Sobre de vida: erupción rápida → meseta (sigue creciendo) → colapso.
+    const rise = THREE.MathUtils.smoothstep(p, 0, 0.2);
+    const fall = 1 - THREE.MathUtils.smoothstep(p, 0.72, 1);
+    const env = rise * fall;
+    const grow = 0.8 + 0.35 * p;
+    const size = 0.75 + 0.5 * hash1(cycle * 3.7 + i * 17.3);
+    g.scale.setScalar(Math.max(env * grow * size, 0.0001));
+    mats[i].uniforms.uAlpha.value = env;
+  }
 }
 
 /** Ráfaga periódica 0..1: una erupción corta por período (curva sin^8 → sube y
@@ -228,97 +295,6 @@ export function makeProminenceMaterial(invR: number): THREE.ShaderMaterial {
 export function burst(time: number, period: number, phase: number): number {
   const s = Math.sin((time / period + phase) * Math.PI * 2);
   return Math.pow(Math.max(0, s), 8);
-}
-
-/* ---------- ráfagas que se DESPRENDEN (eyecciones de plasma) ---------- */
-
-export type EjectaSpec = {
-  dir: THREE.Vector3; // dirección radial de salida
-  axis: THREE.Vector3; // eje de curl (turbulencia en la trayectoria)
-  life: number; // duración del ciclo (s)
-  phase: number; // desfase (s) — nunca en sincronía
-  travel: number; // distancia máxima (en radios del sol)
-  size: number; // tamaño base (en radios del sol)
-  curl: number; // giro total de la trayectoria (rad)
-  fallback: boolean; // ¿recae al sol? (arco balístico, como una prominencia)
-  hot: boolean; // chispa incandescente (aditiva) vs. bloque de plasma (normal)
-};
-
-/** RNG determinista (mulberry32): specs estables entre renders/SSR, sin
- * Math.random en el cuerpo del componente. */
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-export function makeEjectaSpecs(count: number, seed: number): EjectaSpec[] {
-  const r = rng(seed);
-  const specs: EjectaSpec[] = [];
-  for (let i = 0; i < count; i++) {
-    // Sesgo hacia el hemisferio frontal (+z): que se vean desde la cámara.
-    const dir = new THREE.Vector3(
-      r() * 2 - 1,
-      r() * 2 - 1,
-      r() * 0.9 + 0.15,
-    ).normalize();
-    const ref =
-      Math.abs(dir.y) < 0.9
-        ? new THREE.Vector3(0, 1, 0)
-        : new THREE.Vector3(1, 0, 0);
-    const axis = new THREE.Vector3().crossVectors(dir, ref).normalize();
-    specs.push({
-      dir,
-      axis,
-      life: 2.8 + r() * 2.8,
-      phase: r() * 12,
-      travel: 0.7 + r() * 0.9,
-      size: 0.28 + r() * 0.3,
-      curl: (r() - 0.5) * 1.6,
-      fallback: r() < 0.45,
-      hot: r() < 0.45,
-    });
-  }
-  return specs;
-}
-
-const _ejDir = new THREE.Vector3();
-
-/**
- * Anima un pool de ráfagas desprendidas: cada partícula nace en el limbo, se
- * DESPRENDE desacelerando (√p: rápida al salir, se frena — como plasma contra
- * la gravedad), con curl turbulento en la trayectoria; se hincha y se DESVANECE.
- * Las "fallback" suben y RECAEN al sol (arco balístico de prominencia real).
- * `strength` 0..1 escala la opacidad (p.ej. el foco del sol).
- */
-export function updateEjecta(
-  sprites: (THREE.Sprite | null)[],
-  specs: EjectaSpec[],
-  time: number,
-  R: number,
-  strength: number,
-) {
-  for (let i = 0; i < specs.length; i++) {
-    const s = sprites[i];
-    if (!s) continue;
-    const e = specs[i];
-    const p = ((time + e.phase) % e.life) / e.life; // progreso 0..1
-    const up = e.fallback ? Math.sin(Math.PI * p) : Math.sqrt(p);
-    const rad = R * (1.02 + e.travel * up);
-    _ejDir.copy(e.dir).applyAxisAngle(e.axis, e.curl * p);
-    s.position.copy(_ejDir).multiplyScalar(rad);
-    const grow = Math.sin(Math.PI * Math.min(p * 1.25, 1));
-    const sc = R * e.size * (0.5 + grow);
-    s.scale.set(sc, sc, 1);
-    // entrada rápida, desvanecimiento largo
-    const o = Math.min(p * 6, 1) * Math.pow(1 - p, 1.6);
-    (s.material as THREE.SpriteMaterial).opacity =
-      o * (e.hot ? 0.95 : 0.85) * strength;
-  }
 }
 
 /* ---------- factorías de materiales / texturas ---------- */

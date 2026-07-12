@@ -13,11 +13,9 @@ import {
   makeFlameMaterial,
   makeProminenceMaterial,
   makeCoronaTexture,
-  makeEjectaSpecs,
-  updateEjecta,
+  updateProminences,
   advanceSuns,
   spinSun,
-  burst,
 } from "./sun";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
@@ -40,7 +38,9 @@ const S = 1.4;
  * transición suave entre waypoints — sin saltos al cruzar secciones). `active`
  * es la sección discreta (para HUD / sol activo). */
 export type CamState = { t: number; active: number };
-export type NodeProj = { x: number; y: number; front: boolean };
+/** Proyección 2D de un sol-nodo: posición en px, si mira a cámara, y su RADIO
+ * aparente en px (para el hit-area circular del overlay). */
+export type NodeProj = { x: number; y: number; front: boolean; r: number };
 
 /* Setup imperativo de three (fuera del componente: API mutable de la escena). */
 function applySky(scene: THREE.Scene, tex: THREE.Texture) {
@@ -91,31 +91,14 @@ function easeSunCore(
   }
 }
 
-/* Ráfagas/jets del sol central: erupciones periódicas de luz en el limbo
- * (cada una con su período y fase → nunca en sincronía, como un sol real). */
-const JETS = [
-  { dir: new THREE.Vector3(0.9, 0.35, 0.2).normalize(), period: 7, phase: 0.15, rot: -0.38 },
-  { dir: new THREE.Vector3(-0.75, 0.6, 0.15).normalize(), period: 9.5, phase: 0.55, rot: 2.45 },
-  { dir: new THREE.Vector3(-0.2, -0.95, 0.25).normalize(), period: 8.2, phase: 0.8, rot: 1.78 },
-];
-function pulseJets(sprites: (THREE.Sprite | null)[], t: number, R: number) {
-  for (let i = 0; i < JETS.length; i++) {
-    const s = sprites[i];
-    if (!s) continue;
-    const b = burst(t, JETS[i].period, JETS[i].phase);
-    (s.material as THREE.SpriteMaterial).opacity = b * 0.85;
-    s.scale.set(R * (1.2 + 1.7 * b), R * 0.55, 1);
-  }
-}
-
 /**
  * SOL CENTRAL — el corazón del grafo, con el logo FD adentro (silueta oscura
  * sobre el disco ardiente, como un eclipse). Capas, de adentro hacia afuera:
- * superficie de plasma animada (domain-warp, HDR) → shell de LLAMAS → dos
- * PROTUBERANCIAS en arco ancladas al limbo (como la referencia) que derivan
- * lentamente → RÁFAGAS periódicas (jets que erupcionan y se apagan) → corona →
- * una luz puntual que ilumina el balón desde adentro. El FD va en un Billboard
- * entre el sol y la cámara. En lite: superficie estática, sin fuegos.
+ * superficie fotográfica hirviendo (foto NASA/SDO + domain-warp) → shell de
+ * LLAMAS → 4 PROTUBERANCIAS VIVAS (mallas 3D que erupcionan desde el limbo,
+ * crecen, colapsan y RENACEN en otro punto — siempre hay ráfagas formándose) →
+ * corona → una luz puntual que ilumina el contenedor desde adentro. El FD va
+ * en un Billboard entre el sol y la cámara. En lite: superficie estática.
  */
 function SunCore({
   radius,
@@ -132,13 +115,10 @@ function SunCore({
   const group = useRef<THREE.Group>(null);
   const sunMesh = useRef<THREE.Mesh>(null);
   const flameMesh = useRef<THREE.Mesh>(null);
-  const flareGroup = useRef<THREE.Group>(null);
-  const jetRefs = useRef<(THREE.Sprite | null)[]>([]);
-  const ejRefs = useRef<(THREE.Sprite | null)[]>([]);
+  const promGroups = useRef<(THREE.Group | null)[]>([]);
+  const lastCycle = useRef<number[]>([-1, -1, -1, -1]);
   const fdGroup = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
-  // Ráfagas desprendidas: 14 partículas con trayectorias/vidas propias.
-  const ejSpecs = useMemo(() => makeEjectaSpecs(14, 7), []);
   // La FOTO solar real (granulación NASA/SDO) — la base del hiperrealismo.
   const solTex = useTexture(SUN_TEX);
   useEffect(() => prepSunTexture(solTex), [solTex]);
@@ -151,46 +131,40 @@ function SunCore({
     () => (lite ? null : makeFlameMaterial(1 / (R * 1.42))),
     [R, lite],
   );
-  const prom = useMemo(
-    () => (lite ? null : makeProminenceMaterial(1 / (R * 0.5))),
+  // 4 protuberancias, cada una con su MATERIAL propio (uAlpha independiente:
+  // cada arco vive y muere en su propio ciclo).
+  const promMats = useMemo(
+    () =>
+      lite
+        ? []
+        : Array.from({ length: 4 }, () => makeProminenceMaterial(1 / (R * 0.5))),
     [R, lite],
   );
   const corona = useMemo(() => makeCoronaTexture(), []);
-  // Anclajes de las protuberancias: local +X del arco = dirección radial del
-  // limbo (los pies tocan la superficie, el bucle sale hacia afuera).
-  const arcs = useMemo(() => {
-    const X = new THREE.Vector3(1, 0, 0);
-    const mk = (d: THREE.Vector3, roll: number, arcR: number) => {
-      const dir = d.normalize();
-      const q = new THREE.Quaternion().setFromUnitVectors(X, dir);
-      const qRoll = new THREE.Quaternion().setFromAxisAngle(dir, roll);
-      return { q: qRoll.multiply(q), pos: dir.clone().multiplyScalar(R * 0.9), arcR };
-    };
-    return [
-      mk(new THREE.Vector3(0.85, 0.45, -0.12), 0.4, R * 0.5),
-      mk(new THREE.Vector3(-0.8, -0.35, -0.28), 2.1, R * 0.4),
-    ];
-  }, [R]);
   useEffect(() => {
     return () => {
       mat.dispose();
       flame?.dispose();
-      prom?.dispose();
+      for (const m of promMats) m.dispose();
       corona.dispose();
     };
-  }, [mat, flame, prom, corona]);
+  }, [mat, flame, promMats, corona]);
 
   useFrame((_, delta) => {
     if (!reduced) {
       timeRef.current += Math.min(delta, 0.1);
-      advanceSuns(delta, mat, flame, prom);
-      // Rotación lenta: el plasma gira; las llamas contra-rotan; las
-      // protuberancias derivan por el limbo (independientes del disco).
+      advanceSuns(delta, mat, flame, ...promMats);
+      // Rotación lenta: el plasma gira; las llamas contra-rotan.
       if (sunMesh.current) spinSun(sunMesh.current, 0.06, delta);
       if (flameMesh.current) spinSun(flameMesh.current, -0.04, delta);
-      if (flareGroup.current) spinSun(flareGroup.current, 0.045, delta);
-      pulseJets(jetRefs.current, timeRef.current, R);
-      updateEjecta(ejRefs.current, ejSpecs, timeRef.current, R, 1);
+      // El ciclo de vida de las protuberancias (erupción → colapso → renacer).
+      updateProminences(
+        promGroups.current,
+        promMats,
+        lastCycle.current,
+        timeRef.current,
+        R,
+      );
     }
     if (group.current) {
       easeSunCore(group.current, fdGroup.current, activeIndex >= 0, delta);
@@ -207,62 +181,22 @@ function SunCore({
           <sphereGeometry args={[R, 32, 32]} />
         </mesh>
       )}
-      {/* Protuberancias en arco + ráfagas periódicas (solo GPU real). */}
-      {prom && (
-        <group ref={flareGroup}>
-          {arcs.map((a, i) => (
-            <group key={i} position={a.pos} quaternion={a.q}>
-              <mesh material={prom} rotation={[0, 0, -Math.PI * 0.575]}>
-                <torusGeometry args={[a.arcR, R * 0.055, 8, 40, Math.PI * 1.15]} />
-              </mesh>
-            </group>
-          ))}
-          {JETS.map((j, i) => (
-            <sprite
-              key={i}
-              ref={(el) => {
-                jetRefs.current[i] = el;
-              }}
-              position={j.dir.clone().multiplyScalar(R * 1.05)}
-              scale={[R * 1.2, R * 0.55, 1]}
-            >
-              {/* Blending normal: la ráfaga tiene cuerpo contra el cielo claro. */}
-              <spriteMaterial
-                map={corona}
-                rotation={j.rot}
-                depthWrite={false}
-                transparent
-                opacity={0}
-                toneMapped={false}
-              />
-            </sprite>
-          ))}
-          {/* Ráfagas que se DESPRENDEN: nacen en el limbo, se alejan
-              desacelerando con curl, se hinchan y se desvanecen; algunas
-              recaen al sol (arco de prominencia). Las "hot" son chispas
-              incandescentes (aditivas); el resto, bloques de plasma con cuerpo
-              (blending normal, visibles contra el cielo claro). */}
-          {ejSpecs.map((e, i) => (
-            <sprite
-              key={`ej-${i}`}
-              ref={(el) => {
-                ejRefs.current[i] = el;
-              }}
-              scale={[R * 0.2, R * 0.2, 1]}
-            >
-              <spriteMaterial
-                map={corona}
-                color={e.hot ? "#ffdda6" : "#ff8f36"}
-                blending={e.hot ? THREE.AdditiveBlending : THREE.NormalBlending}
-                depthWrite={false}
-                transparent
-                opacity={0}
-                toneMapped={false}
-              />
-            </sprite>
-          ))}
+      {/* Protuberancias VIVAS: mallas 3D (torus parciales) con ciclo de vida —
+          el anclaje, escala y alfa los maneja updateProminences por frame.
+          Solo GPU real. */}
+      {promMats.map((m, i) => (
+        <group
+          key={i}
+          ref={(el) => {
+            promGroups.current[i] = el;
+          }}
+          scale={0.0001}
+        >
+          <mesh material={m} rotation={[0, 0, -Math.PI * 0.575]}>
+            <torusGeometry args={[R * 0.45, R * 0.055, 8, 40, Math.PI * 1.15]} />
+          </mesh>
         </group>
-      )}
+      ))}
       {/* Un solo halo amplio y suave: el resplandor cercano lo hacen las llamas
           + el bloom (dos coronas encimadas lavaban la textura del disco). */}
       <sprite scale={R * 4.6}>
@@ -303,17 +237,24 @@ function SunCore({
  * fijas en el mundo y la cámara los encara con precisión. */
 function GraphGroup({
   activeIndex,
+  hovered,
   lite,
   reduced,
 }: {
   activeIndex: number;
+  hovered: number;
   lite: boolean;
   reduced: boolean;
 }) {
   return (
     <group scale={S}>
       <Lattice lite={lite} />
-      <GraphNodes activeIndex={activeIndex} lite={lite} reduced={reduced} />
+      <GraphNodes
+        activeIndex={activeIndex}
+        hovered={hovered}
+        lite={lite}
+        reduced={reduced}
+      />
       <SunCore
         radius={BALL_R}
         lite={lite}
@@ -480,6 +421,7 @@ function NodeProjector({
   const { camera, size } = useThree();
   const buf = useRef<NodeProj[]>([]);
   const rNode = radius * 1.32 * S;
+  const sunWorldR = radius * 0.085 * S * 1.3; // radio del sol (promedio con foco)
   useFrame(() => {
     if (!onProject) return;
     _cam.copy(camera.position).normalize();
@@ -489,15 +431,17 @@ function NodeProjector({
       _v.set(d[0], d[1], d[2]).normalize().multiplyScalar(rNode);
       _nd.copy(_v).normalize();
       const front = _nd.dot(_cam) > 0.12;
+      const dist = camera.position.distanceTo(_v);
       _v.project(camera);
       let e = b[i];
       if (!e) {
-        e = { x: 0, y: 0, front: false };
+        e = { x: 0, y: 0, front: false, r: 0 };
         b[i] = e;
       }
       e.x = ((_v.x + 1) / 2) * size.width;
       e.y = (1 - (_v.y + 1) / 2) * size.height;
       e.front = front;
+      e.r = (sunWorldR / (dist * TAN_HALF_FOV)) * (size.height / 2);
     }
     onProject(b);
   });
@@ -514,6 +458,7 @@ function SignalReady({ onReady }: { onReady?: () => void }) {
 function Scene({
   camRef,
   activeIndex,
+  hovered,
   reduced,
   lite,
   onReady,
@@ -522,6 +467,7 @@ function Scene({
 }: {
   camRef: RefObject<CamState>;
   activeIndex: number;
+  hovered: number;
   reduced: boolean;
   lite: boolean;
   onReady?: () => void;
@@ -546,7 +492,12 @@ function Scene({
         intensity={lite ? 1.15 : 0.7}
         color="#fff3dd"
       />
-      <GraphGroup activeIndex={activeIndex} lite={lite} reduced={reduced} />
+      <GraphGroup
+        activeIndex={activeIndex}
+        hovered={hovered}
+        lite={lite}
+        reduced={reduced}
+      />
       <CameraRig
         camRef={camRef}
         reduced={reduced}
@@ -562,6 +513,8 @@ function Scene({
 export type GraphCanvasProps = {
   camRef: RefObject<CamState>;
   activeIndex?: number;
+  /** Índice del sol bajo el puntero (-1 = ninguno): dispara la mini-implosión. */
+  hovered?: number;
   reduced?: boolean;
   /** Solicitud de pausa de GraphHome (sin actividad de scroll/cámara). Solo se
    * respeta en software rendering o reduced-motion — ahí el sol es estático y
@@ -577,6 +530,7 @@ export type GraphCanvasProps = {
 export default function GraphCanvas({
   camRef,
   activeIndex = -1,
+  hovered = -1,
   reduced = false,
   paused = false,
   onReady,
@@ -609,6 +563,7 @@ export default function GraphCanvas({
         <Scene
           camRef={camRef}
           activeIndex={activeIndex}
+          hovered={hovered}
           reduced={reduced}
           lite={lite}
           onReady={onReady}
