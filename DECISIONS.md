@@ -74,6 +74,23 @@ como referencia visual).
 - El FD ahora se anima por ESCALA de su grupo (la opacidad del material de
   troika-text no es confiable de mutar).
 
+### v3.8 — Responsive mobile + DEPLOY a Vercel
+- **Mobile:** la cámara escala por ASPECTO (`OVER = r·max(5, 4.15/aspect)`): en
+  anchos chicos se aleja para que el contenedor + halo de soles + etiquetas
+  entren completos (~80% del viewport). Tipografía: mínimos de los clamps
+  reducidos. Verificado 360/390/768: overflow-x 0, texto legible, HUD entero.
+- **Deploy:** proyecto Vercel **`felipe.doval.portfolio`** (cuenta felgimon).
+  Vercel aceptó el nombre con puntos pero la URL los normaliza (los puntos
+  romperían el TLS wildcard de *.vercel.app):
+  **https://felipedovalportfolio.vercel.app** (canónica, sigue cada deploy) +
+  alias `https://felipe-doval-portfolio.vercel.app` (re-apuntar tras cada
+  deploy o agregarlo como dominio en el dashboard). `ssoProtection` apagado vía
+  API (portfolio público). `siteUrl` actualizado.
+- **Verificación EN PRODUCCIÓN** (Playwright contra la URL real): desktop,
+  mobile y /proyectos/superlum → 0 errores de consola, canvas 3D activo,
+  overflow-x 0. Deploy manual: `npx vercel --prod` (o conectar el repo GitHub
+  para auto-deploy).
+
 ### v3.7.0 — Protuberancias VIVAS + soles clickeables con implosión
 - **Fuera las partículas-sprite de eyección** (a Felipe no le parecían de un
   sol). El fuego ahora es 100% mallas 3D + shaders.

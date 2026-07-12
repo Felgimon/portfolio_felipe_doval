@@ -86,9 +86,15 @@ y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
 - [ ] **Form de contacto:** no hay form (no configuraste Formspree/Resend). El
   contacto es email (con "copiar") + GitHub + LinkedIn. Si querés un form real,
   configurá Formspree o Resend y avisá.
-- [ ] **Dominio:** el sitio asume `felipedoval.com`. Cambialo por tu dominio real
-  en **un solo lugar**: `lib/site.ts` (`siteUrl`). De ahí lo toman metadata, OG,
-  sitemap y robots.
+- [x] **Deploy:** ✅ DEPLOYEADO en tu Vercel (cuenta `felgimon`, proyecto
+  `felipe.doval.portfolio`): **https://felipedovalportfolio.vercel.app** (alias:
+  https://felipe-doval-portfolio.vercel.app). Vercel no permite puntos en la URL
+  (romperían el certificado HTTPS de *.vercel.app). Para deploys futuros:
+  `npx vercel --prod` desde la carpeta del proyecto, o conectá el repo de GitHub
+  en el dashboard para deploy automático en cada push.
+- [ ] **Dominio propio:** si comprás uno (ej. `felipedoval.com`), cambialo en
+  `lib/site.ts` (`siteUrl`) y agregalo en el dashboard de Vercel. De ahí lo
+  toman metadata, OG, sitemap y robots.
 - [ ] **Lighthouse mobile:** validalo sobre el preview de Vercel (ver
   DECISIONS.md, Fase 9). En local con Chromium por software da bajo el
   Performance mobile, pero desktop da 94 y A11y/BP/SEO 100.
