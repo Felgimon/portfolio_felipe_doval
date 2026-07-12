@@ -3,10 +3,10 @@ import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 
 /**
- * Envoltorio de un tópico/nodo (UI espacial). SIN scrim ni capa oscura: el texto
- * flota directamente sobre el cielo y el balón (tinta oscura sobre cielo claro =
- * legible). El modelo se corre a un costado (lo maneja GraphHome con un transform
- * del canvas); el contenido se ancla al lado opuesto. El kicker va sin bullet.
+ * Envoltorio de un tópico/nodo (UI espacial). SIN scrim ni capa extra: el texto
+ * flota directamente sobre el espacio y el balón (luz celeste sobre espacio
+ * profundo = legible). El modelo se corre a un costado (lo maneja GraphHome con
+ * la cámara); el contenido se ancla al lado opuesto. El kicker va sin bullet.
  */
 export function TopicPanel({
   id,

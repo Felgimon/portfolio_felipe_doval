@@ -87,7 +87,8 @@ function updateShock(
  * hirviendo (shader `sun`) + corona + una luz que viaja al sol activo. El HOVER
  * dispara una mini-implosión (contracción de brillo + ONDA EXPANSIVA 3D) y el
  * foco crece gradualmente (~1s). Cada sol lleva su ETIQUETA 3D flotante
- * (billboard, tinta con halo claro) para saber a qué sección lleva.
+ * (billboard, texto claro con halo espacial oscuro) para saber a qué sección
+ * lleva.
  */
 export function GraphNodes({
   activeIndex,
@@ -236,11 +237,11 @@ export function GraphNodes({
               anchorX="center"
               anchorY="middle"
               outlineWidth={base * 0.05}
-              outlineColor="#eef6fc"
+              outlineColor="#050b14"
               outlineOpacity={0.85}
             >
               {nodos[i].label.toUpperCase()}
-              <meshBasicMaterial color="#10293b" transparent />
+              <meshBasicMaterial color="#eaf4fc" transparent />
             </Text>
           </Billboard>
         </group>

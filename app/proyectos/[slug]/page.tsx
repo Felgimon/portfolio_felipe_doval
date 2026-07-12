@@ -111,7 +111,7 @@ export default async function ProyectoDetalle({
                 <ul className="space-y-1 text-sm text-chalk-dim">
                   {p.equipo.map((m) => (
                     <li key={m.nombre}>
-                      {m.nombre} — <span className="text-muted">{m.rol}</span>
+                      {m.nombre} · <span className="text-muted">{m.rol}</span>
                     </li>
                   ))}
                 </ul>

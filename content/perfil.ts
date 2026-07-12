@@ -12,21 +12,21 @@ export const perfil: Perfil = {
   ubicacion: "Buenos Aires, Argentina",
 
   bioCorta:
-    "Soy Felipe Doval, estudiante de la especialización TIC en ORT Belgrano, Buenos Aires. Construyo productos de punta a punta —de la base de datos a la interfaz— y me meto con datos y machine learning cuando el problema lo pide. Lo que ves acá es la prueba de cómo pienso y de cómo llevo una idea de cero a algo que funciona; los proyectos son el medio, no el punto.",
+    "Soy Felipe Doval, estudiante de la especialización TIC en ORT Belgrano, Buenos Aires. Construyo productos de punta a punta, de la base de datos a la interfaz, y me meto con datos y machine learning cuando el problema lo pide. Lo que ves acá es la prueba de cómo pienso y de cómo llevo una idea de cero a algo que funciona; los proyectos son el medio, no el punto.",
 
   bioLarga: [
-    "Arranqué a programar en la escuela y no paré. Hoy tengo cosas que van desde un juego de terminal en C++ hasta plataformas web completas con Next.js, TypeScript y Python, pasando por modelos de machine learning. No me caso con una sola capa del stack: me gusta el ciclo entero —entender el problema, modelar los datos, diseñar la experiencia y shippear—, y ese es el hilo que conecta todo lo que hago.",
-    "Hice mi pasantía en Taquion automatizando con n8n y workflows de Notion, y de ahí salió Superlum: el workspace a medida que terminé construyendo para reemplazar a Notion en la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguearon competencias como NASA Space Apps y los Premios Sadosky. El deporte —fútbol y básquet— fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
+    "Arranqué a programar en la escuela y no paré. Hoy tengo cosas que van desde un juego de terminal en C++ hasta plataformas web completas con Next.js, TypeScript y Python, pasando por modelos de machine learning. No me caso con una sola capa del stack: me gusta el ciclo entero (entender el problema, modelar los datos, diseñar la experiencia y shippear), y ese es el hilo que conecta todo lo que hago.",
+    "Hice mi pasantía en Taquion automatizando con n8n y workflows de Notion, y de ahí salió Superlum: el workspace a medida que terminé construyendo para reemplazar a Notion en la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguearon competencias como NASA Space Apps y los Premios Sadosky. El deporte (fútbol y básquet) fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
   ],
 
   enfoque: {
     resumen:
-      "Trabajo el ciclo completo: entender el problema, modelar los datos, diseñar la experiencia y shippear. Por eso los proyectos son un medio —una prueba de cómo pienso—, no un fin en sí mismos.",
+      "Trabajo el ciclo completo: entender el problema, modelar los datos, diseñar la experiencia y shippear. Por eso los proyectos son un medio (una prueba de cómo pienso), no un fin en sí mismos.",
     principios: [
       {
         titulo: "Entender antes de tocar código",
         texto:
-          "Primero el problema real, no el ideal del papel. Reemplazar algo que la gente ya usa —como hice con Notion en Superlum— te obliga a mirar cómo trabaja de verdad, no cómo debería.",
+          "Primero el problema real, no el ideal del papel. Reemplazar algo que la gente ya usa (como hice con Notion en Superlum) te obliga a mirar cómo trabaja de verdad, no cómo debería.",
       },
       {
         titulo: "Los datos como cimiento",
@@ -47,7 +47,7 @@ export const perfil: Perfil = {
   },
 
   metaDescripcion:
-    "Felipe Doval — desarrollador y builder de Buenos Aires. Construyo productos reales de punta a punta, del full-stack a los datos y el machine learning. Portfolio: Superlum y más.",
+    "Felipe Doval: desarrollador y builder de Buenos Aires. Construyo productos reales de punta a punta, del full-stack a los datos y el machine learning. Portfolio: Superlum y más.",
 
   links: {
     github: "https://github.com/Felgimon",

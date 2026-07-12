@@ -1,77 +1,78 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   DESIGN TOKENS — "Cielo" (v3)
-   Portfolio de Felipe Doval. Giro completo: de la noche verde-agua a un CIELO
-   claro. Fondo celeste (UI espacial, el balón flota en el cielo), superficies de
-   Liquid Glass, texto tinta (slate-navy frío que rima con el cielo) y ORO cálido
-   como acento (guiño al sol — easter egg, nunca se nombra). Cero glow: la
-   profundidad la dan sombras suaves y el vidrio, no halos emisivos.
+   DESIGN TOKENS — "Espacio" (v4)
+   Portfolio de Felipe Doval. El balón ya no flota en un cielo diurno: flota en
+   el ESPACIO (panorámica real de la Vía Láctea). La paleta se INVIERTE: fondo
+   espacio profundo, texto celeste-blanco (la dupla celeste/blanco sigue siendo
+   la marca, ahora en luz sobre oscuridad), Liquid Glass oscuro estilo iOS y
+   ORO cálido reservado a los soles. Cero glow en la UI: la profundidad la dan
+   sombras y vidrio; el brillo real lo ponen los soles 3D.
 
    Los tokens son por ROL (fondo / texto / acento / línea), no por color literal:
-   sus VALORES giraron para el tema cielo, sus nombres marcan la función. Se
-   agregan alias nuevos (--oro, --cielo, --glass-*) para el código nuevo.
+   sus VALORES giraron para el tema espacio, sus nombres marcan la función.
    Regla de Felipe: los atenuados son HEX SÓLIDOS; el alpha solo en vidrio,
    scrims de degradado y sombras.
    ========================================================================== */
 
 :root {
-  /* Base — cielo */
-  --ink: #a9d3ea; /* fondo base — celeste medio (rol: page background) */
-  --ink-2: #94c6e3; /* celeste más profundo — bandas / profundidad */
-  --panel: #f4fbff; /* superficie sólida clara — cards no-vidrio */
-  --panel-2: #ffffff; /* hover de panel / blanco puro */
+  /* Base — espacio profundo */
+  --ink: #060f1c; /* fondo base — azul-negro espacial (rol: page background) */
+  --ink-2: #0a1626; /* banda más levantada — footer / profundidad */
+  --panel: #0d1e33; /* superficie sólida oscura — cards no-vidrio */
+  --panel-2: #122844; /* hover de panel */
 
-  /* Alias de cielo (código nuevo) */
-  --cielo-hi: #d3ecf9; /* horizonte alto, claro */
-  --cielo: #a9d3ea; /* cielo medio */
-  --cielo-lo: #7fb8db; /* cielo bajo, más saturado */
-  --nube: #ffffff; /* nube / blanco del balón */
+  /* Alias de cielo (ahora: bóveda espacial) */
+  --cielo-hi: #16293f; /* zona alta, con resto de luz galáctica */
+  --cielo: #0a1a2e; /* espacio medio */
+  --cielo-lo: #04080f; /* espacio profundo */
+  --nube: #eaf4fc; /* la luz / el blanco de marca */
 
-  /* Acento de TEXTO/UI — azul celeste profundo (puro, rima con el cielo).
+  /* Acento de TEXTO/UI — celeste luminoso (la señal sobre lo oscuro).
      El oro queda reservado para los SOLES 3D y micro-marcas (punto del logo). */
-  --acento: #0b5385; /* azul profundo: links, eyebrows, estados activos (AA) */
-  --acento-hi: #2f97d8; /* azul claro: hovers / highlights */
-  --agua: #0b5385; /* rol "señal" → ahora azul (alias legacy) */
-  --agua-bright: #2f97d8;
-  --jade: #0b5385;
-  --oro: #e0a63a; /* SOLO soles/micro-marcas */
-  --oro-hi: #f4c869;
+  --acento: #7cc4ea; /* celeste claro: links, eyebrows, estados activos (AA) */
+  --acento-hi: #a8dcf8; /* más luminoso: hovers / highlights */
+  --agua: #7cc4ea; /* rol "señal" (alias legacy) */
+  --agua-bright: #a8dcf8;
+  --jade: #7cc4ea;
+  --oro: #e8b34c; /* SOLO soles/micro-marcas */
+  --oro-hi: #f6cd77;
   --oro-deep: #8a5a0f;
 
-  /* Texto (sólidos, cero alpha) — tinta fría */
-  --chalk: #10293b; /* texto principal — slate-navy profundo (rol: primary text) */
-  --chalk-dim: #38566a; /* texto secundario — pizarra */
-  --muted: #4f6d80; /* metadatos atenuados — niebla (AA sobre cielo) */
+  /* Texto (sólidos, cero alpha) — luz fría */
+  --chalk: #eaf4fc; /* texto principal — celeste-blanco (rol: primary text) */
+  --chalk-dim: #b9cfe0; /* texto secundario — celeste niebla */
+  --muted: #85a2b8; /* metadatos atenuados (AA sobre espacio) */
 
-  /* Líneas — hairlines sobre claro */
-  --line: #8bb4cd; /* bordes / hairlines en reposo */
-  --line-soft: #b4d5e7; /* bordes más sutiles */
+  /* Líneas — hairlines sobre oscuro */
+  --line: #27455f; /* bordes / hairlines en reposo */
+  --line-soft: #1a3049; /* bordes más sutiles */
 
   /* Chispa cálida secundaria — uso puntual */
-  --brasa: #d9762b; /* terracota — marcador cálido ocasional */
+  --brasa: #e08a4a; /* terracota luminosa — marcador cálido ocasional */
 
-  /* Superficie invertida — momento oscuro puntual (contra-forma del cielo) */
-  --paper: #0f2233; /* slate profundo */
-  --paper-ink: #eaf5fb; /* texto claro sobre esa superficie */
+  /* Superficie invertida — momento CLARO puntual (contra-forma del espacio) */
+  --paper: #eaf4fc; /* celeste-blanco */
+  --paper-ink: #10293b; /* tinta sobre esa superficie */
 
-  /* Liquid Glass (iOS-style: MUY translúcido, blur+saturación fuertes del fondo,
-     borde especular fino y sombra de profundidad — el fondo "moja" el vidrio) */
-  --glass-bg: rgba(255, 255, 255, 0.26); /* vidrio (el cielo se ve a través) */
-  --glass-bg-2: rgba(255, 255, 255, 0.42); /* vidrio hover / más denso */
-  --glass-brd: rgba(255, 255, 255, 0.62); /* borde especular */
+  /* Liquid Glass oscuro (iOS-style: MUY translúcido, blur+saturación fuertes
+     del fondo, borde especular fino y sombra de profundidad — la galaxia
+     "moja" el vidrio) */
+  --glass-bg: rgba(13, 28, 48, 0.42); /* vidrio (el espacio se ve a través) */
+  --glass-bg-2: rgba(20, 42, 70, 0.55); /* vidrio hover / más denso */
+  --glass-brd: rgba(150, 200, 240, 0.35); /* borde especular */
   --glass-blur: 26px;
 
   /* Estados */
-  --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
-  --danger: #c0392b;
-  --ok: #e0a63a;
+  --focus: #7cc4ea; /* celeste luminoso — foco visible sobre oscuro */
+  --danger: #e0604f;
+  --ok: #e8b34c;
 
   /* Radios / sombras (espaciales: elevación por sombra, no glow) */
   --radius: 0.85rem;
   --radius-lg: 1.5rem;
-  --shadow-float: 0 22px 48px -20px rgba(15, 41, 66, 0.42); /* flotación espacial */
-  --shadow-soft: 0 10px 28px -14px rgba(15, 41, 66, 0.3);
+  --shadow-float: 0 22px 48px -20px rgba(0, 0, 0, 0.65); /* flotación espacial */
+  --shadow-soft: 0 10px 28px -14px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
@@ -131,7 +132,7 @@ body {
 
 ::selection {
   background-color: var(--acento);
-  color: #f2f8fc;
+  color: #06101f;
 }
 
 /* Foco visible y consistente en todo lo interactivo (piso de accesibilidad) */
@@ -216,10 +217,10 @@ body {
   color: var(--acento);
 }
 
-/* Palabra-acento de display: gradiente de azul profundo a celeste luminoso
-   (luz del cielo atravesando la letra — puro, sin color chato). */
+/* Palabra-acento de display: gradiente de blanco-luz a celeste galáctico
+   (luz de estrella atravesando la letra — puro, sin color chato). */
 .accent-grad {
-  background-image: linear-gradient(118deg, #083d66 0%, #1370ad 52%, #3fa0d8 100%);
+  background-image: linear-gradient(118deg, #f2f9ff 0%, #a8dcf8 48%, #4aa3d8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -263,16 +264,16 @@ body {
 .glass {
   position: relative;
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
-  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.25);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.25);
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   box-shadow:
-    0 18px 44px -18px rgba(10, 38, 60, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.85),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.18),
-    inset 1.5px 0 1px -1px rgba(255, 255, 255, 0.5),
-    inset -1.5px 0 1px -1px rgba(255, 255, 255, 0.5);
+    0 18px 44px -18px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(190, 225, 255, 0.32),
+    inset 0 -1px 1px rgba(190, 225, 255, 0.08),
+    inset 1.5px 0 1px -1px rgba(190, 225, 255, 0.2),
+    inset -1.5px 0 1px -1px rgba(190, 225, 255, 0.2);
 }
 /* Borde especular direccional: un gradiente EN el borde (arriba-izq brillante →
    abajo-der tenue), recortado al anillo del border con mask compositing. */
@@ -285,10 +286,10 @@ body {
   pointer-events: none;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.35) 38%,
-    rgba(255, 255, 255, 0.12) 62%,
-    rgba(255, 255, 255, 0.45) 100%
+    rgba(190, 225, 255, 0.55) 0%,
+    rgba(190, 225, 255, 0.16) 38%,
+    rgba(190, 225, 255, 0.06) 62%,
+    rgba(190, 225, 255, 0.26) 100%
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -314,9 +315,9 @@ body {
   pointer-events: none;
   background: linear-gradient(
     172deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.06) 38%,
-    rgba(255, 255, 255, 0) 60%
+    rgba(190, 225, 255, 0.14) 0%,
+    rgba(190, 225, 255, 0.03) 38%,
+    rgba(190, 225, 255, 0) 60%
   );
 }
 @media (hover: hover) {
@@ -329,9 +330,9 @@ body {
   .glass-hover:hover {
     background: var(--glass-bg-2);
     box-shadow:
-      0 26px 60px -22px rgba(10, 38, 60, 0.5),
-      inset 0 1px 1px rgba(255, 255, 255, 0.95),
-      inset 0 -1px 1px rgba(255, 255, 255, 0.22);
+      0 26px 60px -22px rgba(0, 0, 0, 0.7),
+      inset 0 1px 1px rgba(190, 225, 255, 0.4),
+      inset 0 -1px 1px rgba(190, 225, 255, 0.1);
     transform: translateY(-2px);
   }
 }
@@ -370,23 +371,23 @@ body {
   background-size: 34px 34px;
 }
 
-/* Superficie invertida — el único momento oscuro (contra-forma del cielo). */
+/* Superficie invertida — el único momento CLARO (contra-forma del espacio). */
 .surface-paper {
   background-color: var(--paper);
   color: var(--paper-ink);
 }
 .surface-paper .eyebrow {
-  color: #7cc4ea; /* celeste claro — AA sobre slate profundo */
+  color: #0b5385; /* azul profundo — AA sobre claro */
 }
 .surface-paper .lead {
-  color: #b9cdd9; /* claro frío — AA sobre slate */
+  color: #38566a; /* pizarra — AA sobre claro */
 }
 .surface-paper .hairline {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.18) 15%,
-    rgba(255, 255, 255, 0.18) 85%,
+    rgba(16, 41, 59, 0.22) 15%,
+    rgba(16, 41, 59, 0.22) 85%,
     transparent
   );
 }
@@ -416,26 +417,25 @@ body {
 }
 
 /* ============================================================================
-   CIELO PROCEDURAL — fondo celeste con nubes suaves, generado por CSS (cero
-   peso de carga). Gradiente vertical (horizonte claro → cielo medio) + capas de
-   nubes con radial-gradients desenfocados que derivan muy lento.
+   ESPACIO PROCEDURAL — fondo espacial generado por CSS (cero peso de carga):
+   base bajo el canvas y fallback sin-WebGL. Gradiente de bóveda + dos tintes
+   de nebulosa + tres capas de ESTRELLAS (radial-gradients de 1px repetidos a
+   distintas escalas: campo estelar disperso, sin assets) que derivan lento.
    ========================================================================== */
 .sky {
   background:
+    radial-gradient(1px 1px at 22% 34%, rgba(234, 244, 252, 0.9) 49%, transparent 51%),
+    radial-gradient(1px 1px at 71% 12%, rgba(234, 244, 252, 0.7) 49%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 48% 78%, rgba(200, 226, 246, 0.8) 49%, transparent 51%),
     radial-gradient(
-      120% 80% at 20% 22%,
-      rgba(255, 255, 255, 0.9),
-      rgba(255, 255, 255, 0) 45%
+      130% 90% at 68% 26%,
+      rgba(94, 140, 190, 0.18),
+      rgba(94, 140, 190, 0) 55%
     ),
     radial-gradient(
-      90% 60% at 78% 30%,
-      rgba(255, 255, 255, 0.7),
-      rgba(255, 255, 255, 0) 46%
-    ),
-    radial-gradient(
-      100% 70% at 62% 78%,
-      rgba(255, 255, 255, 0.55),
-      rgba(255, 255, 255, 0) 50%
+      90% 70% at 22% 74%,
+      rgba(120, 90, 150, 0.12),
+      rgba(120, 90, 150, 0) 55%
     ),
     linear-gradient(
       180deg,
@@ -443,6 +443,13 @@ body {
       var(--cielo) 52%,
       var(--cielo-lo) 100%
     );
+  background-size:
+    210px 210px,
+    340px 340px,
+    470px 470px,
+    auto,
+    auto,
+    auto;
 }
 .sky-drift {
   animation: sky-drift 60s ease-in-out infinite alternate;
@@ -458,18 +465,10 @@ body {
 }
 @keyframes sky-drift {
   from {
-    background-position:
-      0% 0%,
-      0% 0%,
-      0% 0%,
-      0 0;
+    background-position: 0% 0%;
   }
   to {
-    background-position:
-      6% 3%,
-      -5% 2%,
-      4% -3%,
-      0 0;
+    background-position: 4% 2%;
   }
 }
 

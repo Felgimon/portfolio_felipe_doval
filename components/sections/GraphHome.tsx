@@ -188,7 +188,7 @@ function HudRail({
                 btnRefs.current[i] = el;
               }}
               onClick={() => onGoto(n.id)}
-              aria-label={`${n.label} — ${n.hint}`}
+              aria-label={`${n.label}: ${n.hint}`}
               aria-current={active ? "true" : undefined}
               className={cn(
                 "relative rounded-full px-2.5 py-1.5 font-mono text-[0.7rem] tracking-wide whitespace-nowrap transition-colors sm:px-4 sm:text-xs",
@@ -424,7 +424,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
         >
           <h1 className="font-mono text-xs tracking-[0.32em] text-chalk-dim uppercase">
             {perfil.nombre}
-            <span className="text-muted"> — Portfolio</span>
+            <span className="text-muted"> · Portfolio</span>
           </h1>
         </section>
 

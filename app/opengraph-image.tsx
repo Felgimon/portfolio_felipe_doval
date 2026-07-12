@@ -4,18 +4,18 @@ import { join } from "node:path";
 import { perfil } from "@/content/perfil";
 
 // Imagen OG generada desde los tokens del design system (texto + color, sin
-// ilustración dibujada). Tema "cielo": fondo celeste, texto tinta, el "_" de la
-// marca es un nodo ORO. Tipografía Archivo Black (bold grotesco; el sitio usa
-// Bricolage).
-export const alt = `${perfil.nombre} — ${perfil.rol}`;
+// ilustración dibujada). Tema "espacio": fondo espacio profundo, texto de luz
+// celeste, el "_" de la marca es un nodo ORO. Tipografía Archivo Black (bold
+// grotesco; el sitio usa Bricolage).
+export const alt = `${perfil.nombre} · ${perfil.rol}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const CIELO = "linear-gradient(160deg, #d3ecf9 0%, #a9d3ea 60%, #7fb8db 100%)";
-const ORO = "#c88a1e";
-const TINTA = "#10293b";
-const PIZARRA = "#38566a";
-const NIEBLA = "#4f6d80";
+const ESPACIO = "linear-gradient(160deg, #16293f 0%, #0a1a2e 55%, #04080f 100%)";
+const ORO = "#e8b34c";
+const TINTA = "#eaf4fc";
+const PIZARRA = "#b9cfe0";
+const NIEBLA = "#85a2b8";
 
 export default async function OpengraphImage() {
   const archivo = await readFile(
@@ -31,7 +31,7 @@ export default async function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: CIELO,
+          background: ESPACIO,
           padding: "72px",
           fontFamily: "Archivo",
         }}

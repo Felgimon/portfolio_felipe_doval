@@ -21,7 +21,7 @@ export function SiteNav() {
       >
         <Link
           href="/"
-          aria-label="Felipe Doval — inicio"
+          aria-label="Felipe Doval: inicio"
           className="glass glass-spec glass-pill px-4 py-2"
         >
           <Logo className="text-lg text-chalk" />

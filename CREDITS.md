@@ -1,9 +1,10 @@
 # CREDITS — assets y licencias
 
 Todos los assets del portfolio son propios de Felipe o de licencia libre
-(CC0 / SIL OFL / ISC), **con UNA excepción CC-BY**: la textura solar de Solar
-System Scope (ver tabla), acreditada visiblemente en el footer del sitio como
-exige la licencia. Si se agrega otro asset CC-BY, se documenta acá y se suma su
+(CC0 / dominio público / SIL OFL / ISC), **con DOS excepciones CC-BY**: la
+panorámica de la Vía Láctea de ESO y la textura solar de Solar System Scope
+(ver tablas), ambas acreditadas visiblemente en el footer del sitio como exige
+la licencia. Si se agrega otro asset CC-BY, se documenta acá y se suma su
 crédito visible.
 
 ## Tipografías (v2.1 — self-hosted)
@@ -26,16 +27,17 @@ archivos que Google Fonts, OFL).
 | `pelota-facetada.glb` | Balón facetado sólido | Generado proceduralmente por Felipe | CC0 (propio) |
 | `esfera-lowpoly.glb` | Icoesfera facetada | Generado proceduralmente por Felipe | CC0 (propio) |
 
-## HDRI / Skybox (v3.1)
+## Skybox espacial (v4 — CC-BY, con crédito en el footer)
 
 | Archivo | Qué es | Origen | Licencia |
 |---|---|---|---|
-| `public/hdri/cielo-fondo.jpg` (4K) + `cielo-fondo-1k.jpg` | Skybox fotorealista del cielo (fondo equirectangular de la escena) | [Kloofendal 48d Partly Cloudy (Pure Sky)](https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky) — Poly Haven | **CC0** (sin atribución requerida; se acredita igual) |
-| `public/hdri/cielo-luz.hdr` (1K) | Environment map (iluminación + reflejos del balón) | El mismo HDRI de Poly Haven, versión HDR 1K | CC0 |
+| `public/hdri/espacio-fondo.jpg` (3200×1600) + `espacio-fondo-1k.jpg` | Panorámica 360° REAL de la Vía Láctea: fondo equirectangular de la escena y (en GPU real) environment map que ilumina el cromo y el vidrio | [The Milky Way panorama (eso0932a)](https://www.eso.org/public/images/eso0932a/) — ESO/S. Brunier | **CC BY 4.0** → crédito visible en el footer del sitio |
+| `public/textures/asteroide.jpg` (1K) | Superficie de roca lunar (cráteres reales) para los asteroides procedurales | Imagen NASA (vía repo oficial de three.js, `examples/textures/planets/moon_1024.jpg`) | Dominio público (NASA) |
 
-Los JPG salen del "Tonemapped JPG" 8K oficial de Poly Haven, redimensionado a
-4K / 1K (JPEG q80) para web. El HDR 1K se usa solo como LUZ (PMREM), no como
-fondo.
+El JPG grande sale del "Publication JPEG" 4000×2000 oficial de ESO,
+redimensionado a 3200×1600 (JPEG q78) para web; el 1K es la versión "screen"
+oficial. Los skyboxes anteriores del cielo diurno (Poly Haven, CC0) se
+retiraron en v4.
 
 ## Textura solar (v3.6 — CC-BY, con crédito en el footer)
 

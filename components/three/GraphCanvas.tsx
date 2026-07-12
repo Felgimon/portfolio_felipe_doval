@@ -2,9 +2,10 @@
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, Text, Billboard, Environment } from "@react-three/drei";
+import { useTexture, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
+import { Asteroids } from "./Asteroids";
 import { Lattice, BALL_R } from "./Lattice";
 import {
   SUN_TEX,
@@ -21,14 +22,17 @@ import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
 const LOGO_FONT = "/fonts/logo.ttf";
-/** Skybox fotorealista: "Kloofendal partly cloudy puresky" (Poly Haven, CC0).
- * El JPG 4K es el FONDO (cielo real con nubes); el HDR 1K es la LUZ (environment
- * map): el cielo ilumina el balón y se refleja en él, como en Blender. */
-const SKY_BG = "/hdri/cielo-fondo.jpg";
-const SKY_BG_LITE = "/hdri/cielo-fondo-1k.jpg"; /* render por software: menos bandwidth */
-const SKY_HDR = "/hdri/cielo-luz.hdr";
-/** Rotación del skybox (elige qué parte del cielo queda detrás del balón). */
+/** Skybox fotorealista del ESPACIO: panorámica 360° REAL de la Vía Láctea
+ * (ESO/S. Brunier, CC BY 4.0). El JPG equirectangular es el FONDO y, en GPU
+ * real, también la LUZ (environment map): la galaxia ilumina el cromo y el
+ * vidrio, y se refleja en ellos. */
+const SKY_BG = "/hdri/espacio-fondo.jpg";
+const SKY_BG_LITE = "/hdri/espacio-fondo-1k.jpg"; /* render por software: menos bandwidth */
+/** Rotación del skybox (elige qué parte de la galaxia queda detrás del balón). */
 const SKY_ROT = 2.35;
+/** Deriva del cielo (rad/s): el espacio nunca está quieto, pero gira tan lento
+ * que se percibe como vida, no como mareo (vuelta completa ≈ 21 min). */
+const SKY_DRIFT = 0.005;
 
 /** Escala del grafo. El balón queda centrado; la CÁMARA hace todo el movimiento. */
 const S = 1.4;
@@ -43,27 +47,43 @@ export type CamState = { t: number; active: number };
 export type NodeProj = { x: number; y: number; front: boolean; r: number };
 
 /* Setup imperativo de three (fuera del componente: API mutable de la escena). */
-function applySky(scene: THREE.Scene, tex: THREE.Texture) {
+function applySky(scene: THREE.Scene, tex: THREE.Texture, lite: boolean) {
   tex.mapping = THREE.EquirectangularReflectionMapping;
   tex.colorSpace = THREE.SRGBColorSpace;
   scene.background = tex;
   scene.backgroundIntensity = 1.0;
   scene.backgroundRotation.set(0, SKY_ROT, 0);
+  if (!lite) {
+    // La galaxia como IBL: el cromo refleja el campo de estrellas real. En
+    // software rendering el PBR con envmap se paga carísimo → luces simples.
+    scene.environment = tex;
+    scene.environmentIntensity = 0.6;
+    scene.environmentRotation.set(0, SKY_ROT, 0);
+  }
 }
 function clearSky(scene: THREE.Scene) {
   scene.background = null;
+  scene.environment = null;
+}
+/** Deriva lentísima del cielo: fondo y reflejos giran juntos. */
+function driftSky(scene: THREE.Scene, delta: number) {
+  scene.backgroundRotation.y += SKY_DRIFT * delta;
+  scene.environmentRotation.y = scene.backgroundRotation.y;
 }
 
-/** Skybox: el cielo fotográfico como fondo equirectangular de la ESCENA. Al
- * orbitar/panear la cámara se ve otra parte del cielo (el modelo no se mueve;
- * se mueve la cámara). */
-function SkyDome({ lite }: { lite: boolean }) {
+/** Skybox: el espacio fotográfico como fondo equirectangular de la ESCENA. Al
+ * orbitar/panear la cámara se ve otra parte de la galaxia (el modelo no se
+ * mueve; se mueve la cámara), y el cielo entero deriva muy lento. */
+function SkyDome({ lite, reduced }: { lite: boolean; reduced: boolean }) {
   const tex = useTexture(lite ? SKY_BG_LITE : SKY_BG);
   const scene = useThree((s) => s.scene);
   useEffect(() => {
-    applySky(scene, tex);
+    applySky(scene, tex, lite);
     return () => clearSky(scene);
-  }, [tex, scene]);
+  }, [tex, scene, lite]);
+  useFrame((_, delta) => {
+    if (!reduced) driftSky(scene, Math.min(delta, 0.1));
+  });
   return null;
 }
 
@@ -338,7 +358,7 @@ function CameraRig({
   // Calibrado contra BALL_R exacto. En pantallas ANGOSTAS (mobile) la cámara se
   // aleja más: el contenedor Y el halo de soles orbitando (r×1.32 + etiquetas)
   // entran completos en el ancho. dist ≥ span/(0.8·tan(fov/2)·aspect).
-  const OVER = rBall * Math.max(5.0, 4.15 / aspect); // portada: entero, de frente
+  const OVER = rBall * Math.max(5.0, 4.75 / aspect); // portada: entero, de frente
   const CLOSE = rBall * Math.max(3.6, 2.6 / aspect); // tópico: grande, sol de frente
 
   useFrame((_, delta) => {
@@ -478,22 +498,21 @@ function Scene({
 }) {
   return (
     <>
-      {/* El cielo fotográfico de fondo (siempre: ES el diseño). */}
-      <SkyDome lite={lite} />
-      {/* Iluminación: environment map del cielo (reflejos reales en el cromo y
-          el vidrio). En render por SOFTWARE el PBR con envmap se paga carísimo →
-          luces simples equivalentes (mismo clima, fracción del costo). */}
-      {lite ? (
-        <ambientLight intensity={0.85} color="#eaf5fb" />
-      ) : (
-        <Environment files={SKY_HDR} environmentRotation={[0, SKY_ROT, 0]} />
-      )}
-      {/* Un sol direccional cálido refuerza los highlights del cromo. */}
+      {/* El espacio fotográfico de fondo (siempre: ES el diseño). El IBL de la
+          galaxia lo setea applySky (solo GPU real). */}
+      <SkyDome lite={lite} reduced={reduced} />
+      {/* En el espacio la luz clave es DURA (sol lejano, sin atmósfera): un
+          direccional fuerte esculpe el cromo y los asteroides con lado de luz y
+          lado de sombra bien marcados. En software rendering, ambient de apoyo
+          en lugar del envmap. */}
+      {lite && <ambientLight intensity={0.5} color="#8fb4d8" />}
       <directionalLight
         position={[2.5, 4.5, 2]}
-        intensity={lite ? 1.15 : 0.7}
-        color="#fff3dd"
+        intensity={lite ? 1.5 : 1.15}
+        color="#fff2df"
       />
+      {/* El espacio vivo: asteroides en tránsito alrededor del grafo. */}
+      <Asteroids lite={lite} reduced={reduced} />
       <GraphGroup
         activeIndex={activeIndex}
         hovered={hovered}

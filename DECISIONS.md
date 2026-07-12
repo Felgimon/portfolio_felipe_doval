@@ -921,3 +921,51 @@ del portfolio, el sitio dice **Sportmonks**. → Pendiente que Felipe confirme
 - [~] Lighthouse mobile ≥ 90: desktop 94 y A11y/BP/SEO 100 ✓; Performance mobile a
       validar en Vercel (SwiftShader local infla el score). Presupuesto JS y CLS ✓.
 - [x] Links funcionan; TODO(FELI) restantes listados en `TODO-FELI.md`.
+
+---
+
+## v4.0 — "Espacio": skybox de la Vía Láctea + asteroides vivos + paleta invertida
+
+Pedido de Felipe: fondo de espacio exterior ultra realista, con asteroides
+pasando a alta velocidad y rotando sobre su propio eje al azar; además, cero
+"—" (em dash) en todo texto renderizado del sitio.
+
+- **Skybox fotográfico REAL**: panorámica 360° de la Vía Láctea de **ESO/S.
+  Brunier** (`eso0932a`, CC BY 4.0, crédito en el footer). 3200×1600 q78
+  (827 KB) + versión 1K para lite. No es una ilustración: es una fotografía
+  del cielo real. En GPU real, el mismo equirect es el **environment map**:
+  la galaxia ilumina y se refleja en el cromo y el vidrio.
+- **El cielo deriva** (SKY_DRIFT 0.005 rad/s, vuelta ≈ 21 min): fondo y
+  reflejos giran juntos; el espacio nunca está congelado.
+- **Asteroides** (`components/three/Asteroids.tsx`): 12 rocas 3D (5 en lite)
+  100% procedurales: icosaedro subdividido + deformación radial multibanda
+  (posicional → sin costuras, mergeVertices → normales suaves) + aplaste
+  anisotrópico; textura FOTOGRÁFICA de roca lunar (NASA, dominio público, vía
+  repo de three.js) con ventana/tinte distinto por material (4 siluetas × 4
+  materiales). Trayectorias rectas TANGENCIALES por banda de profundidad
+  (d ∈ [16, 58]: jamás entre cámara y balón), velocidad ∝ profundidad
+  (paralaje real), giro sobre eje propio aleatorio (0.4–4.4 rad/s, 25%
+  tumbeadores rápidos) y renacimiento fuera de cuadro con nueva ruta. Spawn
+  sesgado 70% al hemisferio visible. PRNG mulberry32 con semillas fijas:
+  reproducible. `prefers-reduced-motion`: cinturón estático.
+- **Paleta invertida** ("cielo" → "espacio", mismos tokens por rol): texto
+  celeste-blanco sobre espacio profundo (la dupla celeste/blanco de la marca
+  sigue, ahora en luz), Liquid Glass OSCURO estilo iOS (specular celeste
+  tenue, brightness 1.25), `--acento` pasa a celeste luminoso #7cc4ea → los
+  botones `bg-acento` cambian `text-white` por `text-ink` (AA), `.sky`
+  procedural ahora es bóveda espacial con 3 capas de estrellas CSS + nebulosa
+  (fallback sin WebGL / preloader), `surface-paper` invierte (momento claro),
+  OG re-tematizada, etiquetas 3D de los soles en claro con halo oscuro.
+  Los soles ganan MUCHO contra fondo oscuro (las referencias de Felipe tenían
+  espacio negro detrás).
+- **Em dashes**: barrido total en strings renderizados (bios, metas, aria-
+  labels, title, OG alt, HUD, footer) parafraseando con comas, paréntesis,
+  dos puntos o "·". Verificado con `dashcheck` (fetch del HTML de las 3 rutas
+  → 0 apariciones). Los comentarios de código no renderizan y quedan fuera
+  del alcance.
+- **Póster de fallback** regenerado con la escena nueva (captura cuadrada del
+  balón en el espacio). Skybox diurno de Poly Haven retirado.
+- Verificación: gate verde, `anim` (sol hirviendo) ✓, `touch` 14/14 ✓,
+  `smoke` 0 errores ✓, `dashcheck` 0 ✓, screenshots desktop/tópico/footer/
+  mobile revisados a ojo (etiqueta Trabajo con margen en 390px tras subir el
+  factor de distancia mobile a 4.75/aspect).

@@ -28,7 +28,7 @@ export function Trabajo() {
           La <span className="accent-grad">prueba</span>: lo que construí
         </h2>
         <p className="lead mt-5 max-w-2xl">
-          Cada uno resolvió un problema real. El grande —Superlum— tiene su
+          Cada uno resolvió un problema real. El grande, Superlum, tiene su
           historia completa; abajo, el resto de lo que fui armando.
         </p>
       </Reveal>
@@ -52,13 +52,13 @@ export function Trabajo() {
               </div>
               <Link
                 href="/proyectos/superlum"
-                className="group mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-acento px-5 py-2.5 font-mono text-xs tracking-wide text-white transition-colors hover:bg-acento-hi"
+                className="group mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-acento px-5 py-2.5 font-mono text-xs tracking-wide text-ink transition-colors hover:bg-acento-hi"
               >
                 Ver el caso
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
             </div>
-            <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-line-soft bg-white/40">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-line-soft bg-white/10">
               {cap && (
                 <Image
                   src={cap.src}

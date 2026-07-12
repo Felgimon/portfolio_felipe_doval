@@ -71,7 +71,7 @@ export const proyectos: Proyecto[] = [
     nombre: "FutbolVision",
     categoria: "destacado",
     unaLinea:
-      "Plataforma de analítica de fútbol con predicciones por machine learning — para entender el juego, no para apostar.",
+      "Plataforma de analítica de fútbol con predicciones por machine learning: para entender el juego, no para apostar.",
     tagline: "Entendé el fútbol, no apuestes en él.",
     resumen:
       "Un proyecto anterior donde me tocó el lado de machine learning: un modelo XGBoost que le baja al hincha la analítica que suele quedar encerrada en clubes y casas de apuestas. Ya no lo sigo, pero muestra bien cómo encaro un problema de datos de punta a punta.",
@@ -165,7 +165,7 @@ export const proyectos: Proyecto[] = [
     resumen:
       "Las bases sin frameworks en el medio: estructuras de datos, recursión y punteros. Un buen contrapeso 'de fundamentos' frente a los proyectos web.",
     queHace:
-      "Tablero renderizado en terminal con colores ANSI y símbolos Unicode, lógica de revelado recursivo (flood fill) para destapar zonas vacías, y cálculo de indicadores de minas adyacentes. Incluyó debuggear a mano bugs de indicadores y de recursión — de los que enseñan de verdad.",
+      "Tablero renderizado en terminal con colores ANSI y símbolos Unicode, lógica de revelado recursivo (flood fill) para destapar zonas vacías, y cálculo de indicadores de minas adyacentes. Incluyó debuggear a mano bugs de indicadores y de recursión, de los que enseñan de verdad.",
     rol: "Desarrollo completo, en solitario.",
     stack: ["C++ puro (sin librerías externas)"],
     destacados: [
@@ -234,7 +234,7 @@ export const proyectos: Proyecto[] = [
     categoria: "secundario",
     unaLinea: "Armador / configurador de PCs por componentes.",
     resumen:
-      "Configurador de PCs por componentes. (Faltan descripción, features y stack — pendiente de completar.)",
+      "Configurador de PCs por componentes. (Faltan descripción, features y stack; pendiente de completar.)",
     rol: "En solitario.",
     stack: [],
     enlaces: [

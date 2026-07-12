@@ -52,7 +52,7 @@ export function ProjectCard({
       )}
     >
       {/* Media */}
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-line-soft bg-white/40">
+      <div className="relative aspect-[16/10] overflow-hidden border-b border-line-soft bg-white/10">
         {tieneCaptura ? (
           <Image
             src={cap.src}
@@ -97,7 +97,7 @@ export function ProjectCard({
     return (
       <Link
         href={href}
-        aria-label={`${proyecto.nombre} — ver el caso`}
+        aria-label={`${proyecto.nombre}: ver el caso`}
         className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         {contenido}
@@ -110,7 +110,7 @@ export function ProjectCard({
         href={repo.url}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={`${proyecto.nombre} — abrir ${repo.label}`}
+        aria-label={`${proyecto.nombre}: abrir ${repo.label}`}
         className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         {contenido}

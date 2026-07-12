@@ -24,7 +24,7 @@ export function Contacto() {
         </h2>
         <p className="lead mt-6 max-w-2xl">
           Estoy abierto a proyectos, pasantías y buenas ideas. Si algo de lo que
-          viste te resonó, escribime — respondo.
+          viste te resonó, escribime; respondo.
         </p>
       </Reveal>
 
