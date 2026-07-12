@@ -27,17 +27,17 @@ archivos que Google Fonts, OFL).
 | `pelota-facetada.glb` | Balón facetado sólido | Generado proceduralmente por Felipe | CC0 (propio) |
 | `esfera-lowpoly.glb` | Icoesfera facetada | Generado proceduralmente por Felipe | CC0 (propio) |
 
-## Skybox espacial (v4 — CC-BY, con crédito en el footer)
+## Skybox espacial (v4.2 — PROCEDURAL, propio)
 
 | Archivo | Qué es | Origen | Licencia |
 |---|---|---|---|
-| `public/hdri/espacio-fondo.jpg` (3200×1600) + `espacio-fondo-1k.jpg` | Panorámica 360° REAL de la Vía Láctea: fondo equirectangular de la escena y (en GPU real) environment map que ilumina el cromo y el vidrio | [The Milky Way panorama (eso0932a)](https://www.eso.org/public/images/eso0932a/) — ESO/S. Brunier | **CC BY 4.0** → crédito visible en el footer del sitio |
+| `public/hdri/espacio-fondo.jpg` (4096×2048) + `espacio-fondo-1k.jpg` | Nebulosa espacial 100% procedural: GLSL (fbm 3D + domain warping doble sobre la esfera), núcleo galáctico luminoso, banda con polvo, acentos dorados y glitter estelar; renderizada offline y determinística por seed | Generada por el pipeline propio del proyecto | CC0 (propio) |
 | `public/textures/asteroide.jpg` (1K) | Superficie de roca lunar (cráteres reales) para los asteroides procedurales | Imagen NASA (vía repo oficial de three.js, `examples/textures/planets/moon_1024.jpg`) | Dominio público (NASA) |
 
-El JPG grande sale del "Publication JPEG" 4000×2000 oficial de ESO,
-redimensionado a 3200×1600 (JPEG q78) para web; el 1K es la versión "screen"
-oficial. Los skyboxes anteriores del cielo diurno (Poly Haven, CC0) se
-retiraron en v4.
+Historial: v4.0/v4.1 usaron la panorámica real de la Vía Láctea (ESO/S.
+Brunier, CC BY 4.0) con grading y erosión; se retiró en v4.2 a pedido de
+Felipe (skybox artístico procedural en su lugar) y con ella su crédito del
+footer. Los skyboxes del cielo diurno (Poly Haven, CC0) se retiraron en v4.0.
 
 ## Textura solar (v3.6 — CC-BY, con crédito en el footer)
 

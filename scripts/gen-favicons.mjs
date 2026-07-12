@@ -1,7 +1,8 @@
-// Genera los favicons del portfolio a partir de un glifo primitivo: un
-// micro-balón-grafo (un nodo central + 3 satélites unidos por struts), hecho
-// SOLO con <circle>/<line> (primitivas triviales, nada de <path> dibujado a
-// mano — respeta la regla de oro). Paleta "verde agua". Reproducible:
+// Genera los favicons del portfolio con la identidad "espacio" (v4): el SOL
+// dorado dentro de la ventana HEXAGONAL del fullereno (la vista de la portada),
+// sobre espacio profundo con estrellas. Hecho SOLO con primitivas
+// (<rect>/<circle>/<polygon> de vértices calculados, gradientes): nada de
+// <path> dibujado a mano — respeta la regla de oro. Reproducible:
 //   node scripts/gen-favicons.mjs
 import sharp from "sharp";
 import { writeFileSync } from "node:fs";
@@ -10,23 +11,55 @@ import { dirname, join } from "node:path";
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..", "app");
 
-const INK = "#0f1e1b";
-const JADE = "#47a88c";
-const AGUA = "#8fe3c6";
-const AGUA_BRIGHT = "#b7f0da";
+const ESPACIO = "#04080f";
+const CROMO = "#c6d8e6"; // el hexágono (struts de cromo)
+const ESTRELLA = "#eaf4fc";
+
+// Hexágono "flat-top" (como la ventana frontal del fullereno): 6 vértices
+// calculados sobre un círculo de radio R.
+const CX = 256;
+const CY = 256;
+const R_HEX = 196;
+const hexPts = Array.from({ length: 6 }, (_, i) => {
+  const a = (Math.PI / 3) * i;
+  return `${(CX + R_HEX * Math.cos(a)).toFixed(1)},${(CY + R_HEX * Math.sin(a)).toFixed(1)}`;
+}).join(" ");
+
+// Estrellas de fondo (posiciones fijas, fuera del hexágono).
+const stars = [
+  [52, 84, 5, 0.9],
+  [458, 62, 4, 0.7],
+  [472, 420, 5, 0.8],
+  [70, 434, 3.5, 0.6],
+  [244, 34, 3, 0.55],
+  [36, 258, 3, 0.5],
+  [478, 244, 3, 0.5],
+]
+  .map(
+    ([x, y, r, o]) =>
+      `<circle cx="${x}" cy="${y}" r="${r}" fill="${ESTRELLA}" opacity="${o}"/>`,
+  )
+  .join("\n  ");
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="${INK}"/>
-  <g stroke="${JADE}" stroke-width="16" stroke-linecap="round">
-    <line x1="256" y1="244" x2="256" y2="112"/>
-    <line x1="256" y1="244" x2="138" y2="356"/>
-    <line x1="256" y1="244" x2="374" y2="356"/>
-  </g>
-  <circle cx="256" cy="244" r="66" fill="${AGUA}" opacity="0.18"/>
-  <circle cx="256" cy="112" r="26" fill="${AGUA}"/>
-  <circle cx="138" cy="356" r="26" fill="${AGUA}"/>
-  <circle cx="374" cy="356" r="26" fill="${AGUA}"/>
-  <circle cx="256" cy="244" r="42" fill="${AGUA_BRIGHT}"/>
+  <defs>
+    <radialGradient id="sol" cx="42%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#fff6d8"/>
+      <stop offset="38%" stop-color="#f9c14e"/>
+      <stop offset="72%" stop-color="#ef8c2c"/>
+      <stop offset="100%" stop-color="#c85a1d"/>
+    </radialGradient>
+    <radialGradient id="fondo" cx="50%" cy="46%" r="75%">
+      <stop offset="0%" stop-color="#0a1626"/>
+      <stop offset="100%" stop-color="${ESPACIO}"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#fondo)"/>
+  ${stars}
+  <circle cx="${CX}" cy="${CY}" r="200" fill="#f9b43e" opacity="0.1"/>
+  <circle cx="${CX}" cy="${CY}" r="158" fill="#f9b43e" opacity="0.16"/>
+  <circle cx="${CX}" cy="${CY}" r="126" fill="url(#sol)"/>
+  <polygon points="${hexPts}" fill="none" stroke="${CROMO}" stroke-width="20" stroke-linejoin="round"/>
 </svg>`;
 
 const svgBuf = Buffer.from(svg);

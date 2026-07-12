@@ -997,3 +997,41 @@ Intentos descartados y por qué: servir 6000px nativo (el "ruido" son
 estrellas reales, sobreviven a cualquier crush y siguen leyendo como grano),
 blur global sin erosión (la banda se volvía niebla gris), crush de negros
 solo (las estrellas débiles son más brillantes que cualquier umbral útil).
+
+---
+
+## v4.2 — Skybox procedural + favicon nuevo + logo libre + SEO del nombre
+
+Pedidos de Felipe: (1) favicon coherente con la identidad, (2) logo sin el
+contenedor glass, (3) skybox espacial "deslumbrante" sin necesidad de foto
+real, (4) que buscar "felipe doval" encuentre el sitio primero, sin pagar.
+
+- **Skybox 100% procedural, propio** (retira la foto ESO y su crédito):
+  nebulosas GLSL con fbm 3D + domain warping DOBLE (técnica iq) muestreado
+  sobre la ESFERA (sin costuras ni polos pinchados), núcleo galáctico
+  luminoso blanco-celeste con ruptura de nubes, banda gaussiana ondulada con
+  vetas de polvo oscuro, acentos dorados que riman con los soles y glitter
+  estelar horneado en 4 escalas (+ estrellas grandes con halo). Renderizado
+  OFFLINE vía WebGL en Chromium a equirect 4096×2048 (JPEG q92, ~306 KB) +
+  lite 1024. Determinístico por seed. Mismo cableado: fondo + environment
+  map (la nebulosa ilumina el cromo) + tilt diagonal + deriva.
+- **Favicon**: el sol dorado dentro de la ventana hexagonal del fullereno
+  sobre espacio con estrellas (la portada en 32px). `gen-favicons.mjs`
+  regenera icon.png/apple-icon.png/favicon.ico desde primitivas SVG
+  (polygon de vértices calculados + gradientes radiales; cero <path> a
+  mano). Se eliminaron app/icon.tsx y app/apple-icon.tsx (los estáticos
+  mandan).
+- **Logo sin contenedor**: SiteNav pierde el glass-pill; el FD· flota con
+  drop-shadow para leerse sobre cualquier zona del cielo.
+- **SEO del nombre** (todo lo técnico del lado del sitio): JSON-LD
+  Person + WebSite (@graph, sameAs GitHub/LinkedIn, knowsAbout, dirección
+  Buenos Aires), canonical self-referencing ("./" en metadata → cada ruta se
+  canoniza a sí misma), más lo que ya estaba (dominio exacto, H1 con el
+  nombre, sitemap, robots, metadata OG). Verificado con seocheck (JSON-LD +
+  canonical en el HTML de home y subpáginas). Los pasos que requieren SUS
+  cuentas (Search Console + TXT de verificación, Bing, backlinks de
+  GitHub/LinkedIn) quedaron guiados en TODO-FELI.md.
+- **Fix**: lint rojo que se coló en v4.1 (mutación inline de uniform en
+  Stars.tsx; ahora vía helper de módulo, patrón del repo). El gate de esa
+  corrida quedó tapado por un pipe; lección: chequear exit codes, no solo
+  la cola del output.

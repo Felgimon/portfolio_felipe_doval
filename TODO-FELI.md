@@ -97,6 +97,26 @@ y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
   al proyecto: apex + `www` redirigiendo 308. `lib/site.ts` (`siteUrl`) ya
   apunta acá (metadata, OG, sitemap y robots incluidos). Los dominios
   `*.vercel.app` del proyecto siguen funcionando como secundarios.
+- [ ] **SEO para que "felipe doval" te encuentre PRIMERO (sin pagar):** el
+  sitio ya tiene todo lo técnico (dominio exacto felipedoval.com, JSON-LD de
+  Person+WebSite, canonical, sitemap, robots, metadata, H1 con tu nombre).
+  Lo que falta lo tenés que hacer VOS porque requiere tus cuentas:
+  1. **Google Search Console** (el paso más importante): entrá a
+     https://search.google.com/search-console → "Añadir propiedad" →
+     "Dominio" → `felipedoval.com`. Te va a dar un registro TXT para
+     verificar: agregalo en Vercel (dashboard → Domains → felipedoval.com →
+     DNS → Add record, tipo TXT) o pasámelo y lo agrego yo por API. Una vez
+     verificado: Sitemaps → enviar `https://felipedoval.com/sitemap.xml`, y
+     en "Inspección de URLs" pegá `https://felipedoval.com` → "Solicitar
+     indexación". Google suele indexar en horas/días.
+  2. **Bing Webmaster Tools** (https://www.bing.com/webmasters): "Importar
+     desde Google Search Console" y listo (cubre Bing + DuckDuckGo).
+  3. **Backlinks propios** (señal fuerte para la búsqueda del nombre):
+     poné `https://felipedoval.com` como sitio web en tu perfil de GitHub
+     (Settings → Profile → Website), en LinkedIn (sección Contacto →
+     sitio web) y en cualquier bio que tengas (Instagram, X, etc.).
+  4. Paciencia: para un nombre propio + dominio exacto + estas señales,
+     rankear primero suele tomar de días a un par de semanas.
 - [ ] **Lighthouse mobile:** validalo sobre el preview de Vercel (ver
   DECISIONS.md, Fase 9). En local con Chromium por software da bajo el
   Performance mobile, pero desktop da 94 y A11y/BP/SEO 100.

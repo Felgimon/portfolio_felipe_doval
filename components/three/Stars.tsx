@@ -92,6 +92,11 @@ const starsFragment = /* glsl */ `
   }
 `;
 
+/* Sincroniza el DPR real con el shader (mutación fuera del componente). */
+function setStarsPx(mat: THREE.ShaderMaterial, px: number) {
+  mat.uniforms.uPx.value = px;
+}
+
 export function Stars({ lite, reduced }: { lite: boolean; reduced: boolean }) {
   const dpr = useThree((s) => s.viewport.dpr);
   const group = useRef<THREE.Group>(null);
@@ -110,7 +115,7 @@ export function Stars({ lite, reduced }: { lite: boolean; reduced: boolean }) {
     [],
   );
   useEffect(() => {
-    mat.uniforms.uPx.value = dpr;
+    setStarsPx(mat, dpr);
   }, [mat, dpr]);
   useEffect(() => {
     return () => {

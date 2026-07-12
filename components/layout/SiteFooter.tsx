@@ -54,17 +54,7 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-line-soft pt-6 sm:flex-row sm:items-center">
           <p className="font-mono text-xs text-muted">
-            © {anio} {perfil.nombre} · Hecho con Next.js + Three.js · Vía
-            Láctea:{" "}
-            <a
-              href="https://www.eso.org/public/images/eso0932a/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline hover:text-chalk-dim"
-            >
-              ESO/S. Brunier
-            </a>{" "}
-            (CC BY 4.0) · Sol:{" "}
+            © {anio} {perfil.nombre} · Hecho con Next.js + Three.js · Sol:{" "}
             <a
               href="https://www.solarsystemscope.com/textures/"
               target="_blank"

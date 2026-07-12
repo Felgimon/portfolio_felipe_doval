@@ -19,10 +19,12 @@ export function SiteNav() {
         aria-label="Principal"
         className="mx-auto flex max-w-[88rem] items-center justify-between px-4 py-4 sm:px-8"
       >
+        {/* Logo SIN contenedor: flota directo sobre el espacio; una sombra
+            suave le garantiza lectura incluso sobre la banda galáctica. */}
         <Link
           href="/"
           aria-label="Felipe Doval: inicio"
-          className="glass glass-spec glass-pill px-4 py-2"
+          className="rounded-full drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
         >
           <Logo className="text-lg text-chalk" />
         </Link>

@@ -23,20 +23,20 @@ import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
 const LOGO_FONT = "/fonts/logo.ttf";
-/** Skybox fotorealista del ESPACIO: panorámica 360° REAL de la Vía Láctea
- * (ESO/S. Brunier, CC BY 4.0), desde la fuente de 6000px con GRADING propio
- * (negros aplastados + contraste + saturación: espacio profundo, no velo gris;
- * compensa el lavado del tonemapping ACES). El JPG equirectangular es el FONDO
- * y, en GPU real, también la LUZ (environment map): la galaxia ilumina el
- * cromo y el vidrio, y se refleja en ellos. Las estrellas NÍTIDAS las pone la
- * bóveda procedural (Stars): una foto estirada nunca da puntos nítidos. */
+/** Skybox del ESPACIO, 100% PROCEDURAL y propio: nebulosas GLSL (fbm 3D con
+ * domain warping doble muestreado sobre la esfera → sin costuras ni polos
+ * pinchados), núcleo galáctico luminoso, banda con vetas de polvo, acentos
+ * dorados que riman con los soles y glitter estelar horneado. Renderizado
+ * offline a equirect 4K (scripts en el pipeline de assets; determinístico por
+ * seed). El JPG es el FONDO y, en GPU real, también la LUZ (environment map):
+ * la nebulosa ilumina el cromo y el vidrio. Las estrellas NÍTIDAS las pone la
+ * bóveda procedural en vivo (Stars). */
 const SKY_BG = "/hdri/espacio-fondo.jpg";
 const SKY_BG_LITE = "/hdri/espacio-fondo-1k.jpg"; /* render por software: menos bandwidth */
-/** Rotación del skybox (elige qué parte de la galaxia queda detrás del balón). */
+/** Rotación del skybox (elige qué parte de la nebulosa queda detrás del balón). */
 const SKY_ROT = 2.35;
-/** Inclinación de la bóveda: la banda galáctica cruza en DIAGONAL (composición
- * dinámica) y la mayor parte del encuadre es espacio profundo con estrellas
- * nítidas, no la franja brillante y granulada del ecuador del panorama. */
+/** Inclinación de la bóveda: la banda nebular cruza en DIAGONAL (composición
+ * dinámica) y el núcleo luminoso queda a un costado del encuadre. */
 const SKY_TILT = 0.3;
 
 /** Escala del grafo. El balón queda centrado; la CÁMARA hace todo el movimiento. */
