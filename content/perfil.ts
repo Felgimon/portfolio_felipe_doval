@@ -74,7 +74,9 @@ export const perfil: Perfil = {
   ],
 
   // El orden codifica la secuencia del recorrido. TODO(FELI): confirmá orden
-  // exacto y fechas (ver TODO-FELI.md).
+  // exacto y fechas (ver TODO-FELI.md). Las cards de NASA Space Apps y
+  // Premios Sadosky se retiraron a pedido de Felipe (v4.3); las competencias
+  // siguen mencionadas en la bio larga.
   timeline: [
     {
       orden: 1,
@@ -87,22 +89,6 @@ export const perfil: Perfil = {
     },
     {
       orden: 2,
-      titulo: "NASA Space Apps Challenge",
-      lugar: "Competencia",
-      descripcion:
-        "Participación en el hackathon global de la NASA: resolver un desafío con datos, en equipo y contra reloj.",
-      tipo: "competencia",
-    },
-    {
-      orden: 3,
-      titulo: "Premios Sadosky",
-      lugar: "Competencia",
-      descripcion:
-        "Participación en los premios a la innovación y el talento en tecnología de Argentina.",
-      tipo: "competencia",
-    },
-    {
-      orden: 4,
       titulo: "Pasantía",
       lugar: "Taquion",
       descripcion:

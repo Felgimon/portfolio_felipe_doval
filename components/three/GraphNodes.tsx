@@ -17,6 +17,41 @@ import {
 
 const LABEL_FONT = "/fonts/logo.ttf";
 
+/* ---- Etiquetas 3D (v4.3): CHIPS PILL de vidrio espacial ----
+ * La misma identidad Liquid Glass del HUD, llevada a la escena: cada sol
+ * lleva debajo un chip pill oscuro translúcido con borde especular celeste,
+ * texto claro y un conector fino al sol (callout de spatial UI). El chip del
+ * sol ACTIVO/hover se enciende. Todo primitivas computadas (arcos de pill),
+ * cero paths a mano. */
+
+/** Pill (rect con extremos semicirculares) como Shape de arcos computados. */
+function pillShape(w: number, h: number): THREE.Shape {
+  const r = h / 2;
+  const s = new THREE.Shape();
+  s.absarc(w / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2, false);
+  s.absarc(-w / 2 + r, 0, r, Math.PI / 2, (3 * Math.PI) / 2, false);
+  s.closePath();
+  return s;
+}
+/** Anillo pill (borde especular): pill exterior con agujero pill interior. */
+function pillRingGeometry(w: number, h: number, t: number): THREE.ShapeGeometry {
+  const outer = pillShape(w, h);
+  const inner = pillShape(w - t * 2, h - t * 2);
+  outer.holes.push(inner);
+  return new THREE.ShapeGeometry(outer, 24);
+}
+
+/** Enciende/apaga un chip (mutación fuera del componente). */
+function easeChip(
+  chip: THREE.MeshBasicMaterial,
+  ring: THREE.MeshBasicMaterial,
+  on: number,
+  k: number,
+) {
+  chip.opacity += (0.42 + 0.2 * on - chip.opacity) * k;
+  ring.opacity += (0.3 + 0.55 * on - ring.opacity) * k;
+}
+
 const GROW = 0.5; // escala extra del sol activo
 const BRIGHT_0 = 1.1; // brillo en reposo
 const BRIGHT_1 = 1.5; // brillo activo
@@ -127,12 +162,62 @@ export function GraphNodes({
     [base, lite, solTex],
   );
   const corona = useMemo(() => makeCoronaTexture(), []);
+
+  // Chips pill: geometría por nodo (el ancho sigue al largo del texto) +
+  // materiales propios (el chip del sol activo/hover se enciende).
+  const FS = base * 0.42; // tamaño del texto de etiqueta
+  const CON_H = base * 0.95; // largo del conector chip→sol
+  const chips = useMemo(
+    () =>
+      nodos.map((n) => {
+        const w = n.label.length * FS * 0.68 + FS * 1.7;
+        const h = FS * 2.1;
+        return {
+          plate: new THREE.ShapeGeometry(pillShape(w, h), 24),
+          ring: pillRingGeometry(w, h, FS * 0.09),
+          h,
+        };
+      }),
+    [FS],
+  );
+  const chipMats = useMemo(
+    () =>
+      nodos.map(
+        () =>
+          new THREE.MeshBasicMaterial({
+            color: "#081527",
+            transparent: true,
+            opacity: 0.42,
+            depthWrite: false,
+          }),
+      ),
+    [],
+  );
+  const ringMats = useMemo(
+    () =>
+      nodos.map(
+        () =>
+          new THREE.MeshBasicMaterial({
+            color: "#a8dcf8",
+            transparent: true,
+            opacity: 0.3,
+            depthWrite: false,
+          }),
+      ),
+    [],
+  );
   useEffect(() => {
     return () => {
       for (const m of mats) m.dispose();
+      for (const c of chips) {
+        c.plate.dispose();
+        c.ring.dispose();
+      }
+      for (const m of chipMats) m.dispose();
+      for (const m of ringMats) m.dispose();
       corona.dispose();
     };
-  }, [mats, corona]);
+  }, [mats, chips, chipMats, ringMats, corona]);
 
   const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
   const spriteRefs = useRef<(THREE.Sprite | null)[]>([]);
@@ -174,6 +259,8 @@ export function GraphNodes({
       const m = meshRefs.current[i];
       if (!reduced && m) spinSun(m, 0.22, delta);
       updateShock(ringRefs.current[i], shockStart.current[i], timeRef.current, base);
+      // El chip del sol activo/hover se enciende (sigue al foco ya suavizado).
+      easeChip(chipMats[i], ringMats[i], Math.min(1, f[i] + hv[i]), k);
     }
     moveLight(
       lightRef.current,
@@ -228,20 +315,31 @@ export function GraphNodes({
               />
             </mesh>
           </Billboard>
-          {/* Etiqueta 3D flotante: a qué sección lleva este sol. */}
-          <Billboard position={[0, -base * 2.4, 0]}>
+          {/* Etiqueta 3D: chip pill de vidrio espacial + conector al sol
+              (callout de spatial UI, misma identidad que el HUD). */}
+          <Billboard position={[0, -base * 2.3, 0]}>
+            <mesh geometry={chips[i].plate} material={chipMats[i]} />
+            <mesh
+              geometry={chips[i].ring}
+              material={ringMats[i]}
+              position={[0, 0, 0.001]}
+            />
+            <mesh
+              material={ringMats[i]}
+              position={[0, chips[i].h / 2 + CON_H / 2, 0]}
+            >
+              <planeGeometry args={[base * 0.018, CON_H]} />
+            </mesh>
             <Text
               font={LABEL_FONT}
-              fontSize={base * 0.6}
-              letterSpacing={0.08}
+              fontSize={FS}
+              letterSpacing={0.12}
               anchorX="center"
               anchorY="middle"
-              outlineWidth={base * 0.05}
-              outlineColor="#050b14"
-              outlineOpacity={0.85}
+              position={[0, 0, 0.002]}
             >
               {nodos[i].label.toUpperCase()}
-              <meshBasicMaterial color="#eaf4fc" transparent />
+              <meshBasicMaterial color="#eaf4fc" transparent depthWrite={false} />
             </Text>
           </Billboard>
         </group>

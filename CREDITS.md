@@ -31,7 +31,7 @@ archivos que Google Fonts, OFL).
 
 | Archivo | Qué es | Origen | Licencia |
 |---|---|---|---|
-| `public/hdri/espacio-fondo.jpg` (4096×2048) + `espacio-fondo-1k.jpg` | Nebulosa espacial 100% procedural: GLSL (fbm 3D + domain warping doble sobre la esfera), núcleo galáctico luminoso, banda con polvo, acentos dorados y glitter estelar; renderizada offline y determinística por seed | Generada por el pipeline propio del proyecto | CC0 (propio) |
+| `public/hdri/espacio-fondo.webp` (4096×2048) + `espacio-fondo-1k.webp` | Nebulosa espacial 100% procedural: GLSL (fbm 3D quíntico + domain warping doble sobre la esfera), núcleo galáctico luminoso, banda con polvo, acentos dorados, glitter estelar y dithering anti-banding; WebP q95, renderizada offline y determinística por seed | Generada por el pipeline propio del proyecto | CC0 (propio) |
 | `public/textures/asteroide.jpg` (1K) | Superficie de roca lunar (cráteres reales) para los asteroides procedurales | Imagen NASA (vía repo oficial de three.js, `examples/textures/planets/moon_1024.jpg`) | Dominio público (NASA) |
 
 Historial: v4.0/v4.1 usaron la panorámica real de la Vía Láctea (ESO/S.

@@ -5,13 +5,15 @@ import { ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 
 /**
- * Nav global mínima: solo la marca arriba-izquierda (el HUD de nodos, en la
- * home, lo maneja GraphHome). En rutas de detalle suma un "volver" al grafo.
- * Se acabaron las píldoras de sección: la navegación de la home ES el grafo.
+ * Nav global mínima. En la HOME no se renderiza nada: la escena 3D (con el FD
+ * dentro del sol) es la marca, y el HUD de abajo la navegación; un logo
+ * flotando arriba competía con el modelo (pedido de Felipe, v4.3). En rutas
+ * de detalle sí: marca + "volver" al grafo.
  */
 export function SiteNav() {
   const pathname = usePathname();
   const enHome = pathname === "/";
+  if (enHome) return null;
 
   return (
     <header className="fixed inset-x-0 top-0 z-40">
@@ -19,8 +21,7 @@ export function SiteNav() {
         aria-label="Principal"
         className="mx-auto flex max-w-[88rem] items-center justify-between px-4 py-4 sm:px-8"
       >
-        {/* Logo SIN contenedor: flota directo sobre el espacio; una sombra
-            suave le garantiza lectura incluso sobre la banda galáctica. */}
+        {/* Logo sin contenedor, con sombra suave para leerse sobre el cielo. */}
         <Link
           href="/"
           aria-label="Felipe Doval: inicio"
@@ -29,15 +30,13 @@ export function SiteNav() {
           <Logo className="text-lg text-chalk" />
         </Link>
 
-        {!enHome && (
-          <Link
-            href="/#trabajo"
-            className="glass glass-spec glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-acento"
-          >
-            <ArrowLeft className="size-4" />
-            Volver al grafo
-          </Link>
-        )}
+        <Link
+          href="/#trabajo"
+          className="glass glass-spec glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-acento"
+        >
+          <ArrowLeft className="size-4" />
+          Volver al grafo
+        </Link>
       </nav>
     </header>
   );

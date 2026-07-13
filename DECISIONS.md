@@ -1035,3 +1035,32 @@ real, (4) que buscar "felipe doval" encuentre el sitio primero, sin pagar.
   Stars.tsx; ahora vía helper de módulo, patrón del repo). El gate de esa
   corrida quedó tapado por un pipe; lección: chequear exit codes, no solo
   la cola del output.
+
+### v4.3 — Calidad gráfica del skybox + chips 3D + favicon FD + limpieza
+
+Feedback de Felipe: partes del skybox pixeladas y zonas oscuras saturadas
+con "el negro horrible"; favicon a solo "FD"; sin logo sobre la home; "|"
+en el título de la pestaña; etiquetas de los soles rediseñadas; fuera las
+cards de NASA y Sadosky.
+
+- **Diagnóstico gráfico del skybox** (tres culpables, todos confirmados):
+  (1) el value noise con interpolación CÚBICA deja artefactos de grilla que
+  a fov angosto se leen como "pixelado" → interpolación QUÍNTICA (C2) + una
+  sexta octava de detalle; (2) el JPEG macro-bloquea los gradientes oscuros
+  (violetas posterizados = "el negro horrible") → export WebP q95; (3) la
+  cuantización a 8 bits banda los degradés suaves → DITHERING de ±0.75 LSB
+  en el shader antes de cuantizar. Resultado: 260 KB, gradientes limpios.
+- **Etiquetas 3D nuevas**: CHIPS PILL de vidrio espacial (Shape de arcos
+  computados: pill + anillo especular celeste con agujero) con texto claro y
+  CONECTOR fino al sol (callout de spatial UI). El chip del sol activo/hover
+  se ENCIENDE (easeChip sigue al foco suavizado). Es la identidad Liquid
+  Glass del HUD llevada a la escena; se evaluó texto extruido (TextGeometry)
+  y se descartó: requiere fuente typeface.json aparte y rompe la coherencia
+  con el resto de la UI.
+- **Favicon**: solo el monograma FD· (Archivo Black real vía canvas de
+  Chromium + punto dorado) sobre espacio profundo. gen-favicons.mjs ahora
+  renderiza con la tipografía auténtica en vez de aproximar con SVG.
+- **Home sin logo**: SiteNav no renderiza nada en la home (el FD del sol es
+  la marca); en rutas de detalle sigue logo + volver.
+- **Título de pestaña**: separador "|" (default y template).
+- **Recorrido**: fuera NASA Space Apps y Premios Sadosky (siguen en la bio).

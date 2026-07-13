@@ -1,72 +1,89 @@
-// Genera los favicons del portfolio con la identidad "espacio" (v4): el SOL
-// dorado dentro de la ventana HEXAGONAL del fullereno (la vista de la portada),
-// sobre espacio profundo con estrellas. Hecho SOLO con primitivas
-// (<rect>/<circle>/<polygon> de vértices calculados, gradientes): nada de
-// <path> dibujado a mano — respeta la regla de oro. Reproducible:
+// Genera los favicons del portfolio (v4.3): el monograma "FD·" de la marca
+// (Archivo Black + punto dorado) sobre espacio profundo con estrellas.
+// Renderizado con canvas de Chromium (tipografía real, no aproximada) y
+// exportado en los tres tamaños. Reproducible:
 //   node scripts/gen-favicons.mjs
-import sharp from "sharp";
-import { writeFileSync } from "node:fs";
+import { chromium } from "playwright";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-const APP = join(dirname(fileURLToPath(import.meta.url)), "..", "app");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const APP = join(ROOT, "app");
+const FONT_B64 = readFileSync(
+  join(APP, "fonts", "ArchivoBlack-Regular.ttf"),
+).toString("base64");
 
-const ESPACIO = "#04080f";
-const CROMO = "#c6d8e6"; // el hexágono (struts de cromo)
-const ESTRELLA = "#eaf4fc";
+const b = await chromium.launch();
+const p = await b.newPage();
 
-// Hexágono "flat-top" (como la ventana frontal del fullereno): 6 vértices
-// calculados sobre un círculo de radio R.
-const CX = 256;
-const CY = 256;
-const R_HEX = 196;
-const hexPts = Array.from({ length: 6 }, (_, i) => {
-  const a = (Math.PI / 3) * i;
-  return `${(CX + R_HEX * Math.cos(a)).toFixed(1)},${(CY + R_HEX * Math.sin(a)).toFixed(1)}`;
-}).join(" ");
+const draw = (size) =>
+  p.evaluate(
+    async ([size, fontB64]) => {
+      const font = new FontFace(
+        "Archivo",
+        Uint8Array.from(atob(fontB64), (c) => c.charCodeAt(0)).buffer,
+      );
+      await font.load();
+      document.fonts.add(font);
 
-// Estrellas de fondo (posiciones fijas, fuera del hexágono).
-const stars = [
-  [52, 84, 5, 0.9],
-  [458, 62, 4, 0.7],
-  [472, 420, 5, 0.8],
-  [70, 434, 3.5, 0.6],
-  [244, 34, 3, 0.55],
-  [36, 258, 3, 0.5],
-  [478, 244, 3, 0.5],
-]
-  .map(
-    ([x, y, r, o]) =>
-      `<circle cx="${x}" cy="${y}" r="${r}" fill="${ESTRELLA}" opacity="${o}"/>`,
-  )
-  .join("\n  ");
+      const c = document.createElement("canvas");
+      c.width = size;
+      c.height = size;
+      const x = c.getContext("2d");
+      const s = size / 512; // todo se define a 512 y escala
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <defs>
-    <radialGradient id="sol" cx="42%" cy="40%" r="65%">
-      <stop offset="0%" stop-color="#fff6d8"/>
-      <stop offset="38%" stop-color="#f9c14e"/>
-      <stop offset="72%" stop-color="#ef8c2c"/>
-      <stop offset="100%" stop-color="#c85a1d"/>
-    </radialGradient>
-    <radialGradient id="fondo" cx="50%" cy="46%" r="75%">
-      <stop offset="0%" stop-color="#0a1626"/>
-      <stop offset="100%" stop-color="${ESPACIO}"/>
-    </radialGradient>
-  </defs>
-  <rect width="512" height="512" fill="url(#fondo)"/>
-  ${stars}
-  <circle cx="${CX}" cy="${CY}" r="200" fill="#f9b43e" opacity="0.1"/>
-  <circle cx="${CX}" cy="${CY}" r="158" fill="#f9b43e" opacity="0.16"/>
-  <circle cx="${CX}" cy="${CY}" r="126" fill="url(#sol)"/>
-  <polygon points="${hexPts}" fill="none" stroke="${CROMO}" stroke-width="20" stroke-linejoin="round"/>
-</svg>`;
+      // Fondo: espacio profundo con un leve resplandor central.
+      const g = x.createRadialGradient(
+        256 * s, 236 * s, 40 * s,
+        256 * s, 256 * s, 380 * s,
+      );
+      g.addColorStop(0, "#0d1e33");
+      g.addColorStop(1, "#04080f");
+      x.fillStyle = g;
+      x.fillRect(0, 0, size, size);
 
-const svgBuf = Buffer.from(svg);
+      // Estrellas (solo se perciben en tamaños grandes; a 32px desaparecen).
+      const stars = [
+        [64, 88, 5, 0.85],
+        [452, 72, 4, 0.7],
+        [462, 430, 5, 0.75],
+        [76, 428, 3.5, 0.6],
+        [250, 40, 3, 0.5],
+      ];
+      x.fillStyle = "#eaf4fc";
+      for (const [sx, sy, r, o] of stars) {
+        x.globalAlpha = o;
+        x.beginPath();
+        x.arc(sx * s, sy * s, r * s, 0, Math.PI * 2);
+        x.fill();
+      }
+      x.globalAlpha = 1;
 
-async function png(size) {
-  return sharp(svgBuf).resize(size, size).png().toBuffer();
-}
+      // Monograma FD + punto dorado (la marca), centrado ópticamente.
+      x.font = `${228 * s}px Archivo`;
+      x.textAlign = "left";
+      x.textBaseline = "alphabetic";
+      const texto = "FD";
+      const tw = x.measureText(texto).width;
+      const dotR = 25 * s;
+      const gap = 12 * s;
+      const total = tw + gap + dotR * 2;
+      const tx = (size - total) / 2;
+      const ty = 338 * s;
+      x.fillStyle = "#eaf4fc";
+      x.fillText(texto, tx, ty);
+      x.fillStyle = "#e8b34c";
+      x.beginPath();
+      x.arc(tx + tw + gap + dotR, ty - dotR, dotR, 0, Math.PI * 2);
+      x.fill();
+
+      return c.toDataURL("image/png");
+    },
+    [size, FONT_B64],
+  );
+
+const toBuf = (dataUrl) => Buffer.from(dataUrl.split(",")[1], "base64");
 
 // ICO con un único PNG de 32×32 embebido (los navegadores modernos lo aceptan).
 function wrapIco(png32) {
@@ -86,10 +103,9 @@ function wrapIco(png32) {
   return Buffer.concat([header, entry, png32]);
 }
 
-const [icon512, apple180, png32] = await Promise.all([png(512), png(180), png(32)]);
-
-writeFileSync(join(APP, "icon.png"), icon512);
-writeFileSync(join(APP, "apple-icon.png"), apple180);
-writeFileSync(join(APP, "favicon.ico"), wrapIco(png32));
+writeFileSync(join(APP, "icon.png"), toBuf(await draw(512)));
+writeFileSync(join(APP, "apple-icon.png"), toBuf(await draw(180)));
+writeFileSync(join(APP, "favicon.ico"), wrapIco(toBuf(await draw(32))));
+await b.close();
 
 console.log("favicons generados: icon.png (512), apple-icon.png (180), favicon.ico (32)");

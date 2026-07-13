@@ -12,7 +12,7 @@ import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
 
-const titulo = `${perfil.nombre} · ${perfil.rol}`;
+const titulo = `${perfil.nombre} | ${perfil.rol}`;
 
 /** Datos estructurados (JSON-LD): le dicen a Google QUIÉN es Felipe Doval y
  * que este sitio es SU sitio oficial. Junto con el dominio exacto
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: titulo,
-    template: `%s · ${perfil.nombre}`,
+    template: `%s | ${perfil.nombre}`,
   },
   description: perfil.metaDescripcion,
   alternates: {

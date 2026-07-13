@@ -76,8 +76,7 @@ export function Contacto() {
         </div>
 
         <p data-reveal-item className="mt-8 font-mono text-xs text-muted">
-          {perfil.ubicacion} · tip: si andás con teclado, ya sabés qué código
-          probar.
+          {perfil.ubicacion}
         </p>
       </Reveal>
     </TopicPanel>

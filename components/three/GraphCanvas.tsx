@@ -31,8 +31,10 @@ const LOGO_FONT = "/fonts/logo.ttf";
  * seed). El JPG es el FONDO y, en GPU real, también la LUZ (environment map):
  * la nebulosa ilumina el cromo y el vidrio. Las estrellas NÍTIDAS las pone la
  * bóveda procedural en vivo (Stars). */
-const SKY_BG = "/hdri/espacio-fondo.jpg";
-const SKY_BG_LITE = "/hdri/espacio-fondo-1k.jpg"; /* render por software: menos bandwidth */
+/* WebP (no JPEG): los gradientes oscuros de nebulosa posterizan con el
+ * macroblocking de JPEG; WebP q95 + dithering en el shader = cero banding. */
+const SKY_BG = "/hdri/espacio-fondo.webp";
+const SKY_BG_LITE = "/hdri/espacio-fondo-1k.webp"; /* render por software: menos bandwidth */
 /** Rotación del skybox (elige qué parte de la nebulosa queda detrás del balón). */
 const SKY_ROT = 2.35;
 /** Inclinación de la bóveda: la banda nebular cruza en DIAGONAL (composición
