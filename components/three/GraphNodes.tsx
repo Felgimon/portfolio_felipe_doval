@@ -170,8 +170,12 @@ export function GraphNodes({
   const chips = useMemo(
     () =>
       nodos.map((n) => {
-        const w = n.label.length * FS * 0.68 + FS * 1.7;
+        // Ancho del texto (glifo ~0.68·FS + tracking 0.12·FS por letra) + las
+        // DOS puntas semicirculares del pill (h en total, zona no usable) +
+        // aire lateral real de 0.45·FS por lado.
+        const textW = n.label.length * FS * (0.68 + 0.12);
         const h = FS * 2.1;
+        const w = textW + h + FS * 0.9;
         return {
           plate: new THREE.ShapeGeometry(pillShape(w, h), 24),
           ring: pillRingGeometry(w, h, FS * 0.09),

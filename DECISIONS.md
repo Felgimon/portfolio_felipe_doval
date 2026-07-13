@@ -1064,3 +1064,32 @@ cards de NASA y Sadosky.
   la marca); en rutas de detalle sigue logo + volver.
 - **Título de pestaña**: separador "|" (default y template).
 - **Recorrido**: fuera NASA Space Apps y Premios Sadosky (siguen en la bio).
+
+### v4.3.1 — Skybox: el fix DEFINITIVO de los artefactos + aire en los chips
+
+Felipe volvió a señalar bloques y saturación altísima en las zonas oscuras
+(con razón: el zoom 2x lo confirmó). Causa raíz REAL, encontrada al fin: el
+WebP lossy SIEMPRE submuestrea el croma a 4:2:0, y en las sombras violetas
+la luminancia es plana pero el COLOR dibuja el degradé → el croma a media
+resolución se ve en bloques. Ningún q lo arregla. Solución triple:
+
+1. **Sombras desaturadas EN EL SHADER** (saturación dependiente de
+   luminancia): las zonas oscuras viran a azul-gris profundo. Arregla la
+   estética (la "saturación altísima") Y deja casi sin croma que romper.
+2. **WebP SIN PÉRDIDA** (quality 1.0 en Chromium = lossless): cero
+   submuestreo, cero bloques. Para que pese poco: se sirve a 2048×1024 (las
+   nubes son suaves, el upscale bilineal es invisible; las estrellas
+   nítidas ya las pone la bóveda procedural en vivo) y el glitter horneado
+   se moderó (el ruido infla el lossless).
+3. **Dither ordenado (Bayer 8x8)** en lugar de random: rompe el banding
+   igual pero comprime mucho mejor (random: 1.4 MB → Bayer: 1.17 MB).
+
+Verificación con evidencia: crops con zoom 2x de la zona señalada (vista
+Perfil, cuadrante inferior-izquierdo) antes y después → gradiente limpio,
+sin bloques ni bandas ni violeta quemado. Corroborado también en
+producción tras el deploy.
+
+Chips: la fórmula de ancho no descontaba las puntas semicirculares del pill
+(zona no usable por el texto) → "RECORRIDO" tocaba el borde. Ahora:
+ancho = texto (glifo + tracking) + altura del pill (las dos puntas) + aire
+real de 0.45·FS por lado. Verificado con crop 2x del chip más largo.
