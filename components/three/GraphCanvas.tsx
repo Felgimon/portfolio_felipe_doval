@@ -5,16 +5,13 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { GraphNodes } from "./GraphNodes";
-import { Asteroids } from "./Asteroids";
-import { Stars, SKY_DRIFT } from "./Stars";
-import { Lattice, BALL_R } from "./Lattice";
+import { Studio } from "./Studio";
+import { BALL_R, NODE_RING, GRAPH_SCALE } from "./scene-config";
 import {
   SUN_TEX,
   prepSunTexture,
   makeSunMaterial,
-  makeFlameMaterial,
   makeProminenceMaterial,
-  makeCoronaTexture,
   updateProminences,
   advanceSuns,
   spinSun,
@@ -23,26 +20,9 @@ import { isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
 const LOGO_FONT = "/fonts/logo.ttf";
-/** Skybox del ESPACIO, 100% PROCEDURAL y propio: nebulosas GLSL (fbm 3D con
- * domain warping doble muestreado sobre la esfera → sin costuras ni polos
- * pinchados), núcleo galáctico luminoso, banda con vetas de polvo, acentos
- * dorados que riman con los soles y glitter estelar horneado. Renderizado
- * offline a equirect 4K (scripts en el pipeline de assets; determinístico por
- * seed). El JPG es el FONDO y, en GPU real, también la LUZ (environment map):
- * la nebulosa ilumina el cromo y el vidrio. Las estrellas NÍTIDAS las pone la
- * bóveda procedural en vivo (Stars). */
-/* WebP (no JPEG): los gradientes oscuros de nebulosa posterizan con el
- * macroblocking de JPEG; WebP q95 + dithering en el shader = cero banding. */
-const SKY_BG = "/hdri/espacio-fondo.webp";
-const SKY_BG_LITE = "/hdri/espacio-fondo-1k.webp"; /* render por software: menos bandwidth */
-/** Rotación del skybox (elige qué parte de la nebulosa queda detrás del balón). */
-const SKY_ROT = 2.35;
-/** Inclinación de la bóveda: la banda nebular cruza en DIAGONAL (composición
- * dinámica) y el núcleo luminoso queda a un costado del encuadre. */
-const SKY_TILT = 0.3;
 
-/** Escala del grafo. El balón queda centrado; la CÁMARA hace todo el movimiento. */
-const S = 1.4;
+/** Escala del grafo. El sol queda centrado; la CÁMARA hace todo el movimiento. */
+const S = GRAPH_SCALE;
 
 /** Estado de cámara derivado del scroll. `t` es el progreso CONTINUO por la
  * ruta de waypoints (0 = portada, 1..N = nodo N de lleno; los decimales son la
@@ -52,47 +32,6 @@ export type CamState = { t: number; active: number };
 /** Proyección 2D de un sol-nodo: posición en px, si mira a cámara, y su RADIO
  * aparente en px (para el hit-area circular del overlay). */
 export type NodeProj = { x: number; y: number; front: boolean; r: number };
-
-/* Setup imperativo de three (fuera del componente: API mutable de la escena). */
-function applySky(scene: THREE.Scene, tex: THREE.Texture, lite: boolean) {
-  tex.mapping = THREE.EquirectangularReflectionMapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = tex;
-  scene.backgroundIntensity = 1.0;
-  scene.backgroundRotation.set(SKY_TILT, SKY_ROT, 0);
-  if (!lite) {
-    // La galaxia como IBL: el cromo refleja el campo de estrellas real. En
-    // software rendering el PBR con envmap se paga carísimo → luces simples.
-    scene.environment = tex;
-    scene.environmentIntensity = 0.6;
-    scene.environmentRotation.set(SKY_TILT, SKY_ROT, 0);
-  }
-}
-function clearSky(scene: THREE.Scene) {
-  scene.background = null;
-  scene.environment = null;
-}
-/** Deriva lentísima del cielo: fondo y reflejos giran juntos. */
-function driftSky(scene: THREE.Scene, delta: number) {
-  scene.backgroundRotation.y += SKY_DRIFT * delta;
-  scene.environmentRotation.y = scene.backgroundRotation.y;
-}
-
-/** Skybox: el espacio fotográfico como fondo equirectangular de la ESCENA. Al
- * orbitar/panear la cámara se ve otra parte de la galaxia (el modelo no se
- * mueve; se mueve la cámara), y el cielo entero deriva muy lento. */
-function SkyDome({ lite, reduced }: { lite: boolean; reduced: boolean }) {
-  const tex = useTexture(lite ? SKY_BG_LITE : SKY_BG);
-  const scene = useThree((s) => s.scene);
-  useEffect(() => {
-    applySky(scene, tex, lite);
-    return () => clearSky(scene);
-  }, [tex, scene, lite]);
-  useFrame((_, delta) => {
-    if (!reduced) driftSky(scene, Math.min(delta, 0.1));
-  });
-  return null;
-}
 
 /* Transición del sol central (mutación imperativa, fuera del componente):
  * en un tópico se ACHICA y el FD se encoge hasta desaparecer (el sol del tópico
@@ -121,11 +60,11 @@ function easeSunCore(
 /**
  * SOL CENTRAL — el corazón del grafo, con el logo FD adentro (silueta oscura
  * sobre el disco ardiente, como un eclipse). Capas, de adentro hacia afuera:
- * superficie fotográfica hirviendo (foto NASA/SDO + domain-warp) → shell de
- * LLAMAS → 4 PROTUBERANCIAS VIVAS (mallas 3D que erupcionan desde el limbo,
- * crecen, colapsan y RENACEN en otro punto — siempre hay ráfagas formándose) →
- * corona → una luz puntual que ilumina el contenedor desde adentro. El FD va
- * en un Billboard entre el sol y la cámara. En lite: superficie estática.
+ * superficie fotográfica hirviendo (foto NASA/SDO + domain-warp) → 4
+ * PROTUBERANCIAS VIVAS (mallas 3D que erupcionan desde el limbo, crecen,
+ * colapsan y RENACEN en otro punto — siempre hay ráfagas formándose). El
+ * resplandor lo pone el BLOOM (luz HDR real del disco). El FD va en un
+ * Billboard entre el sol y la cámara. En lite: superficie estática.
  */
 function SunCore({
   radius,
@@ -141,7 +80,6 @@ function SunCore({
   const R = radius * 0.5;
   const group = useRef<THREE.Group>(null);
   const sunMesh = useRef<THREE.Mesh>(null);
-  const flameMesh = useRef<THREE.Mesh>(null);
   const promGroups = useRef<(THREE.Group | null)[]>([]);
   const lastCycle = useRef<number[]>([-1, -1, -1, -1]);
   const fdGroup = useRef<THREE.Group>(null);
@@ -154,12 +92,9 @@ function SunCore({
       makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite, map: solTex }),
     [R, lite, solTex],
   );
-  const flame = useMemo(
-    () => (lite ? null : makeFlameMaterial(1 / (R * 1.42))),
-    [R, lite],
-  );
   // 4 protuberancias, cada una con su MATERIAL propio (uAlpha independiente:
-  // cada arco vive y muere en su propio ciclo).
+  // cada arco vive y muere en su propio ciclo). Usan blending NORMAL → se ven
+  // con cuerpo también sobre el estudio blanco (el aditivo desaparecía).
   const promMats = useMemo(
     () =>
       lite
@@ -167,23 +102,19 @@ function SunCore({
         : Array.from({ length: 4 }, () => makeProminenceMaterial(1 / (R * 0.5))),
     [R, lite],
   );
-  const corona = useMemo(() => makeCoronaTexture(), []);
   useEffect(() => {
     return () => {
       mat.dispose();
-      flame?.dispose();
       for (const m of promMats) m.dispose();
-      corona.dispose();
     };
-  }, [mat, flame, promMats, corona]);
+  }, [mat, promMats]);
 
   useFrame((_, delta) => {
     if (!reduced) {
       timeRef.current += Math.min(delta, 0.1);
-      advanceSuns(delta, mat, flame, ...promMats);
-      // Rotación lenta: el plasma gira; las llamas contra-rotan.
+      advanceSuns(delta, mat, ...promMats);
+      // Rotación lenta: el plasma gira sobre su eje.
       if (sunMesh.current) spinSun(sunMesh.current, 0.06, delta);
-      if (flameMesh.current) spinSun(flameMesh.current, -0.04, delta);
       // El ciclo de vida de las protuberancias (erupción → colapso → renacer).
       updateProminences(
         promGroups.current,
@@ -203,11 +134,6 @@ function SunCore({
       <mesh ref={sunMesh} material={mat}>
         <sphereGeometry args={[R, 48, 48]} />
       </mesh>
-      {flame && (
-        <mesh ref={flameMesh} material={flame} scale={1.42}>
-          <sphereGeometry args={[R, 32, 32]} />
-        </mesh>
-      )}
       {/* Protuberancias VIVAS: mallas 3D (torus parciales) con ciclo de vida —
           el anclaje, escala y alfa los maneja updateProminences por frame.
           Solo GPU real. */}
@@ -224,20 +150,6 @@ function SunCore({
           </mesh>
         </group>
       ))}
-      {/* Un solo halo amplio y suave: el resplandor cercano lo hacen las llamas
-          + el bloom (dos coronas encimadas lavaban la textura del disco). */}
-      <sprite scale={R * 4.6}>
-        <spriteMaterial
-          map={corona}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          transparent
-          opacity={0.5}
-          toneMapped={false}
-        />
-      </sprite>
-      {/* El sol ilumina el balón desde el centro (luz real en la escena). */}
-      <pointLight color="#ffb45c" intensity={1.2} distance={radius * 2.4} decay={1.8} />
       {/* FD entre el sol y la cámara: silueta tinta sobre el disco ardiente.
           Se anima por escala del grupo (ver easeSunCore). */}
       <group ref={fdGroup}>
@@ -259,9 +171,10 @@ function SunCore({
   );
 }
 
-/** El contenedor geodésico (cromo + vidrio) + el sol central (con el FD) + los
- * nodos. Grupo ESTÁTICO (sin rotación): así las direcciones de los nodos son
- * fijas en el mundo y la cámara los encara con precisión. */
+/** El sol central (con el FD) + los mini-soles. Grupo ESTÁTICO (sin rotación):
+ * así las direcciones de los nodos son fijas en el mundo y la cámara los encara
+ * con precisión. El contenedor de metal se retiró: el sol y los mini-soles
+ * quedan solos en el estudio blanco. */
 function GraphGroup({
   activeIndex,
   hovered,
@@ -275,7 +188,6 @@ function GraphGroup({
 }) {
   return (
     <group scale={S}>
-      <Lattice lite={lite} />
       <GraphNodes
         activeIndex={activeIndex}
         hovered={hovered}
@@ -449,7 +361,7 @@ function NodeProjector({
 }) {
   const { camera, size } = useThree();
   const buf = useRef<NodeProj[]>([]);
-  const rNode = radius * 1.32 * S;
+  const rNode = NODE_RING * S; // mismo anillo que las posiciones de los mini-soles
   const sunWorldR = radius * 0.085 * S * 1.3; // radio del sol (promedio con foco)
   useFrame(() => {
     if (!onProject) return;
@@ -505,23 +417,9 @@ function Scene({
 }) {
   return (
     <>
-      {/* El espacio fotográfico de fondo (siempre: ES el diseño). El IBL de la
-          galaxia lo setea applySky (solo GPU real). */}
-      <SkyDome lite={lite} reduced={reduced} />
-      {/* En el espacio la luz clave es DURA (sol lejano, sin atmósfera): un
-          direccional fuerte esculpe el cromo y los asteroides con lado de luz y
-          lado de sombra bien marcados. En software rendering, ambient de apoyo
-          en lugar del envmap. */}
-      {lite && <ambientLight intensity={0.5} color="#8fb4d8" />}
-      <directionalLight
-        position={[2.5, 4.5, 2]}
-        intensity={lite ? 1.5 : 1.15}
-        color="#fff2df"
-      />
-      {/* El espacio vivo: bóveda de estrellas nítidas + asteroides en
-          tránsito alrededor del grafo. */}
-      <Stars lite={lite} reduced={reduced} />
-      <Asteroids lite={lite} reduced={reduced} />
+      {/* Estudio blanco 3D: cúpula (pared + piso) + sombra del sol en el piso.
+          Los soles son shaders sin iluminar → no hacen falta luces. */}
+      <Studio />
       <GraphGroup
         activeIndex={activeIndex}
         hovered={hovered}
@@ -602,20 +500,20 @@ export default function GraphCanvas({
         />
       </Suspense>
       {/* Bloom HDR SELECTIVO: umbral > 1 → solo los píxeles HDR de los soles
-          (uBright > 1, toneMapped=false) derraman luz. El cielo, el vidrio y el
-          balón quedan limpios. Esto es el "encandila": luz renderizada real del
-          modelo, no un halo pegado. En software rendering se omite. */}
+          (uBright > 1, toneMapped=false) derraman luz; el estudio blanco está
+          por debajo de 1.0 y NO florece. Sobre blanco el bloom es más sutil, así
+          que se baja la intensidad para que sea un halo cálido, no una mancha. */}
       {/* multisampling 0: el MSAA sobre el buffer HDR del composer es otra
           fuente conocida de frames negros en algunos drivers; el DPR alto
           compensa el aliasing. */}
       {!lite && (
         <EffectComposer multisampling={0}>
           <Bloom
-            intensity={0.7}
+            intensity={0.42}
             luminanceThreshold={1.0}
-            luminanceSmoothing={0.3}
+            luminanceSmoothing={0.32}
             mipmapBlur
-            radius={0.75}
+            radius={0.7}
           />
         </EffectComposer>
       )}

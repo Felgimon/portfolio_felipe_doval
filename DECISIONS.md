@@ -1093,3 +1093,38 @@ Chips: la fórmula de ancho no descontaba las puntas semicirculares del pill
 (zona no usable por el texto) → "RECORRIDO" tocaba el borde. Ahora:
 ancho = texto (glifo + tracking) + altura del pill (las dos puntas) + aire
 real de 0.45·FS por lado. Verificado con crop 2x del chip más largo.
+
+---
+
+## v5.0 — "Estudio blanco": fuera el contenedor de metal + fondo estudio
+
+Pedido de Felipe: eliminar el contenedor de metal (que quede el sol + los
+mini-soles, más cerca del centro) y cambiar el fondo por un ESTUDIO BLANCO 3D
+(pared + piso, con la sombra del sol en el suelo, tipo render de producto).
+
+- **Fuera el metal**: se retiró `Lattice.tsx` (icosaedro truncado + vidrio).
+  Las constantes compartidas (`BALL_R`, escala) pasaron a `scene-config.ts` con
+  `NODE_RING = 0.86`: los mini-soles orbitan más cerca del sol (antes 1.32,
+  empujados por el contenedor). `NodeProjector` usa el mismo anillo → los
+  hit-areas siguen alineados.
+- **Estudio blanco** (`Studio.tsx`): cúpula (esfera BackSide) con un shader de
+  gradiente por ALTURA (piso luminoso abajo → pared gris muy claro arriba) +
+  la sombra del sol como textura radial en un plano tumbado. Es CAMERA-ROBUSTO:
+  la cámara orbita adentro y ve blanco desde cualquier ángulo (verificado el
+  caso crítico "Contacto", donde la cámara mira desde ABAJO: un piso rígido
+  fijo se habría roto; la cúpula no). Sin luces: los soles son shaders sin
+  iluminar y no hay PBR que iluminar → más barato y sin tonemapeo disparejo.
+- **Sol sobre blanco**: se quitaron la CORONA y las LLAMAS (blending ADITIVO →
+  invisibles sobre blanco, la vieja trampa "aditivo sobre cielo claro"). El
+  resplandor lo da el BLOOM (núcleo HDR) bajado a 0.42 (sobre blanco un bloom
+  fuerte embarra). Las protuberancias quedan (NormalBlending → se ven). Igual
+  en los mini-soles (sin sprites de corona).
+- **Chips claros**: el pill pasó a vidrio CLARO (frost + borde azul definido +
+  texto tinta) para leer sobre blanco; el chip activo/hover se enciende.
+- **Paleta v5 "estudio"**: se revierte a la luz (fondo casi blanco, texto
+  tinta, Liquid Glass claro, acento azul profundo, oro a los soles). `.sky`
+  procedural = ciclorama blanco (espejo del estudio 3D). `surface-paper`
+  vuelve a ser el momento oscuro.
+- Verificado: gate 0, touch 14/14, anim (sol vivo), smoke, dashcheck,
+  seocheck; capturas de portada + Perfil/Trabajo/Contacto/Recorrido + mobile +
+  footer + página de proyecto; póster de fallback regenerado.

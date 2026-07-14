@@ -1,78 +1,78 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   DESIGN TOKENS — "Espacio" (v4)
-   Portfolio de Felipe Doval. El balón ya no flota en un cielo diurno: flota en
-   el ESPACIO (panorámica real de la Vía Láctea). La paleta se INVIERTE: fondo
-   espacio profundo, texto celeste-blanco (la dupla celeste/blanco sigue siendo
-   la marca, ahora en luz sobre oscuridad), Liquid Glass oscuro estilo iOS y
-   ORO cálido reservado a los soles. Cero glow en la UI: la profundidad la dan
-   sombras y vidrio; el brillo real lo ponen los soles 3D.
+   DESIGN TOKENS — "Estudio" (v5)
+   Portfolio de Felipe Doval. El sol ya no flota en el espacio: flota en un
+   ESTUDIO BLANCO (ciclorama de fotografía de producto — pared + piso, con la
+   sombra del sol apoyada en el suelo). Aire limpio y profesional. La paleta
+   vuelve a la luz: fondo casi blanco, texto tinta fría, Liquid Glass claro
+   estilo iOS y ORO cálido reservado a los soles. Cero glow en la UI: la
+   profundidad la dan sombras suaves y el vidrio; el brillo real lo pone el sol.
 
    Los tokens son por ROL (fondo / texto / acento / línea), no por color literal:
-   sus VALORES giraron para el tema espacio, sus nombres marcan la función.
+   sus VALORES giraron para el tema estudio, sus nombres marcan la función.
    Regla de Felipe: los atenuados son HEX SÓLIDOS; el alpha solo en vidrio,
    scrims de degradado y sombras.
    ========================================================================== */
 
 :root {
-  /* Base — espacio profundo */
-  --ink: #060f1c; /* fondo base — azul-negro espacial (rol: page background) */
-  --ink-2: #0a1626; /* banda más levantada — footer / profundidad */
-  --panel: #0d1e33; /* superficie sólida oscura — cards no-vidrio */
-  --panel-2: #122844; /* hover de panel */
+  /* Base — estudio blanco */
+  --ink: #eef2f6; /* fondo base — gris-blanco frío (rol: page background) */
+  --ink-2: #e3e9f0; /* banda del footer / profundidad */
+  --panel: #ffffff; /* superficie sólida clara — cards no-vidrio */
+  --panel-2: #f5f9fc; /* hover de panel */
 
-  /* Alias de cielo (ahora: bóveda espacial) */
-  --cielo-hi: #16293f; /* zona alta, con resto de luz galáctica */
-  --cielo: #0a1a2e; /* espacio medio */
-  --cielo-lo: #04080f; /* espacio profundo */
-  --nube: #eaf4fc; /* la luz / el blanco de marca */
+  /* Alias de cielo (ahora: ciclorama del estudio) */
+  --cielo-hi: #ffffff; /* piso luminoso */
+  --cielo: #eef2f6; /* medio */
+  --cielo-lo: #dbe2ea; /* pared, un pelín más gris */
+  --nube: #ffffff; /* el blanco puro */
 
-  /* Acento de TEXTO/UI — celeste luminoso (la señal sobre lo oscuro).
+  /* Acento de TEXTO/UI — azul profundo (la señal sobre lo claro, AA).
      El oro queda reservado para los SOLES 3D y micro-marcas (punto del logo). */
-  --acento: #7cc4ea; /* celeste claro: links, eyebrows, estados activos (AA) */
-  --acento-hi: #a8dcf8; /* más luminoso: hovers / highlights */
-  --agua: #7cc4ea; /* rol "señal" (alias legacy) */
-  --agua-bright: #a8dcf8;
-  --jade: #7cc4ea;
-  --oro: #e8b34c; /* SOLO soles/micro-marcas */
-  --oro-hi: #f6cd77;
+  --acento: #0b5385; /* azul profundo: links, eyebrows, estados activos (AA) */
+  --acento-hi: #1d74b0; /* azul medio: hovers / highlights */
+  --agua: #0b5385; /* rol "señal" (alias legacy) */
+  --agua-bright: #1d74b0;
+  --jade: #0b5385;
+  --oro: #d99a1e; /* SOLO soles/micro-marcas (más profundo para leer en blanco) */
+  --oro-hi: #f0b843;
   --oro-deep: #8a5a0f;
 
-  /* Texto (sólidos, cero alpha) — luz fría */
-  --chalk: #eaf4fc; /* texto principal — celeste-blanco (rol: primary text) */
-  --chalk-dim: #b9cfe0; /* texto secundario — celeste niebla */
-  --muted: #85a2b8; /* metadatos atenuados (AA sobre espacio) */
+  /* Texto (sólidos, cero alpha) — tinta fría */
+  --chalk: #10293b; /* texto principal — slate-navy profundo (rol: primary text) */
+  --chalk-dim: #38566a; /* texto secundario — pizarra */
+  --muted: #566f80; /* metadatos atenuados (AA sobre claro) */
 
-  /* Líneas — hairlines sobre oscuro */
-  --line: #27455f; /* bordes / hairlines en reposo */
-  --line-soft: #1a3049; /* bordes más sutiles */
+  /* Líneas — hairlines sobre claro */
+  --line: #c4d3df; /* bordes / hairlines en reposo */
+  --line-soft: #dde7ee; /* bordes más sutiles */
 
   /* Chispa cálida secundaria — uso puntual */
-  --brasa: #e08a4a; /* terracota luminosa — marcador cálido ocasional */
+  --brasa: #d9762b; /* terracota — marcador cálido ocasional */
 
-  /* Superficie invertida — momento CLARO puntual (contra-forma del espacio) */
-  --paper: #eaf4fc; /* celeste-blanco */
-  --paper-ink: #10293b; /* tinta sobre esa superficie */
+  /* Superficie invertida — momento OSCURO puntual (contra-forma del estudio) */
+  --paper: #10293b; /* slate profundo */
+  --paper-ink: #eaf4fc; /* texto claro sobre esa superficie */
 
-  /* Liquid Glass oscuro (iOS-style: MUY translúcido, blur+saturación fuertes
-     del fondo, borde especular fino y sombra de profundidad — la galaxia
-     "moja" el vidrio) */
-  --glass-bg: rgba(13, 28, 48, 0.42); /* vidrio (el espacio se ve a través) */
-  --glass-bg-2: rgba(20, 42, 70, 0.55); /* vidrio hover / más denso */
-  --glass-brd: rgba(150, 200, 240, 0.35); /* borde especular */
-  --glass-blur: 26px;
+  /* Liquid Glass claro (iOS-style: MUY translúcido, blur+saturación fuertes del
+     fondo, borde especular fino y sombra de profundidad — el estudio "moja" el
+     vidrio). Un pelín teñido de frío para que el panel se lea sobre el blanco. */
+  --glass-bg: rgba(232, 240, 248, 0.55); /* vidrio (el estudio se ve a través) */
+  --glass-bg-2: rgba(244, 249, 253, 0.72); /* vidrio hover / más denso */
+  --glass-brd: rgba(255, 255, 255, 0.85); /* borde especular */
+  --glass-blur: 24px;
 
   /* Estados */
-  --focus: #7cc4ea; /* celeste luminoso — foco visible sobre oscuro */
-  --danger: #e0604f;
-  --ok: #e8b34c;
+  --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
+  --danger: #c0392b;
+  --ok: #d99a1e;
 
-  /* Radios / sombras (espaciales: elevación por sombra, no glow) */
+  /* Radios / sombras (elevación por sombra, no glow) */
   --radius: 0.85rem;
   --radius-lg: 1.5rem;
-  --shadow-float: 0 22px 48px -20px rgba(0, 0, 0, 0.65); /* flotación espacial */
-  --shadow-soft: 0 10px 28px -14px rgba(0, 0, 0, 0.5);
+  --shadow-float: 0 22px 48px -20px rgba(15, 41, 66, 0.28); /* flotación limpia */
+  --shadow-soft: 0 10px 28px -14px rgba(15, 41, 66, 0.2);
 }
 
 @theme inline {
@@ -132,7 +132,7 @@ body {
 
 ::selection {
   background-color: var(--acento);
-  color: #06101f;
+  color: #f2f8fc;
 }
 
 /* Foco visible y consistente en todo lo interactivo (piso de accesibilidad) */
@@ -217,10 +217,10 @@ body {
   color: var(--acento);
 }
 
-/* Palabra-acento de display: gradiente de blanco-luz a celeste galáctico
-   (luz de estrella atravesando la letra — puro, sin color chato). */
+/* Palabra-acento de display: gradiente de azul profundo a celeste luminoso
+   (luz atravesando la letra — puro, sin color chato). */
 .accent-grad {
-  background-image: linear-gradient(118deg, #f2f9ff 0%, #a8dcf8 48%, #4aa3d8 100%);
+  background-image: linear-gradient(118deg, #083d66 0%, #1370ad 52%, #3fa0d8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -264,16 +264,16 @@ body {
 .glass {
   position: relative;
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.25);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.25);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   box-shadow:
-    0 18px 44px -18px rgba(0, 0, 0, 0.6),
-    inset 0 1px 1px rgba(190, 225, 255, 0.32),
-    inset 0 -1px 1px rgba(190, 225, 255, 0.08),
-    inset 1.5px 0 1px -1px rgba(190, 225, 255, 0.2),
-    inset -1.5px 0 1px -1px rgba(190, 225, 255, 0.2);
+    0 18px 44px -18px rgba(15, 41, 66, 0.32),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.28),
+    inset 1.5px 0 1px -1px rgba(255, 255, 255, 0.55),
+    inset -1.5px 0 1px -1px rgba(255, 255, 255, 0.55);
 }
 /* Borde especular direccional: un gradiente EN el borde (arriba-izq brillante →
    abajo-der tenue), recortado al anillo del border con mask compositing. */
@@ -286,10 +286,10 @@ body {
   pointer-events: none;
   background: linear-gradient(
     135deg,
-    rgba(190, 225, 255, 0.55) 0%,
-    rgba(190, 225, 255, 0.16) 38%,
-    rgba(190, 225, 255, 0.06) 62%,
-    rgba(190, 225, 255, 0.26) 100%
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.4) 38%,
+    rgba(255, 255, 255, 0.14) 62%,
+    rgba(255, 255, 255, 0.5) 100%
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -315,9 +315,9 @@ body {
   pointer-events: none;
   background: linear-gradient(
     172deg,
-    rgba(190, 225, 255, 0.14) 0%,
-    rgba(190, 225, 255, 0.03) 38%,
-    rgba(190, 225, 255, 0) 60%
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.08) 38%,
+    rgba(255, 255, 255, 0) 60%
   );
 }
 @media (hover: hover) {
@@ -330,9 +330,9 @@ body {
   .glass-hover:hover {
     background: var(--glass-bg-2);
     box-shadow:
-      0 26px 60px -22px rgba(0, 0, 0, 0.7),
-      inset 0 1px 1px rgba(190, 225, 255, 0.4),
-      inset 0 -1px 1px rgba(190, 225, 255, 0.1);
+      0 26px 60px -22px rgba(15, 41, 66, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.32);
     transform: translateY(-2px);
   }
 }
@@ -371,23 +371,23 @@ body {
   background-size: 34px 34px;
 }
 
-/* Superficie invertida — el único momento CLARO (contra-forma del espacio). */
+/* Superficie invertida — el único momento OSCURO (contra-forma del estudio). */
 .surface-paper {
   background-color: var(--paper);
   color: var(--paper-ink);
 }
 .surface-paper .eyebrow {
-  color: #0b5385; /* azul profundo — AA sobre claro */
+  color: #7cc4ea; /* celeste claro — AA sobre slate profundo */
 }
 .surface-paper .lead {
-  color: #38566a; /* pizarra — AA sobre claro */
+  color: #b9cdd9; /* claro frío — AA sobre slate */
 }
 .surface-paper .hairline {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(16, 41, 59, 0.22) 15%,
-    rgba(16, 41, 59, 0.22) 85%,
+    rgba(255, 255, 255, 0.18) 15%,
+    rgba(255, 255, 255, 0.18) 85%,
     transparent
   );
 }
@@ -417,42 +417,24 @@ body {
 }
 
 /* ============================================================================
-   ESPACIO PROCEDURAL — fondo espacial generado por CSS (cero peso de carga):
-   base bajo el canvas y fallback sin-WebGL. Gradiente de bóveda + dos tintes
-   de nebulosa + tres capas de ESTRELLAS (radial-gradients de 1px repetidos a
-   distintas escalas: campo estelar disperso, sin assets) que derivan lento.
+   ESTUDIO PROCEDURAL — ciclorama blanco generado por CSS (cero peso de carga):
+   base bajo el canvas y fallback sin-WebGL. Espejo del degradado del estudio 3D
+   (Studio.tsx): pared clara arriba → piso luminoso abajo, con un halo suave
+   central (la luz del estudio) para que se sienta 3D y no un plano chato.
    ========================================================================== */
 .sky {
   background:
-    radial-gradient(1px 1px at 22% 34%, rgba(234, 244, 252, 0.9) 49%, transparent 51%),
-    radial-gradient(1px 1px at 71% 12%, rgba(234, 244, 252, 0.7) 49%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 48% 78%, rgba(200, 226, 246, 0.8) 49%, transparent 51%),
     radial-gradient(
-      130% 90% at 68% 26%,
-      rgba(94, 140, 190, 0.18),
-      rgba(94, 140, 190, 0) 55%
-    ),
-    radial-gradient(
-      90% 70% at 22% 74%,
-      rgba(120, 90, 150, 0.12),
-      rgba(120, 90, 150, 0) 55%
+      120% 85% at 50% 72%,
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0) 60%
     ),
     linear-gradient(
       180deg,
-      var(--cielo-hi) 0%,
-      var(--cielo) 52%,
-      var(--cielo-lo) 100%
+      var(--cielo-lo) 0%,
+      var(--cielo) 46%,
+      var(--cielo-hi) 100%
     );
-  background-size:
-    210px 210px,
-    340px 340px,
-    470px 470px,
-    auto,
-    auto,
-    auto;
-}
-.sky-drift {
-  animation: sky-drift 60s ease-in-out infinite alternate;
 }
 
 /* En pantallas chicas el modelo queda DETRÁS del texto (layout de una columna).
@@ -460,15 +442,7 @@ body {
    legibilidad. En desktop va a un costado, así que queda pleno. */
 @media (max-width: 767px) {
   .graph-layer.is-topic {
-    opacity: 0.28;
-  }
-}
-@keyframes sky-drift {
-  from {
-    background-position: 0% 0%;
-  }
-  to {
-    background-position: 4% 2%;
+    opacity: 0.22;
   }
 }
 

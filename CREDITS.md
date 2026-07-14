@@ -27,17 +27,18 @@ archivos que Google Fonts, OFL).
 | `pelota-facetada.glb` | Balón facetado sólido | Generado proceduralmente por Felipe | CC0 (propio) |
 | `esfera-lowpoly.glb` | Icoesfera facetada | Generado proceduralmente por Felipe | CC0 (propio) |
 
-## Skybox espacial (v4.2 — PROCEDURAL, propio)
+## Fondo (v5 — ESTUDIO BLANCO, sin assets)
 
-| Archivo | Qué es | Origen | Licencia |
-|---|---|---|---|
-| `public/hdri/espacio-fondo.webp` (4096×2048) + `espacio-fondo-1k.webp` | Nebulosa espacial 100% procedural: GLSL (fbm 3D quíntico + domain warping doble sobre la esfera), núcleo galáctico luminoso, banda con polvo, acentos dorados, glitter estelar y dithering anti-banding; WebP q95, renderizada offline y determinística por seed | Generada por el pipeline propio del proyecto | CC0 (propio) |
-| `public/textures/asteroide.jpg` (1K) | Superficie de roca lunar (cráteres reales) para los asteroides procedurales | Imagen NASA (vía repo oficial de three.js, `examples/textures/planets/moon_1024.jpg`) | Dominio público (NASA) |
+El fondo ya no es una imagen: es un ESTUDIO BLANCO 3D generado en vivo
+(`components/three/Studio.tsx`) — una cúpula/ciclorama con un shader de
+gradiente por altura (pared + piso) y la sombra del sol como una textura
+radial dibujada en canvas. Cero archivos, cero terceros.
 
-Historial: v4.0/v4.1 usaron la panorámica real de la Vía Láctea (ESO/S.
-Brunier, CC BY 4.0) con grading y erosión; se retiró en v4.2 a pedido de
-Felipe (skybox artístico procedural en su lugar) y con ella su crédito del
-footer. Los skyboxes del cielo diurno (Poly Haven, CC0) se retiraron en v4.0.
+Historial de fondos retirados: v4.2 usó una nebulosa procedural propia
+(GLSL, WebP); v4.0/v4.1 la panorámica real de la Vía Láctea (ESO/S. Brunier,
+CC BY 4.0); v3 el cielo diurno de Poly Haven (CC0). También se retiró el
+contenedor de metal (icosaedro truncado, propio) y los asteroides con textura
+de roca lunar de NASA. Todo eso vive en el historial de git.
 
 ## Textura solar (v3.6 — CC-BY, con crédito en el footer)
 

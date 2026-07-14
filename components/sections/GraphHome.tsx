@@ -376,7 +376,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
     <>
       {/* Cielo procedural (CSS, costo cero): el balón flota en él. Gradiente
           horizonte→cielo + nubes suaves que derivan muy lento. */}
-      <div className="sky sky-drift pointer-events-none fixed inset-0 -z-10" aria-hidden />
+      <div className="sky pointer-events-none fixed inset-0 -z-10" aria-hidden />
 
       {/* Capa fija: el grafo 3D (o poster si no hay WebGL). El encuadre por
           sección lo hace la CÁMARA (orbita + panea dentro del canvas); acá no

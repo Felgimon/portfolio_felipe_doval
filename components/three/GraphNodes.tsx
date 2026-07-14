@@ -4,12 +4,11 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useTexture, Text, Billboard } from "@react-three/drei";
 import { nodos } from "@/lib/navigation";
-import { BALL_R } from "./Lattice";
+import { BALL_R, NODE_RING } from "./scene-config";
 import {
   SUN_TEX,
   prepSunTexture,
   makeSunMaterial,
-  makeCoronaTexture,
   advanceSuns,
   spinSun,
   burst,
@@ -17,12 +16,16 @@ import {
 
 const LABEL_FONT = "/fonts/logo.ttf";
 
-/* ---- Etiquetas 3D (v4.3): CHIPS PILL de vidrio espacial ----
- * La misma identidad Liquid Glass del HUD, llevada a la escena: cada sol
- * lleva debajo un chip pill oscuro translúcido con borde especular celeste,
- * texto claro y un conector fino al sol (callout de spatial UI). El chip del
+/* ---- Etiquetas 3D: CHIPS PILL de vidrio (tema estudio claro) ----
+ * La identidad Liquid Glass del HUD, llevada a la escena: cada sol lleva debajo
+ * un chip pill de vidrio claro (frost translúcido + borde azul definido) con
+ * texto tinta y un conector fino al sol (callout de spatial UI). El chip del
  * sol ACTIVO/hover se enciende. Todo primitivas computadas (arcos de pill),
  * cero paths a mano. */
+
+const CHIP_PLATE = "#f2f7fc"; // frost claro del cuerpo del pill
+const CHIP_BORDER = "#0b5385"; // borde azul profundo (define el pill sobre blanco)
+const CHIP_TEXT = "#10293b"; // tinta
 
 /** Pill (rect con extremos semicirculares) como Shape de arcos computados. */
 function pillShape(w: number, h: number): THREE.Shape {
@@ -33,7 +36,7 @@ function pillShape(w: number, h: number): THREE.Shape {
   s.closePath();
   return s;
 }
-/** Anillo pill (borde especular): pill exterior con agujero pill interior. */
+/** Anillo pill (borde): pill exterior con agujero pill interior. */
 function pillRingGeometry(w: number, h: number, t: number): THREE.ShapeGeometry {
   const outer = pillShape(w, h);
   const inner = pillShape(w - t * 2, h - t * 2);
@@ -48,8 +51,8 @@ function easeChip(
   on: number,
   k: number,
 ) {
-  chip.opacity += (0.42 + 0.2 * on - chip.opacity) * k;
-  ring.opacity += (0.3 + 0.55 * on - ring.opacity) * k;
+  chip.opacity += (0.6 + 0.26 * on - chip.opacity) * k;
+  ring.opacity += (0.42 + 0.45 * on - ring.opacity) * k;
 }
 
 const GROW = 0.5; // escala extra del sol activo
@@ -59,13 +62,13 @@ const BRIGHT_1 = 1.5; // brillo activo
 const FOCUS_BASE = 0.014;
 const HOVER_BASE = 0.0000045;
 
-/* Aplica foco (0..1) + hover (0..1) + ráfaga (0..1) a un sol: escala, brillo
- * del plasma y corona reaccionan JUNTOS (mutación fuera del componente). */
+/* Aplica foco (0..1) + hover (0..1) + ráfaga (0..1) a un sol: escala y brillo
+ * del plasma reaccionan JUNTOS (mutación fuera del componente). El resplandor
+ * lo pone el bloom sobre el núcleo HDR — sin sprites aditivos (invisibles sobre
+ * el estudio blanco). */
 function applyFocus(
   mesh: THREE.Mesh | null,
-  sprite: THREE.Sprite | null,
   mat: THREE.ShaderMaterial,
-  base: number,
   f: number,
   h: number,
   b: number,
@@ -73,27 +76,6 @@ function applyFocus(
   if (mesh) mesh.scale.setScalar(1 + GROW * f + 0.12 * h + 0.06 * b);
   mat.uniforms.uBright.value =
     BRIGHT_0 + (BRIGHT_1 - BRIGHT_0) * f + 0.5 * h + 0.3 * b;
-  if (sprite) {
-    const s = base * (4.2 + 2.8 * f + 1.3 * h + 1.6 * b);
-    sprite.scale.set(s, s, 1);
-    (sprite.material as THREE.SpriteMaterial).opacity =
-      0.5 + 0.35 * f + 0.2 * h + 0.25 * b;
-  }
-}
-
-/* La luz cálida VIAJA hacia el sol activo (y se apaga en la portada). */
-function moveLight(
-  light: THREE.PointLight | null,
-  target: THREE.Vector3 | null,
-  k: number,
-) {
-  if (!light) return;
-  if (target) {
-    light.position.lerp(target, k);
-    light.intensity += (2.4 - light.intensity) * k;
-  } else {
-    light.intensity += (0 - light.intensity) * k;
-  }
 }
 
 /* Onda expansiva del hover (la "mini-implosión"): un anillo 3D que estalla
@@ -114,16 +96,16 @@ function updateShock(
   }
   const p = dt / T;
   m.scale.setScalar(base * (1.7 + 3.6 * p));
-  mat.opacity = 0.55 * (1 - p) * (1 - p);
+  mat.opacity = 0.6 * (1 - p) * (1 - p);
 }
 
 /**
  * Las 5 esferas-nodo como MINI-SOLES clickeables: superficie fotográfica
- * hirviendo (shader `sun`) + corona + una luz que viaja al sol activo. El HOVER
- * dispara una mini-implosión (contracción de brillo + ONDA EXPANSIVA 3D) y el
- * foco crece gradualmente (~1s). Cada sol lleva su ETIQUETA 3D flotante
- * (billboard, texto claro con halo espacial oscuro) para saber a qué sección
- * lleva.
+ * hirviendo (shader `sun`) + su resplancor HDR (bloom). El HOVER dispara una
+ * mini-implosión (contracción de brillo + ONDA EXPANSIVA 3D) y el foco crece
+ * gradualmente (~1s). Cada sol lleva su ETIQUETA 3D flotante (chip pill de
+ * vidrio + conector) para saber a qué sección lleva. Sin el contenedor de
+ * metal, orbitan MÁS CERCA del sol central.
  */
 export function GraphNodes({
   activeIndex,
@@ -137,11 +119,11 @@ export function GraphNodes({
   reduced: boolean;
 }) {
   const radius = BALL_R;
-  // Los soles orbitan DESPEGADOS del contenedor (halo alrededor del vidrio).
+  // Los mini-soles orbitan el sol central (anillo compartido con NodeProjector).
   const positions = useMemo(
     () =>
       nodos.map((n) =>
-        new THREE.Vector3(...n.dir).normalize().multiplyScalar(radius * 1.32),
+        new THREE.Vector3(...n.dir).normalize().multiplyScalar(radius * NODE_RING),
       ),
     [radius],
   );
@@ -161,7 +143,6 @@ export function GraphNodes({
       ),
     [base, lite, solTex],
   );
-  const corona = useMemo(() => makeCoronaTexture(), []);
 
   // Chips pill: geometría por nodo (el ancho sigue al largo del texto) +
   // materiales propios (el chip del sol activo/hover se enciende).
@@ -178,7 +159,7 @@ export function GraphNodes({
         const w = textW + h + FS * 0.9;
         return {
           plate: new THREE.ShapeGeometry(pillShape(w, h), 24),
-          ring: pillRingGeometry(w, h, FS * 0.09),
+          ring: pillRingGeometry(w, h, FS * 0.08),
           h,
         };
       }),
@@ -189,10 +170,11 @@ export function GraphNodes({
       nodos.map(
         () =>
           new THREE.MeshBasicMaterial({
-            color: "#081527",
+            color: CHIP_PLATE,
             transparent: true,
-            opacity: 0.42,
+            opacity: 0.6,
             depthWrite: false,
+            toneMapped: false,
           }),
       ),
     [],
@@ -202,10 +184,11 @@ export function GraphNodes({
       nodos.map(
         () =>
           new THREE.MeshBasicMaterial({
-            color: "#a8dcf8",
+            color: CHIP_BORDER,
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.42,
             depthWrite: false,
+            toneMapped: false,
           }),
       ),
     [],
@@ -219,14 +202,11 @@ export function GraphNodes({
       }
       for (const m of chipMats) m.dispose();
       for (const m of ringMats) m.dispose();
-      corona.dispose();
     };
-  }, [mats, chips, chipMats, ringMats, corona]);
+  }, [mats, chips, chipMats, ringMats]);
 
   const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
-  const spriteRefs = useRef<(THREE.Sprite | null)[]>([]);
   const ringRefs = useRef<(THREE.Mesh | null)[]>([]);
-  const lightRef = useRef<THREE.PointLight>(null);
   const focus = useRef<number[]>(nodos.map(() => 0));
   const hoverV = useRef<number[]>(nodos.map(() => 0));
   const shockStart = useRef<number[]>(nodos.map(() => -1));
@@ -251,26 +231,13 @@ export function GraphNodes({
       f[i] += ((i === activeIndex ? 1 : 0) - f[i]) * k;
       hv[i] += ((i === hovered ? 1 : 0) - hv[i]) * kh;
       const b = reduced ? 0 : burst(timeRef.current, 6 + i * 1.3, i * 0.37);
-      applyFocus(
-        meshRefs.current[i],
-        spriteRefs.current[i],
-        mats[i],
-        base,
-        f[i],
-        hv[i],
-        b,
-      );
+      applyFocus(meshRefs.current[i], mats[i], f[i], hv[i], b);
       const m = meshRefs.current[i];
       if (!reduced && m) spinSun(m, 0.22, delta);
       updateShock(ringRefs.current[i], shockStart.current[i], timeRef.current, base);
       // El chip del sol activo/hover se enciende (sigue al foco ya suavizado).
       easeChip(chipMats[i], ringMats[i], Math.min(1, f[i] + hv[i]), k);
     }
-    moveLight(
-      lightRef.current,
-      activeIndex >= 0 ? positions[activeIndex] : null,
-      k,
-    );
   });
 
   return (
@@ -285,21 +252,6 @@ export function GraphNodes({
           >
             <sphereGeometry args={[base, 24, 24]} />
           </mesh>
-          <sprite
-            ref={(el) => {
-              spriteRefs.current[i] = el;
-            }}
-            scale={[base * 4.2, base * 4.2, 1]}
-          >
-            <spriteMaterial
-              map={corona}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-              transparent
-              opacity={0.5}
-              toneMapped={false}
-            />
-          </sprite>
           {/* Onda expansiva del hover (anillo 3D, animado en updateShock). */}
           <Billboard>
             <mesh
@@ -310,7 +262,7 @@ export function GraphNodes({
             >
               <ringGeometry args={[0.86, 1, 48]} />
               <meshBasicMaterial
-                color="#ffd27a"
+                color="#f0a835"
                 transparent
                 opacity={0}
                 depthWrite={false}
@@ -319,7 +271,7 @@ export function GraphNodes({
               />
             </mesh>
           </Billboard>
-          {/* Etiqueta 3D: chip pill de vidrio espacial + conector al sol
+          {/* Etiqueta 3D: chip pill de vidrio claro + conector al sol
               (callout de spatial UI, misma identidad que el HUD). */}
           <Billboard position={[0, -base * 2.3, 0]}>
             <mesh geometry={chips[i].plate} material={chipMats[i]} />
@@ -343,20 +295,11 @@ export function GraphNodes({
               position={[0, 0, 0.002]}
             >
               {nodos[i].label.toUpperCase()}
-              <meshBasicMaterial color="#eaf4fc" transparent depthWrite={false} />
+              <meshBasicMaterial color={CHIP_TEXT} transparent depthWrite={false} />
             </Text>
           </Billboard>
         </group>
       ))}
-      {/* La luz que baña el contenedor: viaja con el foco, intensidad 0 en la
-          portada (siempre montada → sin pops). */}
-      <pointLight
-        ref={lightRef}
-        color="#ffbe6a"
-        intensity={0}
-        distance={radius * 2.6}
-        decay={1.6}
-      />
     </>
   );
 }
