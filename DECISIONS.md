@@ -1156,3 +1156,34 @@ Verificación NUEVA y automática (`clickable.mjs`): navega a cada sección por
 el HUD y comprueba que las 5 hit-areas de sol estén `front` + con
 pointerEvents auto + con el centro POR ENCIMA del nav-bar. Resultado: 5/5 en
 las 5 secciones. Más capturas de portada/secciones/mobile y póster regenerado.
+
+### v5.2 — Vuelve la rotación: el test de visibilidad era el culpable, no la órbita
+
+Feedback de Felipe: le gustaba la rotación anterior (quizá algo menos
+exagerada); con la órbita corta de v5.1 la sección ya no se leía como
+referida a SU mini-sol.
+
+Tensión aparente: en v5.1 había recortado la órbita (TILT 0.34) para que los 5
+soles siguieran clickeables desde cualquier sección. Pero al revisarlo con
+números, esa premisa era FALSA:
+
+- El `front` que habilitaba cada hit-area era un test de **cara de atrás**
+  (`dirSol · dirCámara > umbral`). Ese test era herencia del BALÓN sólido: con
+  el contenedor de metal, un sol del lado lejano quedaba realmente escondido
+  detrás. **Sin balón ya no es cierto**: los mini-soles orbitan a
+  NODE_RING·S = 1.2 y el sol central solo mide 0.7 de radio (0.315 dentro de un
+  tópico, que se achica) → un sol "del otro lado" proyecta MUY por fuera del
+  disco del núcleo: se ve perfecto. Comprobado a mano: con la cámara en Perfil
+  y órbita PLENA, el punto del rayo cámara→Contacto más cercano al origen está
+  a 0.99 (> 0.7) → nunca estuvo tapado; el dot lo desactivaba por error.
+- Fix: `occludedByCore()` — test real **segmento-esfera** (el rayo cámara→sol
+  ¿pasa a menos del radio del núcleo del origen?). Solo se desactiva lo que
+  está tapado DE VERDAD.
+- Con eso, la órbita vuelve fuerte (`TILT = 0.78`, algo menos que el pleno de
+  antes para que no maree): la cámara se va hacia el sol de la sección y lo
+  trae al frente, grande → se lee clarísimo que la sección ES ese sol. Y los
+  otros cuatro siguen clickeables: verificado 5/5 en las 5 secciones (local y
+  producción) con `clickable.mjs`.
+
+Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
+revisar los tests que dependían de él, en vez de compensar recortando features.

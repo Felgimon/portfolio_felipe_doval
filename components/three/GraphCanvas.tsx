@@ -209,8 +209,8 @@ const _dir = new THREE.Vector3();
 const _node = new THREE.Vector3();
 const _target = new THREE.Vector3();
 const _v = new THREE.Vector3();
-const _nd = new THREE.Vector3();
-const _cam = new THREE.Vector3();
+const _seg = new THREE.Vector3();
+const _closest = new THREE.Vector3();
 const _z = new THREE.Vector3(0, 0, 1);
 const _up = new THREE.Vector3(0, 1, 0);
 const _fwd = new THREE.Vector3();
@@ -237,12 +237,13 @@ const PAN_F = 0.44;
  * de arriba) y, en los tópicos, despega los soles de abajo del nav-bar. Se
  * aplica en TODAS las vistas. */
 const LIFT = 0.14;
-/** Órbita PARCIAL hacia el nodo activo (0 = de frente como la portada, 1 =
- * encarándolo de lleno). Se queda corta a propósito: así los CINCO soles siguen
- * mirando a cámara en toda sección → se pueden clickear todos desde cualquier
- * sección (buceando de lleno, los soles opuestos quedaban detrás del sol
- * central). El realce del sol activo lo dan el crecimiento + el pan + el chip. */
-const TILT = 0.34;
+/** Órbita hacia el nodo activo (0 = de frente como la portada, 1 = encarándolo
+ * de lleno). Fuerte: la cámara SE VA hacia el sol de la sección y lo pone
+ * adelante → se lee clarísimo que la sección es ESE sol. Un poco menos que de
+ * lleno para que el giro no maree y el resto del cúmulo quede en cuadro.
+ * Que los demás soles sigan clickeables NO depende de esto: depende de
+ * `occludedByCore` (solo se desactiva lo que el sol central tapa de verdad). */
+const TILT = 0.78;
 
 /* Waypoints de la ruta de cámara: 0 = overview (frente, centrado); k = 1..N =
  * nodo k (orbitado PARCIALMENTE hacia su dirección, paneado a su lado). */
@@ -367,8 +368,28 @@ function CameraRig({
   return null;
 }
 
-/** Proyecta los nodos a 2D para el overlay clickeable; "front" según si el nodo
- * mira a la cámara. Corre en los frames renderizados (durante scroll/asentado). */
+/** ¿El sol `p` está TAPADO por el sol central? Test real segmento-esfera: el
+ * rayo cámara→sol pasa a menos de `r` del origen (donde vive el sol central).
+ *
+ * Reemplaza al viejo test de "cara de atrás" (dot con la cámara), que era
+ * herencia del BALÓN sólido: cuando el contenedor existía, un sol del lado
+ * lejano quedaba realmente escondido detrás de él. Sin balón, ese sol SIGUE
+ * viéndose (orbita a NODE_RING·S = 1.2, muy por fuera del disco del sol
+ * central, 0.7) → debe poder clickearse. Con este test, la cámara puede volver
+ * a orbitar fuerte hacia el nodo activo SIN perder la clickeabilidad del resto:
+ * solo se desactiva lo que de verdad está tapado. */
+function occludedByCore(camPos: THREE.Vector3, p: THREE.Vector3, r: number) {
+  _seg.subVectors(p, camPos);
+  const dd = _seg.lengthSq();
+  if (dd < 1e-6) return false;
+  // Punto del SEGMENTO cámara→sol más cercano al origen.
+  const t = THREE.MathUtils.clamp(-camPos.dot(_seg) / dd, 0, 1);
+  _closest.copy(camPos).addScaledVector(_seg, t);
+  return _closest.lengthSq() < r * r;
+}
+
+/** Proyecta los nodos a 2D para el overlay clickeable; "front" = visible de
+ * verdad (no tapado por el sol central). Corre en los frames renderizados. */
 function NodeProjector({
   onProject,
   radius,
@@ -380,17 +401,15 @@ function NodeProjector({
   const buf = useRef<NodeProj[]>([]);
   const rNode = NODE_RING * S; // mismo anillo que las posiciones de los mini-soles
   const sunWorldR = radius * 0.085 * S * 1.3; // radio del sol (promedio con foco)
+  const coreR = radius * 0.5 * S; // radio del sol central (el único que tapa)
   useFrame(() => {
     if (!onProject) return;
-    _cam.copy(camera.position).normalize();
     const b = buf.current;
     for (let i = 0; i < nodos.length; i++) {
       const d = nodos[i].dir;
       _v.set(d[0], d[1], d[2]).normalize().multiplyScalar(rNode);
-      _nd.copy(_v).normalize();
-      // Umbral bajo: con la órbita parcial todos los soles miran a cámara en
-      // toda sección → todos clickeables (no solo el activo).
-      const front = _nd.dot(_cam) > 0.06;
+      // Clickeable si se VE: solo lo tapa el sol central (nada de back-face).
+      const front = !occludedByCore(camera.position, _v, coreR);
       const dist = camera.position.distanceTo(_v);
       _v.project(camera);
       let e = b[i];
