@@ -1128,3 +1128,31 @@ mini-soles, más cerca del centro) y cambiar el fondo por un ESTUDIO BLANCO 3D
 - Verificado: gate 0, touch 14/14, anim (sol vivo), smoke, dashcheck,
   seocheck; capturas de portada + Perfil/Trabajo/Contacto/Recorrido + mobile +
   footer + página de proyecto; póster de fallback regenerado.
+
+### v5.1 — Encuadre: portada centrada + los 5 soles clickeables desde toda sección
+
+Feedback de Felipe: en la portada el sol quedaba bajo (mucho espacio vacío
+arriba); y desde una sección no se podían clickear las otras (los soles de
+abajo se metían bajo el nav-bar, y los del lado opuesto quedaban detrás del
+sol central porque la cámara buceaba de LLENO al nodo). Pidió: subir el modelo
+en TODAS las secciones, con margen en todos lados, y poder clickear los 5.
+
+Tres cambios coordinados en `CameraRig`:
+- **Órbita PARCIAL** (`TILT = 0.34`): la cámara ya no encara de lleno el nodo,
+  solo orbita un tercio hacia él. Así los CINCO soles siguen mirando a cámara
+  en toda sección → todos clickeables (verificado que el dot·cámara de cada sol
+  queda > umbral en las 5 secciones). El realce del sol activo lo dan el
+  crecimiento + el pan + el chip, no un encuadre que esconde a los demás.
+- **ELEVACIÓN** (`LIFT = 0.14`): la cámara mira un poco por debajo del centro
+  → el cúmulo sube en pantalla. Centra la portada (adiós espacio vacío arriba)
+  y, en los tópicos, despega los soles de abajo del nav-bar (que antes los
+  tapaba: el overlay de hit-areas es z-30, debajo del HUD z-40).
+- **PAN mayor** (`PAN_F = 0.44`) + distancias OVER/CLOSE cercanas: con la
+  órbita corta el cúmulo se mantiene entero, así que se lo empuja bien al lado
+  del modelo (sin pisar la columna de texto) y el tópico casi no hace zoom.
+  Umbral `front` bajado a 0.06 por seguridad.
+
+Verificación NUEVA y automática (`clickable.mjs`): navega a cada sección por
+el HUD y comprueba que las 5 hit-areas de sol estén `front` + con
+pointerEvents auto + con el centro POR ENCIMA del nav-bar. Resultado: 5/5 en
+las 5 secciones. Más capturas de portada/secciones/mobile y póster regenerado.

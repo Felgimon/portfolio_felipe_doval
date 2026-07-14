@@ -228,19 +228,33 @@ const SETTLE = 0.00002;
 const SNAP_EPS2 = 0.012 * 0.012;
 /** tan(fov/2) del canvas (fov 40). */
 const TAN_HALF_FOV = Math.tan((40 * Math.PI) / 360);
-/** Cuánto panea la cámara en un tópico (fracción del semiancho visible). El
- * balón queda del lado del modelo SIN salirse de pantalla e invade un poco el
- * lado del texto. */
-const PAN_F = 0.3;
+/** Cuánto panea la cámara en un tópico (fracción del semiancho visible): el
+ * cúmulo entero queda del lado del modelo, sin pisar la columna de texto y con
+ * margen del borde. */
+const PAN_F = 0.44;
+/** ELEVACIÓN del cúmulo (fracción del semialto): mira un poco por DEBAJO del
+ * centro → el modelo sube en pantalla. Centra la portada (saca el espacio vacío
+ * de arriba) y, en los tópicos, despega los soles de abajo del nav-bar. Se
+ * aplica en TODAS las vistas. */
+const LIFT = 0.14;
+/** Órbita PARCIAL hacia el nodo activo (0 = de frente como la portada, 1 =
+ * encarándolo de lleno). Se queda corta a propósito: así los CINCO soles siguen
+ * mirando a cámara en toda sección → se pueden clickear todos desde cualquier
+ * sección (buceando de lleno, los soles opuestos quedaban detrás del sol
+ * central). El realce del sol activo lo dan el crecimiento + el pan + el chip. */
+const TILT = 0.34;
 
-/* Waypoints de la ruta de cámara: 0 = overview (frente, lejos, centrado);
- * k = 1..N = nodo k (su dirección, cerca, paneado a su lado). */
+/* Waypoints de la ruta de cámara: 0 = overview (frente, centrado); k = 1..N =
+ * nodo k (orbitado PARCIALMENTE hacia su dirección, paneado a su lado). */
 function wpDir(k: number, out: THREE.Vector3) {
   if (k <= 0) {
     out.copy(_z);
   } else {
     const d = nodos[k - 1].dir;
-    out.set(d[0], d[1], d[2]).normalize();
+    // Interpola entre el frente (+z) y la dirección del nodo por TILT → órbita
+    // suave que mantiene todos los soles a la vista.
+    out.set(d[0], d[1], d[2]).normalize().multiplyScalar(TILT);
+    out.addScaledVector(_z, 1 - TILT).normalize();
   }
 }
 function wpPan(k: number): number {
@@ -275,10 +289,11 @@ function CameraRig({
   const rBall = radius * S;
   const aspect = size.width / Math.max(1, size.height);
   // Calibrado contra BALL_R exacto. En pantallas ANGOSTAS (mobile) la cámara se
-  // aleja más: el contenedor Y el halo de soles orbitando (r×1.32 + etiquetas)
-  // entran completos en el ancho. dist ≥ span/(0.8·tan(fov/2)·aspect).
-  const OVER = rBall * Math.max(5.0, 4.75 / aspect); // portada: entero, de frente
-  const CLOSE = rBall * Math.max(3.6, 2.6 / aspect); // tópico: grande, sol de frente
+  // aleja más para que el cúmulo entre completo en el ANCHO. Con la órbita
+  // parcial (TILT) el cúmulo se mantiene entero en toda sección, así que OVER y
+  // CLOSE están cerca: el tópico solo se acerca un poco (el sol activo crece).
+  const OVER = rBall * Math.max(4.5, 4.35 / aspect); // portada: entero, centrado
+  const CLOSE = rBall * Math.max(4.2, 3.55 / aspect); // tópico: cúmulo entero al lado del modelo
 
   useFrame((_, delta) => {
     const st = camRef.current;
@@ -306,13 +321,15 @@ function CameraRig({
     }
     _target.copy(_dir).multiplyScalar(dist);
 
-    // Pan lateral: mirar a un costado del balón → el balón queda del lado del
-    // modelo (opuesto al texto) sin mover la escena.
+    // Punto de mira: pan lateral (el cúmulo queda del lado del modelo) + una
+    // ELEVACIÓN constante (mira por debajo del centro → el cúmulo sube: portada
+    // centrada y soles despegados del nav-bar en los tópicos).
     const pan = THREE.MathUtils.lerp(wpPan(iA), wpPan(iB), fs);
     _fwd.copy(_dir).negate();
-    _right.crossVectors(_fwd, _up).normalize();
-    const half = dist * TAN_HALF_FOV * (size.width / size.height);
-    _lookGoal.copy(_right).multiplyScalar(pan * half);
+    _right.crossVectors(_fwd, _up).normalize(); // horizontal (y = 0)
+    const halfV = dist * TAN_HALF_FOV; // semialto visible a esta distancia
+    _lookGoal.copy(_right).multiplyScalar(pan * halfV * aspect);
+    _lookGoal.y -= LIFT * halfV;
 
     if (reduced) {
       camera.position.copy(_target);
@@ -371,7 +388,9 @@ function NodeProjector({
       const d = nodos[i].dir;
       _v.set(d[0], d[1], d[2]).normalize().multiplyScalar(rNode);
       _nd.copy(_v).normalize();
-      const front = _nd.dot(_cam) > 0.12;
+      // Umbral bajo: con la órbita parcial todos los soles miran a cámara en
+      // toda sección → todos clickeables (no solo el activo).
+      const front = _nd.dot(_cam) > 0.06;
       const dist = camera.position.distanceTo(_v);
       _v.project(camera);
       let e = b[i];
