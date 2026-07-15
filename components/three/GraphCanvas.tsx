@@ -22,9 +22,20 @@ import { ladoModelo, nodos } from "@/lib/navigation";
 /** Escala del grafo. El sol queda centrado; la CÁMARA hace todo el movimiento. */
 const S = GRAPH_SCALE;
 
-/** Giro del cúmulo en la PORTADA (rad/s): una vuelta cada ~75s. Vive, no marea.
- * Se frena al entrar a un tópico (ahí manda el sol de la sección). */
-const HERO_SPIN = 0.084;
+/**
+ * Por qué el CÚMULO no gira (v5.4). Girar el conjunto tenía dos costos que
+ * ninguna calibración arregla, porque son geométricos:
+ *  1. Un mini-sol que orbita pasa DETRÁS del sol central → deja de verse y de
+ *     poder clickearse durante media vuelta.
+ *  2. Al girar, dos chips cualesquiera terminan superpuestos en pantalla (los
+ *     nodos viven en una esfera; su proyección se junta y se cruza).
+ * Además el encuadre se volvía no determinista: el margen de arriba medía
+ * entre 13% y 23% según en qué ángulo te agarraba la captura.
+ * Las direcciones de `nodos` están elegidas para leerse SEPARADAS de frente, y
+ * quietas cumplen esa promesa: cada sección tiene SU lugar fijo en el mapa.
+ * El movimiento lo pone el sol central, que gira sobre su propio eje (spinSun)
+ * sin mover a nadie de lugar.
+ */
 
 /** Estado de cámara derivado del scroll. `t` es el progreso CONTINUO por la
  * ruta de waypoints (0 = portada, 1..N = nodo N de lleno; los decimales son la
@@ -34,6 +45,10 @@ export type CamState = { t: number; active: number };
 /** Proyección 2D de un sol-nodo: posición en px, si mira a cámara, y su RADIO
  * aparente en px (para el hit-area circular del overlay). */
 export type NodeProj = { x: number; y: number; front: boolean; r: number };
+/** El HUECO que el layout le deja al cúmulo en la portada, en px de pantalla
+ * (lo mide GraphHome contra el DOM real). En ancho: a la derecha del nombre y
+ * arriba del HUD. En angosto: toda la pantalla, arriba del texto. */
+export type Banda = { x0: number; x1: number; y0: number; y1: number };
 
 /* Transición del sol central (mutación imperativa, fuera del componente): en un
  * tópico se ACHICA (el mini-sol de la sección pasa a ser el protagonista); en la
@@ -43,11 +58,6 @@ function easeSunCore(g: THREE.Group, inTopic: boolean, delta: number) {
   const k = 1 - Math.pow(0.014, Math.min(delta, 0.1));
   const target = inTopic ? 0.45 : 1;
   g.scale.setScalar(g.scale.x + (target - g.scale.x) * k);
-}
-
-/* El cúmulo GIRA en la portada (y se frena al entrar a un tópico). */
-function applySpin(g: THREE.Group, y: number) {
-  g.rotation.y = y;
 }
 
 /**
@@ -106,8 +116,10 @@ function SunCore({
     if (!reduced) {
       timeRef.current += Math.min(delta, 0.1);
       advanceSuns(delta, mat, ...promMats);
-      // Rotación lenta: el plasma gira sobre su eje.
-      if (sunMesh.current) spinSun(sunMesh.current, 0.06, delta);
+      // El sol gira sobre su PROPIO eje: el plasma cruza el disco y el sol se
+      // lee vivo sin mover a nadie de lugar. Es el único giro de la escena
+      // (el cúmulo quedó quieto), así que va un toque más rápido que antes.
+      if (sunMesh.current) spinSun(sunMesh.current, 0.085, delta);
       // El ciclo de vida de las protuberancias (erupción → colapso → renacer).
       updateProminences(
         promGroups.current,
@@ -145,31 +157,23 @@ function SunCore({
   );
 }
 
-/** El sol central + los mini-soles. GIRA sobre su eje en la portada (`spinRef`,
- * que maneja SpinDriver) y se frena en los tópicos. La cámara y el proyector
- * leen el MISMO ángulo, así que el encuadre de cada tópico es idéntico gire lo
- * que gire (es una rotación rígida alrededor de Y, y el "arriba" de la cámara
- * también es Y). El contenedor de metal se retiró: el sol y los mini-soles
- * quedan solos en el estudio blanco. */
+/** El sol central + los mini-soles, QUIETOS (ver la nota de arriba): cada
+ * sección tiene su lugar fijo en el mapa y la cámara es la que se mueve. El
+ * contenedor de metal se retiró: el sol y los mini-soles quedan solos en el
+ * estudio blanco. */
 function GraphGroup({
   activeIndex,
   hovered,
   lite,
   reduced,
-  spinRef,
 }: {
   activeIndex: number;
   hovered: number;
   lite: boolean;
   reduced: boolean;
-  spinRef: RefObject<number>;
 }) {
-  const g = useRef<THREE.Group>(null);
-  useFrame(() => {
-    if (g.current) applySpin(g.current, spinRef.current);
-  });
   return (
-    <group ref={g} scale={S}>
+    <group scale={S}>
       <GraphNodes
         activeIndex={activeIndex}
         hovered={hovered}
@@ -215,10 +219,86 @@ const TAN_HALF_FOV = Math.tan((40 * Math.PI) / 360);
  * margen del borde. */
 const PAN_F = 0.44;
 /** ELEVACIÓN del cúmulo (fracción del semialto): mira un poco por DEBAJO del
- * centro → el modelo sube en pantalla. Centra la portada (saca el espacio vacío
- * de arriba) y, en los tópicos, despega los soles de abajo del nav-bar. Se
- * aplica en TODAS las vistas. */
+ * centro → el modelo sube en pantalla. Despega los soles de abajo del nav-bar
+ * en los tópicos. */
 const LIFT = 0.14;
+
+/* ---- Encuadre de la PORTADA: la cámara llena el HUECO que deja el layout ----
+ * En la portada el cúmulo no va "a la derecha, a ojo": va CENTRADO en la banda
+ * que le deja libre la columna de texto, y a la distancia justa para llenarla
+ * sin pisar nada. La banda la mide GraphHome contra el DOM real y se la pasa
+ * acá; no hay ninguna fórmula de CSS copiada en este archivo.
+ *
+ * Por qué no alcanzaban tres números fijos: el contenedor centrado (max-w-88rem)
+ * mueve el borde derecho del nombre del 35% del ancho (1440) al 47% (1920), y el
+ * cúmulo se dimensiona contra el ALTO. Un pan constante calibrado en 1920 dejaba
+ * el cúmulo a 4% del borde en 1440 y a 3.7% en 1366x768. Con la banda medida,
+ * cada pantalla se resuelve sola: si cambia la tipografía, el copy o el
+ * contenedor, el encuadre se recalibra sin tocar una constante.
+ *
+ * Resultado en 1920x941 (hero-metrics.mjs): arriba 135px · derecha 135px ·
+ * abajo hasta el HUD 135px · gap con el nombre 144px. Antes: 214 / 196 / 176 /
+ * 427, y el de arriba variaba entre 13% y 23% según en qué ángulo del giro te
+ * agarrara la captura.
+ */
+/** Extensión MEDIDA del cúmulo quieto, en unidades de mundo desde el sol central
+ * (chips y bloom incluidos: es lo que se VE, no la geometría teórica). No es
+ * simétrica: el chip de TRABAJO sobresale a la derecha y todos cuelgan hacia
+ * abajo, por eso su centro óptico no es el sol. Se re-miden con
+ * scratchpad/hero-metrics.mjs si cambian las etiquetas o NODE_RING. */
+const CL_R = 1.68;
+const CL_L = 1.32;
+const CL_T = 0.97;
+const CL_B = 1.5;
+/** Aire mínimo entre el cúmulo y los bordes de su banda (fracción de pantalla). */
+const HERO_MARGEN = 0.07;
+/** Retroceso de la cámara a mitad de camino ENTRE dos nodos (arco de respiro:
+ * pasa por afuera en vez de rozar el sol). Explícito, en unidades de rBall: si
+ * se derivara de (OVER - CLOSE) cambiaría de signo cada vez que se recalibra
+ * una de las dos distancias. */
+const BREATHE = 0.3;
+
+/** Salida de `encuadreHero`, ya en la convención de la CÁMARA (pan/lift son a
+ * dónde MIRA; el cúmulo aparece del lado contrario). Se reusa por frame. */
+const _hero = { dist: 0, pan: 0, lift: 0 };
+
+/**
+ * Distancia + pan + lift para que el cúmulo entre CENTRADO en `banda`.
+ * Se aleja lo justo para cumplir la más exigente de las dos restricciones (que
+ * entre a lo alto y que entre a lo ancho) y después centra su bbox real —
+ * corrigiendo la asimetría de los chips— dentro de la banda.
+ */
+function encuadreHero(medida: Banda, w: number, h: number) {
+  // Sin medir todavía (el canvas es lazy: en la práctica GraphHome mide antes
+  // del primer frame, pero no depende de eso): la banda es la pantalla entera.
+  const banda =
+    medida.x1 > medida.x0 && medida.y1 > medida.y0
+      ? medida
+      : { x0: 0, x1: w, y0: 0, y1: h };
+  const aspect = w / Math.max(1, h);
+  const m = HERO_MARGEN * 2; // fracción de pantalla → NDC (que va de -1 a 1)
+  // Banda en NDC. Ojo: en y el NDC crece hacia ARRIBA y los px hacia abajo.
+  const nx0 = (2 * banda.x0) / w - 1 + m;
+  const nx1 = (2 * banda.x1) / w - 1 - m;
+  const ny0 = 1 - (2 * banda.y1) / h + m;
+  const ny1 = 1 - (2 * banda.y0) / h - m;
+  // Guarda contra una banda absurda (un layout roto no puede meter la cámara
+  // adentro del sol).
+  const bw = Math.max(0.2, nx1 - nx0);
+  const bh = Math.max(0.2, ny1 - ny0);
+  const dist = Math.max(
+    (CL_T + CL_B) / (bh * TAN_HALF_FOV),
+    (CL_R + CL_L) / (bw * TAN_HALF_FOV * aspect),
+  );
+  const hv = dist * TAN_HALF_FOV; // semialto visible a esa distancia
+  const hw = hv * aspect;
+  _hero.dist = dist;
+  // Centro de la banda, corrido para que el centro del BBOX (no el del sol)
+  // caiga justo ahí. El signo se invierte: la cámara mira al lado opuesto de
+  // donde queremos que aparezca el cúmulo.
+  _hero.pan = -((nx0 + nx1) / 2 + (CL_L - CL_R) / (2 * hw));
+  _hero.lift = (ny0 + ny1) / 2 + (CL_B - CL_T) / (2 * hv);
+}
 /** Órbita hacia el nodo activo (0 = de frente como la portada, 1 = encarándolo
  * de lleno). Fuerte: la cámara SE VA hacia el sol de la sección y lo pone
  * adelante → se lee clarísimo que la sección es ESE sol. Un poco menos que de
@@ -227,11 +307,10 @@ const LIFT = 0.14;
  * `occludedByCore` (solo se desactiva lo que el sol central tapa de verdad). */
 const TILT = 0.78;
 
-/* Waypoints de la ruta de cámara: 0 = overview (de frente y quieto: es la
- * portada, donde se VE girar el cúmulo); k = 1..N = nodo k (orbitado hacia su
- * dirección y girado por `spin` junto con el cúmulo → el encuadre del tópico es
- * el mismo sin importar en qué ángulo quedó el giro). */
-function wpDir(k: number, spin: number, out: THREE.Vector3) {
+/* Waypoints de la ruta de cámara: 0 = overview (la portada, de frente); k =
+ * 1..N = nodo k (orbitado hacia su dirección). Con el cúmulo quieto el objetivo
+ * de cada tópico es una constante: la cámara siempre llega al mismo encuadre. */
+function wpDir(k: number, out: THREE.Vector3) {
   if (k <= 0) {
     out.copy(_z);
     return;
@@ -240,29 +319,8 @@ function wpDir(k: number, spin: number, out: THREE.Vector3) {
   // Interpola entre el frente (+z) y la dirección del nodo por TILT.
   out.set(d[0], d[1], d[2]).normalize().multiplyScalar(TILT);
   out.addScaledVector(_z, 1 - TILT).normalize();
-  // ...y acompaña al cúmulo en su giro (rotación rígida alrededor de Y).
-  out.applyAxisAngle(_up, spin);
 }
 
-/** Avanza el giro del cúmulo: solo mientras se está en la PORTADA (t → 0). Al
- * entrar a un tópico se frena, así la cámara tiene un objetivo quieto y asienta
- * (si girara siempre, nunca dejaría de pedir frames). */
-function SpinDriver({
-  camRef,
-  spinRef,
-  reduced,
-}: {
-  camRef: RefObject<CamState>;
-  spinRef: RefObject<number>;
-  reduced: boolean;
-}) {
-  useFrame((_, delta) => {
-    if (reduced) return;
-    const hero = THREE.MathUtils.clamp(1 - camRef.current.t, 0, 1);
-    spinRef.current += HERO_SPIN * hero * Math.min(delta, 0.1);
-  });
-  return null;
-}
 /**
  * Rig de cámara scroll-driven, estilo escena 3D real: la cámara recorre una
  * RUTA CONTINUA de waypoints (overview → nodo 1 → … → nodo N) según `t`. Entre
@@ -278,40 +336,44 @@ function CameraRig({
   reduced,
   radius,
   onActivity,
-  spinRef,
+  bandaRef,
 }: {
   camRef: RefObject<CamState>;
   reduced: boolean;
   radius: number;
   /** ping por frame mientras la cámara AÚN se mueve de verdad. */
   onActivity?: () => void;
-  spinRef: RefObject<number>;
+  bandaRef: RefObject<Banda>;
 }) {
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   const rBall = radius * S;
   const aspect = size.width / Math.max(1, size.height);
-  // Calibrado contra BALL_R exacto. En pantallas ANGOSTAS (mobile) la cámara se
-  // aleja más para que el cúmulo entre completo en el ANCHO. Con la órbita
-  // parcial (TILT) el cúmulo se mantiene entero en toda sección, así que OVER y
-  // CLOSE están cerca: el tópico solo se acerca un poco (el sol activo crece).
-  const OVER = rBall * Math.max(4.5, 4.35 / aspect); // portada: entero
-  const CLOSE = rBall * Math.max(4.2, 3.55 / aspect); // tópico: cúmulo entero al lado del modelo
-  // PORTADA. En pantalla ancha el nombre ocupa la izquierda → el cúmulo se
-  // corre a la DERECHA. En pantalla angosta (una sola columna) no hay lados:
-  // el cúmulo sube y el nombre queda debajo.
-  const ancha = aspect >= 1;
-  const heroPan = ancha ? -PAN_F : 0;
-  const heroLift = ancha ? LIFT : 0.45;
-  const panDe = (k: number) =>
+  // Distancia en un TÓPICO. Calibrada contra BALL_R exacto; en pantallas
+  // angostas la cámara se aleja para que el cúmulo entre completo a lo ancho
+  // (por eso /aspect). Con la órbita parcial (TILT) el cúmulo se mantiene
+  // entero en toda sección.
+  //
+  // Este número NO se toca para agrandar el modelo: está en su límite. Bajarlo
+  // a 3.95 (un 6% más grande) deja el sol de Enfoque con el centro a 45px del
+  // borde superior en la vista de Contacto, o sea cortado. Para dejarle 70px de
+  // aire la distancia no puede bajar de 4.17. El pedido de "más grande" lo
+  // absorbe la PORTADA, que es donde sobraba lugar.
+  const CLOSE = rBall * Math.max(4.2, 3.55 / aspect);
+  const panDe = (k: number, heroPan: number) =>
     k <= 0 ? heroPan : (ladoModelo(k - 1) === "right" ? -1 : 1) * PAN_F;
-  const liftDe = (k: number) => (k <= 0 ? heroLift : LIFT);
+  const liftDe = (k: number, heroLift: number) => (k <= 0 ? heroLift : LIFT);
 
   useFrame((_, delta) => {
     const st = camRef.current;
     const N = nodos.length;
     const t = reduced ? 0 : THREE.MathUtils.clamp(st.t, 0, N);
-    const spin = spinRef.current;
+
+    // El encuadre de la PORTADA sale de la banda libre, que se mide contra el
+    // DOM y cambia sin re-render (resize, carga de la fuente) → se resuelve por
+    // frame. Son cuatro divisiones: más barato que un re-render de React.
+    encuadreHero(bandaRef.current, size.width, size.height);
+    const OVER = _hero.dist;
 
     // Segmento actual [iA → iB] + progreso local con easing (suave en ambas
     // puntas del segmento).
@@ -320,25 +382,33 @@ function CameraRig({
     const f = t - iA;
     const fs = f * f * (3 - 2 * f); // smoothstep
 
-    wpDir(iA, spin, _node);
-    wpDir(iB, spin, _v);
+    wpDir(iA, _node);
+    wpDir(iB, _v);
     _dir.copy(_node).lerp(_v, fs).normalize();
 
     const dA = iA === 0 ? OVER : CLOSE;
     const dB = iB === 0 ? OVER : CLOSE;
     let dist = THREE.MathUtils.lerp(dA, dB, fs);
     // Entre dos NODOS la cámara retrocede un poco a mitad de camino (arco de
-    // respiro) en vez de rozar el balón.
+    // respiro) en vez de rozar el sol.
     if (iA >= 1 && iB >= 1 && iA !== iB) {
-      dist += Math.sin(Math.PI * fs) * (OVER - CLOSE) * 0.45;
+      dist += Math.sin(Math.PI * fs) * rBall * BREATHE;
     }
     _target.copy(_dir).multiplyScalar(dist);
 
     // Punto de mira: pan lateral (el cúmulo queda del lado del modelo) + una
     // ELEVACIÓN constante (mira por debajo del centro → el cúmulo sube: portada
     // centrada y soles despegados del nav-bar en los tópicos).
-    const pan = THREE.MathUtils.lerp(panDe(iA), panDe(iB), fs);
-    const lift = THREE.MathUtils.lerp(liftDe(iA), liftDe(iB), fs);
+    const pan = THREE.MathUtils.lerp(
+      panDe(iA, _hero.pan),
+      panDe(iB, _hero.pan),
+      fs,
+    );
+    const lift = THREE.MathUtils.lerp(
+      liftDe(iA, _hero.lift),
+      liftDe(iB, _hero.lift),
+      fs,
+    );
     _fwd.copy(_dir).negate();
     _right.crossVectors(_fwd, _up).normalize(); // horizontal (y = 0)
     const halfV = dist * TAN_HALF_FOV; // semialto visible a esta distancia
@@ -406,11 +476,9 @@ function occludedByCore(camPos: THREE.Vector3, p: THREE.Vector3, r: number) {
 function NodeProjector({
   onProject,
   radius,
-  spinRef,
 }: {
   onProject?: (p: NodeProj[]) => void;
   radius: number;
-  spinRef: RefObject<number>;
 }) {
   const { camera, size } = useThree();
   const buf = useRef<NodeProj[]>([]);
@@ -420,15 +488,10 @@ function NodeProjector({
   useFrame(() => {
     if (!onProject) return;
     const b = buf.current;
-    const spin = spinRef.current;
     for (let i = 0; i < nodos.length; i++) {
       const d = nodos[i].dir;
-      // Misma rotación que el cúmulo → las hit-areas siguen a los soles cuando
-      // gira la portada.
-      _v.set(d[0], d[1], d[2])
-        .normalize()
-        .applyAxisAngle(_up, spin)
-        .multiplyScalar(rNode);
+      // Misma posición (fija) que los mini-soles en GraphNodes.
+      _v.set(d[0], d[1], d[2]).normalize().multiplyScalar(rNode);
       // Clickeable si se VE: solo lo tapa el sol central (nada de back-face).
       const front = !occludedByCore(camera.position, _v, coreR);
       const dist = camera.position.distanceTo(_v);
@@ -464,6 +527,7 @@ function Scene({
   onReady,
   onProject,
   onActivity,
+  bandaRef,
 }: {
   camRef: RefObject<CamState>;
   activeIndex: number;
@@ -473,15 +537,10 @@ function Scene({
   onReady?: () => void;
   onProject?: (p: NodeProj[]) => void;
   onActivity?: () => void;
+  bandaRef: RefObject<Banda>;
 }) {
-  // Ángulo de giro del cúmulo, compartido por los tres que lo necesitan. Se
-  // avanza PRIMERO (SpinDriver va antes que el resto en el árbol → su useFrame
-  // corre antes) y el grupo, la cámara y el proyector leen el mismo valor en el
-  // mismo frame: nunca se desincronizan.
-  const spinRef = useRef(0);
   return (
     <>
-      <SpinDriver camRef={camRef} spinRef={spinRef} reduced={reduced} />
       {/* Estudio blanco 3D: cúpula (pared + piso) + sombra del sol en el piso.
           Los soles son shaders sin iluminar → no hacen falta luces. */}
       <Studio />
@@ -490,16 +549,15 @@ function Scene({
         hovered={hovered}
         lite={lite}
         reduced={reduced}
-        spinRef={spinRef}
       />
       <CameraRig
         camRef={camRef}
         reduced={reduced}
         radius={BALL_R}
         onActivity={onActivity}
-        spinRef={spinRef}
+        bandaRef={bandaRef}
       />
-      <NodeProjector onProject={onProject} radius={BALL_R} spinRef={spinRef} />
+      <NodeProjector onProject={onProject} radius={BALL_R} />
       <SignalReady onReady={onReady} />
     </>
   );
@@ -520,6 +578,8 @@ export type GraphCanvasProps = {
   onProject?: (p: NodeProj[]) => void;
   /** ping por frame mientras la cámara se mueve (para pausar recién al asentar). */
   onActivity?: () => void;
+  /** El hueco que el layout le deja al cúmulo en la portada (medido en el DOM). */
+  bandaRef: RefObject<Banda>;
 };
 
 export default function GraphCanvas({
@@ -531,6 +591,7 @@ export default function GraphCanvas({
   onReady,
   onProject,
   onActivity,
+  bandaRef,
 }: GraphCanvasProps) {
   // En render por software (SwiftShader) se capa DPR a 1 y sin antialias para
   // sostener FPS; en GPU real, calidad completa.
@@ -564,6 +625,7 @@ export default function GraphCanvas({
           onReady={onReady}
           onProject={onProject}
           onActivity={onActivity}
+          bandaRef={bandaRef}
         />
       </Suspense>
       {/* Bloom HDR SELECTIVO: umbral > 1 → solo los píxeles HDR de los soles

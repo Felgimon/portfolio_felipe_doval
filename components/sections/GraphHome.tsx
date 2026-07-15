@@ -17,7 +17,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWebGL } from "@/hooks/useWebGL";
 import { useAppReady } from "@/components/motion/AppReady";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
-import type { CamState, NodeProj } from "@/components/three/GraphCanvas";
+import type { Banda, CamState, NodeProj } from "@/components/three/GraphCanvas";
 import { nodos, seccionIds } from "@/lib/navigation";
 import { perfil } from "@/content/perfil";
 import { cn } from "@/lib/utils";
@@ -39,11 +39,15 @@ function useForceGl(): boolean {
 }
 
 /** Poster estático del grafo (solo si NO hay WebGL). Se ubica donde la cámara
- * pone el modelo: arriba en pantalla angosta, a la derecha en ancha. */
+ * pone el modelo: arriba en pantalla angosta, a la derecha en ancha. La imagen
+ * es un recorte cuadrado CENTRADO en el cúmulo (lo genera scratchpad/poster.mjs
+ * midiendo la escena real), así que acá alcanza con poner su centro donde la
+ * cámara pone el del cúmulo: 47%/24% en angosto, 74%/46% en ancho — medidos con
+ * hero-metrics, no a ojo. */
 function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="absolute top-[30%] left-1/2 aspect-square h-[46%] max-h-[820px] -translate-x-1/2 -translate-y-1/2 md:top-1/2 md:left-auto md:right-[3%] md:h-[86%] md:translate-x-0">
+      <div className="absolute top-[24%] left-[47%] aspect-square h-[38%] max-h-[820px] -translate-x-1/2 -translate-y-1/2 md:top-[46%] md:left-auto md:right-[8%] md:h-[73%] md:translate-x-0">
         <Image
           src="/assets/hero-poster.png"
           alt=""
@@ -145,9 +149,12 @@ function NodeOverlay({
 function HudRail({
   activeIdx,
   onGoto,
+  barraRef,
 }: {
   activeIdx: number;
   onGoto: (id: string) => void;
+  /** La barra real: la portada la mide para no meter el cúmulo abajo de ella. */
+  barraRef: RefObject<HTMLDivElement | null>;
 }) {
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [bar, setBar] = useState({ x: 0, w: 0, on: false });
@@ -181,7 +188,10 @@ function HudRail({
       aria-label="Secciones"
       className="fixed inset-x-0 bottom-0 z-40"
     >
-      <div className="glass glass-spec mx-3 mb-3 flex items-center justify-center gap-0.5 rounded-full px-1.5 py-2 sm:mx-auto sm:mb-4 sm:max-w-fit sm:gap-2 sm:px-3">
+      <div
+        ref={barraRef}
+        className="glass glass-spec mx-3 mb-3 flex items-center justify-center gap-0.5 rounded-full px-1.5 py-2 sm:mx-auto sm:mb-4 sm:max-w-fit sm:gap-2 sm:px-3"
+      >
         {nodos.map((n, i) => {
           const active = i === activeIdx;
           return (
@@ -232,6 +242,12 @@ export function GraphHome({ children }: { children: ReactNode }) {
 
   const camRef = useRef<CamState>({ t: 0, active: 0 });
   const projRef = useRef<NodeProj[]>([]);
+  // El hueco que el layout le deja al cúmulo en la portada. Lo mide el DOM (acá)
+  // y lo consume la cámara (GraphCanvas): la escena 3D nunca replica reglas de
+  // CSS, pregunta dónde termina el texto de verdad.
+  const bandaRef = useRef<Banda>({ x0: 0, x1: 0, y0: 0, y1: 0 });
+  const columnaRef = useRef<HTMLDivElement>(null);
+  const barraRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(-1); // -1 = portada; 0..4 = nodos
   const [hoverIdx, setHoverIdx] = useState(-1); // sol bajo el puntero
   // El canvas renderiza solo mientras hay actividad (scroll / cámara moviéndose);
@@ -370,6 +386,38 @@ export function GraphHome({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  // La BANDA libre de la portada, medida contra el layout real. En ancho el
+  // texto ocupa la columna izquierda → el hueco es lo que sobra a su derecha,
+  // hasta arriba del HUD. En angosto el texto va abajo → el hueco es todo el
+  // ancho, arriba de él. El ResizeObserver cubre el reflow por la carga de la
+  // fuente; el listener de resize cubre el caso en que el bloque no cambia de
+  // tamaño pero sí de lugar (el contenedor centrado corre con la ventana).
+  const medirBanda = useCallback(() => {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const col = columnaRef.current?.getBoundingClientRect();
+    const barra = barraRef.current?.getBoundingClientRect();
+    const hud = barra ? barra.top : H;
+    bandaRef.current =
+      narrow || !col
+        ? { x0: 0, x1: W, y0: 0, y1: col ? col.top : hud }
+        : { x0: col.right, x1: W, y0: 0, y1: hud };
+  }, [narrow]);
+
+  useEffect(() => {
+    medirBanda();
+    const ro = new ResizeObserver(medirBanda);
+    if (columnaRef.current) ro.observe(columnaRef.current);
+    if (barraRef.current) ro.observe(barraRef.current);
+    window.addEventListener("resize", medirBanda);
+    const t = window.setTimeout(medirBanda, 700); // tras cargar la tipografía
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", medirBanda);
+      clearTimeout(t);
+    };
+  }, [medirBanda]);
+
   const usarCanvas = forceGl || webgl;
   // Click en nodo/HUD: el contenido salta YA (sin speed-scroll por las
   // secciones intermedias, que marea); la transición la hace la CÁMARA, que
@@ -404,6 +452,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
               projRef.current = p;
             }}
             onActivity={onActivity}
+            bandaRef={bandaRef}
           />
         ) : (
           <PosterFallback onLoaded={marcarHeroCargado} />
@@ -429,7 +478,11 @@ export function GraphHome({ children }: { children: ReactNode }) {
           className="relative flex min-h-dvh items-end pb-28 md:items-center md:pb-0"
         >
           <Container size="wide">
-            <div className="max-w-xl">
+            {/* `w-fit`: la columna mide exactamente lo que mide su hijo más
+                ancho (el nombre). No es cosmético — es lo que le permite a la
+                cámara saber dónde termina el texto de verdad para enmarcar el
+                cúmulo en lo que sobra. El tope lo pone max-w-2xl. */}
+            <div ref={columnaRef} className="w-fit max-w-2xl">
               <p className="eyebrow">{perfil.hero.kicker}</p>
               <div className="mt-5">
                 <HeroName />
@@ -460,7 +513,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
         {children}
       </div>
 
-      <HudRail activeIdx={activeIdx} onGoto={goto} />
+      <HudRail activeIdx={activeIdx} onGoto={goto} barraRef={barraRef} />
     </>
   );
 }

@@ -240,7 +240,13 @@ body {
 
 .nombre {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-size: clamp(2.9rem, 9.2vw, 8rem);
+  /* El tamaño no es gusto: es COMPOSICIÓN. El nombre y el cúmulo se reparten el
+     ancho, así que cuanto más chico el nombre, más grande el hueco entre los
+     dos. A 12.2rem "FELIPE" mide ~591px en 1920 y el gap con el sol queda igual
+     que el margen derecho (~11%); a 8rem medía 391px y el gap era el doble
+     (22%). El techo lo pone la columna: dos líneas a 0.86 de interlineado
+     entran en el alto con el kicker, la bajada y los botones. */
+  font-size: clamp(2.9rem, 10.1vw, 12.2rem);
   line-height: 0.86;
   letter-spacing: -0.045em;
   text-transform: uppercase;

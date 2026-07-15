@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v3.3.0** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.4** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1187,6 +1187,87 @@ números, esa premisa era FALSA:
 
 Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
 revisar los tests que dependían de él, en vez de compensar recortando features.
+
+---
+
+## v5.4 — El cúmulo quieto + la cámara enmarca el hueco que deja el layout
+
+Feedback de Felipe sobre v5.3: (a) que los mini-soles giren termina escondiéndolos
+detrás del sol o superponiendo secciones → que queden QUIETOS y gire solo el sol
+central; (b) el modelo tiene que ser más grande, "queda mucho espacio vacío";
+(c) el nombre, un poco más grande, para que tenga más foco; (d) el margen entre
+el texto y el sol es DEMASIADO (mandó una captura con los cuatro márgenes
+marcados: el de la izquierda "demasiado", los otros tres "achicaría solo un poco").
+
+### El cúmulo no gira (y no es una concesión: es geometría)
+Girar el conjunto tenía tres costos que ninguna calibración arregla:
+1. Un mini-sol que orbita **pasa detrás del sol central**: media vuelta sin
+   verse ni poder clickearse. Exactamente lo que reportó Felipe.
+2. Al girar, **dos chips cualesquiera terminan superpuestos**: los nodos viven
+   en una esfera y su proyección se cruza. Las direcciones de `nodos` están
+   elegidas para leerse separadas DE FRENTE; quietas cumplen esa promesa.
+3. El encuadre se volvía **no determinista**: medido con hero-metrics, el margen
+   de arriba daba entre 13% y 23% según en qué ángulo agarrara la captura. Por
+   eso las capturas de Felipe y las mías nunca coincidían.
+
+El movimiento ahora lo pone el sol central girando sobre su **propio eje**
+(`spinSun`, 0.06 → 0.085 rad/s ya que es el único giro de la escena): se ve vivo
+sin mover a nadie de lugar. Se fue `SpinDriver`/`spinRef` y con él toda la
+maquinaria de invariancia-θ de v5.2 (los waypoints y las hit-areas ya no tienen
+que rotar con el cúmulo). Menos código y más determinismo.
+
+### La cámara enmarca la BANDA LIBRE, medida contra el DOM
+Primero calibré a mano tres constantes en 1920 y los cuatro márgenes quedaron
+parejos (135/135/135/144 px). Pero al medir el resto de las pantallas: **1440
+dejaba el cúmulo a 4.4% del borde derecho y 1366x768 a 3.7%** (casi cortado).
+
+Causa: el contenedor centrado (`max-w-[88rem]`) mueve el borde derecho del nombre
+del **35% del ancho (1440) al 47% (1920)**, mientras que el cúmulo se dimensiona
+contra el ALTO. Con esas dos escalas peleando, **ningún pan constante puede
+servir para las dos** — no era cuestión de afinar el número.
+
+Solución: `GraphHome` mide el hueco real que deja el layout (`bandaRef`: a la
+derecha de la columna de texto y arriba del HUD en ancho; arriba del texto en
+angosto) y la cámara (`encuadreHero`) se aleja lo justo para cumplir la más
+exigente de las dos restricciones (que entre a lo alto y a lo ancho) y centra
+ahí el **bbox real** del cúmulo. Detalles que la medición corrigió y la intuición
+erraba:
+- El cúmulo **no es un círculo**: los chips lo estiran a lo ancho (744x609 px en
+  1920) y lo empujan hacia abajo (cuelgan) → su centro óptico no es el sol. De
+  ahí las constantes asimétricas `CL_R/CL_L/CL_T/CL_B`, medidas, no supuestas.
+- La banda vertical **no es la pantalla**: termina arriba del HUD.
+- Para que la columna pueda medirse tiene `w-fit` (mide lo que mide el nombre).
+
+No hay ninguna fórmula de CSS copiada en el archivo del 3D: si cambia la
+tipografía, el copy o el contenedor, el encuadre se recalibra solo.
+
+**Resultado en 1920x941** (hero-metrics.mjs): arriba 135 · derecha 135 · abajo
+hasta el HUD 135 · gap con el nombre 144. Antes: 214 / 196 / 176 / **427**.
+
+### El nombre y el tamaño del modelo
+- Nombre: `clamp(2.9rem, 9.2vw, 8rem)` → `clamp(2.9rem, 10.1vw, 12.2rem)`. No es
+  gusto, es composición: el nombre y el cúmulo se reparten el ancho, así que
+  agrandar el nombre es lo que cierra el gap. "FELIPE" pasa de 391 a 593 px en
+  1920 y la columna a `max-w-2xl` para acompañarlo.
+- Cúmulo en la portada: 602 → 744 px de ancho (+24%). En mobile 221 → 289 (+31%).
+- **En los TÓPICOS la distancia NO se toca (4.2)**: probé 3.95 (+6%) y el sol de
+  Enfoque quedaba con el centro a 45px del borde superior en la vista de
+  Contacto, o sea cortado (lo cazó `clickable.mjs`: 4/5). La cuenta dice que para
+  dejarle 70px de aire no puede bajar de 4.17 → el 4.2 original ya estaba en su
+  límite. El pedido de "más grande" lo absorbe la portada, que es donde sobraba.
+
+### Póster de fallback auto-calibrado
+`scratchpad/poster.mjs` ya no recorta en coordenadas escritas a mano: mide el
+bbox del cúmulo por saturación y recorta un cuadrado centrado en él, e imprime
+dónde va la caja en el CSS. El encuadre del póster sigue al de la cámara solo.
+
+### Verificación
+`gate` 0 · `clickable` 5/5 en las 5 secciones · `cta` · `touch` · `anim` ·
+`smoke` · `dashcheck` (0 em dashes) · `seocheck` · `hero-metrics` en 1920/1440/
+1280/390. Trampa que costó una hora: Next 16 bloquea los recursos de dev pedidos
+desde `127.0.0.1` (los trata como cross-origin) → la página no hidrata y se mide
+el **preloader** en vez de la escena. Tiene que ser `localhost`. Lo delató
+dumpear la máscara de detección en vez de confiar en el número.
 
 ---
 
