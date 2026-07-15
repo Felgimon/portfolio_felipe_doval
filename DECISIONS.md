@@ -1187,3 +1187,49 @@ números, esa premisa era FALSA:
 
 Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
 revisar los tests que dependían de él, en vez de compensar recortando features.
+
+---
+
+## v5.3 — Portada de verdad: el nombre a la izquierda, el sol girando a la derecha
+
+Pedido de Felipe: portada con su NOMBRE grande a la izquierda (colores de la
+identidad, con algo innovador, ni degradado pelado ni pinta de hecho con IA),
+el sol y los mini-soles a la derecha GIRANDO, el sol sin el FD, y dos CTA de
+Liquid Glass a Trabajo y Contacto. Sin guiones ni viñetas en el texto.
+
+- **El nombre** (`HeroName.tsx` + `.nombre` en globals.css). Antes de elegir
+  investigué la técnica de referencia (Awwwards 2026, fancycomponents,
+  Michelle Barker): lo que se premia hoy no son los degradados sino animar los
+  EJES de una fuente VARIABLE. Bricolage Grotesque, que ya usamos y está
+  self-hosted, es variable con eje `wght` 200..800 → cero dependencias nuevas.
+  1. MATERIALIZACIÓN: cada letra entra en wght 200 y engorda a 800 en cascada
+     mientras la línea sube: la letra no aparece, se FORMA. Interpola porque
+     `--w` se registra con `@property` como `<number>` (sin eso saltaría).
+  2. LUZ DEL SOL: el sol vive a la derecha, así que el degradé va tinta →
+     azul → celeste con una luz CÁLIDA entrando por la derecha y la sombra
+     cayendo al lado opuesto. Primer intento con oro: el oro sobre el celeste
+     vira a VERDE y ensucia; se cambió por blanco cálido (que es lo que hace la
+     luz de verdad).
+  3. PARALAJE: el bloque se inclina siguiendo el puntero (solo custom props →
+     transform en el compositor, cero reflow). Se descartó el hover que engorda
+     letras por proximidad: con el peso base ya en 800 no hay margen hacia
+     arriba y forzaba reflow del h1 en cada frame.
+- **SEO/a11y sin ceder ninguno**: el texto del h1 son las letras reales con un
+  espacio entre palabras → en el DOM se lee "Felipe Doval". El patrón habitual
+  (`sr-only` con el nombre + letras `aria-hidden`) DUPLICABA el texto para los
+  buscadores ("Felipe DovalFelipeDoval": Google lee el DOM crudo, no respeta
+  aria-hidden). Los lectores reciben el nombre entero por `aria-label`.
+- **El sol GIRA en la portada** (`SpinDriver` + `spinRef` compartido). Truco
+  para no romper nada: los waypoints de TÓPICO se rotan por el MISMO ángulo que
+  el cúmulo. Como es una rotación rígida alrededor de Y y el "arriba" de la
+  cámara también es Y, el encuadre de cada tópico es IDÉNTICO gire lo que gire
+  → se conserva la calibración de v5.1/v5.2 (5/5 soles clickeables). El giro se
+  frena al entrar a un tópico (si no, la cámara perseguiría un objetivo móvil y
+  nunca asentaría). El proyector rota igual → las hit-areas siguen a los soles.
+- Portada responsive: en pantalla ancha el cúmulo se corre a la DERECHA
+  (heroPan) y el nombre ocupa la izquierda; en angosta no hay lados, así que el
+  cúmulo SUBE (heroLift 0.45) y el nombre va debajo. Póster de fallback
+  reubicado y regenerado con el encuadre nuevo.
+- Fuera el FD del sol: en la portada la marca es el nombre.
+- Verificado: gate 0, `cta.mjs` nuevo (CTA → sección correcta, h1 exacto, cero
+  guiones/viñetas), clickable 5/5 x5, touch, anim, smoke, dashcheck, seocheck.

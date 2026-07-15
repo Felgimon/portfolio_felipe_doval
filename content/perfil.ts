@@ -11,6 +11,13 @@ export const perfil: Perfil = {
   rol: "Desarrollador full-stack & datos",
   ubicacion: "Buenos Aires, Argentina",
 
+  // Portada. Sin guiones ni viñetas (pedido de Felipe): al lado del nombre van
+  // el oficio y una frase, nada de separadores decorativos.
+  hero: {
+    kicker: "Desarrollador full stack y datos en Buenos Aires",
+    lead: "Construyo productos de punta a punta, de la base de datos a la interfaz, con machine learning cuando el problema lo pide.",
+  },
+
   bioCorta:
     "Soy Felipe Doval, estudiante de la especialización TIC en ORT Belgrano, Buenos Aires. Construyo productos de punta a punta, de la base de datos a la interfaz, y me meto con datos y machine learning cuando el problema lo pide. Lo que ves acá es la prueba de cómo pienso y de cómo llevo una idea de cero a algo que funciona; los proyectos son el medio, no el punto.",
 

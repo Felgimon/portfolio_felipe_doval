@@ -80,6 +80,15 @@ export interface Enfoque {
   principios: PrincipioEnfoque[];
 }
 
+/** Copy de la PORTADA. Regla de Felipe: acá no entran guiones ni viñetas (ni
+ * separadores decorativos): al lado del nombre mandan el nombre y una frase. */
+export interface Hero {
+  /** línea de oficio, arriba del nombre */
+  kicker: string;
+  /** la frase que explica qué hace, debajo del nombre */
+  lead: string;
+}
+
 export type TipoTimeline = "trabajo" | "educacion" | "competencia";
 
 export interface ItemTimeline {
@@ -96,6 +105,7 @@ export interface Perfil {
   apodo: string;
   rol: string;
   ubicacion: string;
+  hero: Hero;
   bioCorta: string;
   bioLarga: string[];
   enfoque: Enfoque;

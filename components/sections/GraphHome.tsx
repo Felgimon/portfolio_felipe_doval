@@ -10,6 +10,9 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { Container } from "@/components/ui/Container";
+import { HeroName } from "./HeroName";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWebGL } from "@/hooks/useWebGL";
 import { useAppReady } from "@/components/motion/AppReady";
@@ -35,11 +38,12 @@ function useForceGl(): boolean {
   );
 }
 
-/** Poster estático del grafo (solo si NO hay WebGL). */
+/** Poster estático del grafo (solo si NO hay WebGL). Se ubica donde la cámara
+ * pone el modelo: arriba en pantalla angosta, a la derecha en ancha. */
 function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="absolute top-1/2 left-1/2 aspect-square h-[92%] max-h-[820px] -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute top-[30%] left-1/2 aspect-square h-[46%] max-h-[820px] -translate-x-1/2 -translate-y-1/2 md:top-1/2 md:left-auto md:right-[3%] md:h-[86%] md:translate-x-0">
         <Image
           src="/assets/hero-poster.png"
           alt=""
@@ -417,15 +421,40 @@ export function GraphHome({ children }: { children: ReactNode }) {
 
       {/* Contenido */}
       <div className="relative z-10">
-        {/* Portada — solo el modelo + el logo + la firma mínima */}
+        {/* Portada: el nombre a la izquierda, el sol girando a la derecha (en
+            mobile el sol queda arriba y este bloque abajo: lo resuelve el
+            encuadre de la cámara, no un transform). */}
         <section
           id="inicio"
-          className="relative flex min-h-dvh items-end justify-center pb-28 sm:pb-32"
+          className="relative flex min-h-dvh items-end pb-28 md:items-center md:pb-0"
         >
-          <h1 className="font-mono text-xs tracking-[0.32em] text-chalk-dim uppercase">
-            {perfil.nombre}
-            <span className="text-muted"> · Portfolio</span>
-          </h1>
+          <Container size="wide">
+            <div className="max-w-xl">
+              <p className="eyebrow">{perfil.hero.kicker}</p>
+              <div className="mt-5">
+                <HeroName />
+              </div>
+              <p className="lead mt-6 max-w-md">{perfil.hero.lead}</p>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => goto("trabajo")}
+                  className="glass glass-spec glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
+                >
+                  Ver el trabajo
+                  <ArrowDown className="size-4 text-acento transition-transform group-hover:translate-y-0.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goto("contacto")}
+                  className="glass glass-spec glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
+                >
+                  Hablemos
+                  <ArrowUpRight className="size-4 text-acento transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </button>
+              </div>
+            </div>
+          </Container>
         </section>
 
         {children}
