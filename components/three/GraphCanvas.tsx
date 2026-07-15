@@ -241,17 +241,61 @@ const LIFT = 0.14;
  * 427, y el de arriba variaba entre 13% y 23% según en qué ángulo del giro te
  * agarrara la captura.
  */
-/** Extensión MEDIDA del cúmulo quieto, en unidades de mundo desde el sol central
- * (chips y bloom incluidos: es lo que se VE, no la geometría teórica). No es
- * simétrica: el chip de TRABAJO sobresale a la derecha y todos cuelgan hacia
- * abajo, por eso su centro óptico no es el sol. Se re-miden con
- * scratchpad/hero-metrics.mjs si cambian las etiquetas o NODE_RING. */
-const CL_R = 1.68;
-const CL_L = 1.32;
-const CL_T = 0.97;
-const CL_B = 1.5;
-/** Aire mínimo entre el cúmulo y los bordes de su banda (fracción de pantalla). */
-const HERO_MARGEN = 0.07;
+/**
+ * Extensión GEOMÉTRICA del cúmulo quieto (unidades de mundo desde el sol
+ * central): hasta dónde llega el sol más saliente en cada dirección. Se DERIVA
+ * de los nodos, así que si cambian las direcciones, el anillo o el tamaño de
+ * los soles, el encuadre las sigue solo: no hay números medidos que se pudran.
+ * No es simétrica (los nodos no lo son), así que el centro óptico del cúmulo no
+ * es el sol central; `encuadreHero` lo corrige.
+ *
+ * Se encuadra la GEOMETRÍA y no el halo del bloom, por dos razones. Una
+ * estética: el halo es luz difusa, y dejar que derrame sobre el aire del borde
+ * es lo que hace cualquier foto de una fuente de luz (se encuadra el objeto, no
+ * su resplandor). Y una dura: el halo NO es modelable en unidades de mundo.
+ * Medido, se extiende ~60px en 1920 y casi nada en un celular (donde los soles
+ * miden 10px y el resplandor no llega a destacarse) — o sea que cualquier
+ * constante que lo incluyera sería correcta en una pantalla y falsa en la otra.
+ * Ese fue el error que dejaba el cúmulo un 24% más chico de lo que podía ser en
+ * el celular. El aire de HERO_MARGEN se lo banca.
+ */
+const CL = (() => {
+  const rNodo = NODE_RING * S;
+  const rSol = BALL_R * 0.085 * S * 1.15; // +15%: el sol late y crece al hover
+  const rCore = BALL_R * 0.5 * S; // por si algún día los nodos orbitan más cerca
+  const v = new THREE.Vector3();
+  const e = { r: rCore, l: rCore, t: rCore, b: rCore };
+  for (const n of nodos) {
+    v.set(n.dir[0], n.dir[1], n.dir[2]).normalize().multiplyScalar(rNodo);
+    e.r = Math.max(e.r, v.x + rSol);
+    e.l = Math.max(e.l, -v.x + rSol);
+    e.t = Math.max(e.t, v.y + rSol);
+    e.b = Math.max(e.b, -v.y + rSol);
+  }
+  // Los nodos están en el hemisferio frontal, o sea MÁS CERCA de la cámara que
+  // el sol central: proyectan un poco más grandes que su x/y. La magnificación
+  // va de 1.04 (celular, cámara lejos) a 1.11 (escritorio); se toma el medio y
+  // el ±3% lo absorbe el aire.
+  const PERSP = 1.08;
+  return { r: e.r * PERSP, l: e.l * PERSP, t: e.t * PERSP, b: e.b * PERSP };
+})();
+
+/** Aire entre el cúmulo y los bordes de su banda, como fracción de pantalla.
+ * Tiene que bancarse el halo del bloom, que no entra en CL (ver arriba). Es más
+ * generoso a lo ANCHO que a lo alto porque son cosas distintas: a los costados
+ * el aire separa al cúmulo del nombre y del borde (es composición), mientras que
+ * arriba y abajo, en el celular, cada píxel de aire se lo saca al modelo (que es
+ * justo donde falta). En escritorio manda el ancho, así que el de alto ni se
+ * nota. */
+const HERO_MARGEN_X = 0.09;
+const HERO_MARGEN_Y = 0.05;
+/** Lugar que hay que reservarle a las ETIQUETAS, en PÍXELES de pantalla: son
+ * HTML y no escalan con la escena, así que su espacio no se puede expresar en
+ * unidades de mundo ni como fracción. `X` es lo que sobresale una pastilla más
+ * allá de su sol (la más ancha es RECORRIDO, y es también la del sol más a la
+ * izquierda); `Y` es lo que la pastilla sobresale por arriba o por abajo. */
+const LABEL_X = 26;
+const LABEL_Y = 42;
 /** Retroceso de la cámara a mitad de camino ENTRE dos nodos (arco de respiro:
  * pasa por afuera en vez de rozar el sol). Explícito, en unidades de rBall: si
  * se derivara de (OVER - CLOSE) cambiaría de signo cada vez que se recalibra
@@ -276,19 +320,24 @@ function encuadreHero(medida: Banda, w: number, h: number) {
       ? medida
       : { x0: 0, x1: w, y0: 0, y1: h };
   const aspect = w / Math.max(1, h);
-  const m = HERO_MARGEN * 2; // fracción de pantalla → NDC (que va de -1 a 1)
-  // Banda en NDC. Ojo: en y el NDC crece hacia ARRIBA y los px hacia abajo.
-  const nx0 = (2 * banda.x0) / w - 1 + m;
-  const nx1 = (2 * banda.x1) / w - 1 - m;
-  const ny0 = 1 - (2 * banda.y1) / h + m;
-  const ny1 = 1 - (2 * banda.y0) / h - m;
+  // La banda ÚTIL para los soles: la libre menos el aire de los bordes y menos
+  // el lugar de las etiquetas (en px, porque son HTML y no escalan).
+  const ux0 = banda.x0 + HERO_MARGEN_X * w + LABEL_X;
+  const ux1 = banda.x1 - HERO_MARGEN_X * w - LABEL_X;
+  const uy0 = banda.y0 + HERO_MARGEN_Y * h + LABEL_Y;
+  const uy1 = banda.y1 - HERO_MARGEN_Y * h - LABEL_Y;
+  // → NDC. Ojo: en y el NDC crece hacia ARRIBA y los px hacia abajo.
+  const nx0 = (2 * ux0) / w - 1;
+  const nx1 = (2 * ux1) / w - 1;
+  const ny0 = 1 - (2 * uy1) / h;
+  const ny1 = 1 - (2 * uy0) / h;
   // Guarda contra una banda absurda (un layout roto no puede meter la cámara
   // adentro del sol).
   const bw = Math.max(0.2, nx1 - nx0);
   const bh = Math.max(0.2, ny1 - ny0);
   const dist = Math.max(
-    (CL_T + CL_B) / (bh * TAN_HALF_FOV),
-    (CL_R + CL_L) / (bw * TAN_HALF_FOV * aspect),
+    (CL.t + CL.b) / (bh * TAN_HALF_FOV),
+    (CL.r + CL.l) / (bw * TAN_HALF_FOV * aspect),
   );
   const hv = dist * TAN_HALF_FOV; // semialto visible a esa distancia
   const hw = hv * aspect;
@@ -296,8 +345,8 @@ function encuadreHero(medida: Banda, w: number, h: number) {
   // Centro de la banda, corrido para que el centro del BBOX (no el del sol)
   // caiga justo ahí. El signo se invierte: la cámara mira al lado opuesto de
   // donde queremos que aparezca el cúmulo.
-  _hero.pan = -((nx0 + nx1) / 2 + (CL_L - CL_R) / (2 * hw));
-  _hero.lift = (ny0 + ny1) / 2 + (CL_B - CL_T) / (2 * hv);
+  _hero.pan = -((nx0 + nx1) / 2 + (CL.l - CL.r) / (2 * hw));
+  _hero.lift = (ny0 + ny1) / 2 + (CL.b - CL.t) / (2 * hv);
 }
 /** Órbita hacia el nodo activo (0 = de frente como la portada, 1 = encarándolo
  * de lleno). Fuerte: la cámara SE VA hacia el sol de la sección y lo pone

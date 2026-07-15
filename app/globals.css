@@ -437,6 +437,86 @@ body {
 }
 
 /* ============================================================================
+   CALLOUTS DE LOS SOLES — la etiqueta de cada sección, pegada a su sol
+
+   Vidrio real de la identidad (el mismo `.glass` del HUD) flotando sobre la
+   escena. La POSICIÓN la escribe NodeOverlay por frame desde la cámara 3D; el
+   TAMAÑO vive en px de pantalla y no depende de la distancia: por eso se lee
+   igual en un 1920 que en un celular, que era el problema de las etiquetas
+   hechas con geometría (se achicaban con la escena hasta ~5px).
+   ========================================================================== */
+
+.solnodo {
+  /* El botón es el círculo sobre el sol; el chip y el hilo cuelgan de él. */
+  transition: opacity 0.3s ease;
+}
+.solnodo__hilo {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1px;
+  height: 10px;
+  background: var(--acento);
+  opacity: 0.5;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+/* Los soles del tope llevan su callout hacia ARRIBA: siempre hacia afuera del
+   cúmulo, para que ninguna etiqueta caiga sobre el disco del sol central. */
+.solnodo.is-up .solnodo__hilo {
+  top: auto;
+  bottom: 100%;
+}
+.solnodo.is-up .solnodo__chip {
+  top: auto;
+  bottom: calc(100% + 10px);
+}
+.solnodo__chip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  /* Pastilla compacta: el ancho lo da el texto, no una caja fija. */
+  padding: 0.3rem 0.7rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--chalk);
+  /* El chip nace del sol: se despliega hacia abajo. */
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+/* El sol ACTIVO canta su sección: tinta de acento y vidrio más sólido. */
+.solnodo__chip.is-on {
+  background: var(--glass-bg-2);
+  color: var(--acento);
+}
+@media (hover: hover) {
+  .solnodo:hover .solnodo__chip {
+    background: var(--glass-bg-2);
+    color: var(--acento);
+  }
+  .solnodo:hover .solnodo__hilo {
+    opacity: 1;
+  }
+}
+/* En pantallas chicas el cúmulo entero mide ~340px: los chips se acercan entre
+   sí, así que van un punto más compactos para no tocarse. */
+@media (max-width: 767px) {
+  .solnodo__chip {
+    padding: 0.26rem 0.55rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* ============================================================================
    UTILIDADES DEL SISTEMA
    ========================================================================== */
 

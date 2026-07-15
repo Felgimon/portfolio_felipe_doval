@@ -27,6 +27,14 @@ const GraphCanvas = dynamic(() => import("@/components/three/GraphCanvas"), {
   ssr: false,
 });
 
+/** ¿La etiqueta de este sol va ARRIBA o abajo? Siempre hacia AFUERA del cúmulo:
+ * los soles del tope (Perfil, Enfoque) la llevan arriba y el resto abajo. No es
+ * un capricho: colgándolas todas para abajo, las de arriba caen sobre el disco
+ * del sol central. En una pantalla grande casi ni se nota, pero en un celular
+ * la etiqueta mide lo mismo en px y la escena entra en 280px, así que se le
+ * monta encima. Como los soles están quietos, esto es una constante por nodo. */
+const ETIQUETA_ARRIBA = nodos.map((n) => n.dir[1] > 0.3);
+
 /** Flag de preview `?gl` (fuerza el canvas aunque no haga falta). */
 function useForceGl(): boolean {
   return useSyncExternalStore(
@@ -41,13 +49,13 @@ function useForceGl(): boolean {
 /** Poster estático del grafo (solo si NO hay WebGL). Se ubica donde la cámara
  * pone el modelo: arriba en pantalla angosta, a la derecha en ancha. La imagen
  * es un recorte cuadrado CENTRADO en el cúmulo (lo genera scratchpad/poster.mjs
- * midiendo la escena real), así que acá alcanza con poner su centro donde la
- * cámara pone el del cúmulo: 47%/24% en angosto, 74%/46% en ancho — medidos con
- * hero-metrics, no a ojo. */
+ * midiendo la escena real, etiquetas incluidas), así que acá alcanza con poner
+ * su centro donde la cámara pone el del cúmulo: 49%/24% en angosto, 6% del
+ * borde derecho y 47% de alto en ancho — medidos con hero-metrics, no a ojo. */
 function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="absolute top-[24%] left-[47%] aspect-square h-[38%] max-h-[820px] -translate-x-1/2 -translate-y-1/2 md:top-[46%] md:left-auto md:right-[8%] md:h-[73%] md:translate-x-0">
+      <div className="absolute top-[24%] left-[49%] aspect-square h-[34%] max-h-[820px] -translate-x-1/2 -translate-y-1/2 md:top-[47%] md:left-auto md:right-[6%] md:h-[75%] md:translate-x-0">
         <Image
           src="/assets/hero-poster.png"
           alt=""
@@ -62,25 +70,42 @@ function PosterFallback({ onLoaded }: { onLoaded?: () => void }) {
   );
 }
 
-/** Hit-areas CIRCULARES invisibles sobre los propios soles 3D: se clickea (o
- * TOCA, en mobile) el sol directamente (la identificación la dan las etiquetas
- * 3D en escena). El hover dispara la mini-implosión del sol (via onHover). La
- * proyección (x, y y RADIO aparente en px) sale de la cámara real cada frame.
- * En puntero grueso (touch) el target mínimo sube a 44px (guía de Apple/WCAG).
- * `muted` apaga las hit-areas sin desmontar: en pantallas angostas dentro de un
- * tópico el texto se lee SOBRE el modelo atenuado, y un botón invisible abajo
- * del texto robaría los taps del contenido. Azúcar de puntero (tabIndex -1);
- * el teclado/lector usa el HUD. */
+/**
+ * Los CALLOUTS de los soles: cada sol tiene UNA sola cosa que es a la vez su
+ * etiqueta y su zona clickeable. Es un botón centrado en el sol (círculo
+ * invisible sobre el sol, con el mínimo táctil de 44px de Apple/WCAG) que lleva
+ * colgando una pastilla de vidrio con el nombre de la sección y un conector
+ * fino. Tocar el sol o su etiqueta es lo mismo: el evento burbujea al botón.
+ *
+ * Por qué la etiqueta es HTML y no geometría 3D (v5.5): el texto 3D se escala
+ * con la escena, así que su tamaño lo decidía la distancia de la cámara —
+ * legible en 1920 (12.5px) e ILEGIBLE en un celular (~5px), donde la escena
+ * entera entra en 289px. La etiqueta es UI, no geometría: vive en píxeles de
+ * pantalla y se lee igual en cualquier dispositivo. Además así usa el vidrio
+ * REAL de la identidad (el mismo `.glass` del HUD y los CTA) en vez de una
+ * imitación con planos opacos, y el texto sale nítido a cualquier DPI.
+ *
+ * Lo que sigue siendo 3D es lo que importa: la POSICIÓN sale de proyectar el
+ * sol con la cámara real cada frame, así que la etiqueta va pegada a su sol,
+ * con su paralaje, y desaparece cuando el sol queda tapado por el sol central
+ * (mismo test que decide si se puede clickear: si no lo ves, no está).
+ *
+ * `muted` las apaga sin desmontar: en pantallas angostas dentro de un tópico el
+ * texto se lee SOBRE el modelo atenuado, y un botón encima robaría los taps del
+ * contenido. Azúcar de puntero (tabIndex -1); el teclado/lector usa el HUD.
+ */
 function NodeOverlay({
   projRef,
   onGoto,
   onHover,
   muted,
+  activeIdx,
 }: {
   projRef: RefObject<NodeProj[]>;
   onGoto: (id: string) => void;
   onHover: (i: number) => void;
   muted: boolean;
+  activeIdx: number;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   useEffect(() => {
@@ -94,9 +119,10 @@ function NodeOverlay({
         if (!b) continue;
         const p = proj[i];
         if (muted || !p || !p.front) {
-          // Apagado, o cara de atrás: sin hit-area (clickear un sol que no
-          // ves confunde).
+          // Apagado, o tapado por el sol central: sin etiqueta y sin hit-area
+          // (ofrecerte clickear un sol que no ves confunde).
           b.style.pointerEvents = "none";
+          b.style.opacity = "0";
           b.style.transform = "translate(-9999px, -9999px)";
         } else {
           const d = Math.max(minD, p.r * 2.6); // diámetro con margen de puntería
@@ -104,6 +130,7 @@ function NodeOverlay({
           b.style.height = `${d}px`;
           b.style.transform = `translate(${p.x - d / 2}px, ${p.y - d / 2}px)`;
           b.style.pointerEvents = "auto";
+          b.style.opacity = "1";
         }
       }
       raf = requestAnimationFrame(tick);
@@ -114,7 +141,7 @@ function NodeOverlay({
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
+      className="solabels pointer-events-none fixed inset-0 z-30 overflow-hidden"
       aria-hidden
     >
       {nodos.map((n, i) => (
@@ -134,9 +161,25 @@ function NodeOverlay({
           }}
           onMouseEnter={() => onHover(i)}
           onMouseLeave={() => onHover(-1)}
-          style={{ willChange: "transform" }}
-          className="absolute top-0 left-0 cursor-pointer touch-manipulation rounded-full"
-        />
+          style={{ willChange: "transform", opacity: 0 }}
+          className={cn(
+            "solnodo absolute top-0 left-0 cursor-pointer touch-manipulation rounded-full",
+            ETIQUETA_ARRIBA[i] && "is-up",
+          )}
+        >
+          {/* Conector sol → etiqueta y pastilla. Sobresalen de la caja del
+              botón: siguen siendo clickeables (el evento burbujea) y el
+              overflow del contenedor los recorta contra la pantalla. */}
+          <span className="solnodo__hilo" />
+          <span
+            className={cn(
+              "solnodo__chip glass glass-spec glass-pill",
+              i === activeIdx && "is-on",
+            )}
+          >
+            {n.label}
+          </span>
+        </button>
       ))}
     </div>
   );
@@ -465,6 +508,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
           onGoto={goto}
           onHover={onHover}
           muted={narrow && activeIdx >= 0}
+          activeIdx={activeIdx}
         />
       )}
 

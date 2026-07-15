@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.4** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.5** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1187,6 +1187,71 @@ números, esa premisa era FALSA:
 
 Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
 revisar los tests que dependían de él, en vez de compensar recortando features.
+
+---
+
+## v5.5 — Las etiquetas salen del 3D: el celular también navega por los soles
+
+Feedback de Felipe: en la computadora le encanta, pero **en el celular se ve
+horrible**: el modelo queda chiquito arriba del nombre y las secciones no se
+leen. Ofreció como alternativa apagar el 3D en mobile y navegar solo por el HUD;
+pidió primero intentar en serio mantener la navegación por los soles.
+
+### La causa raíz: el texto vivía en el mundo 3D
+Las etiquetas eran geometría (`drei/Text` + pills de `ShapeGeometry`), así que su
+tamaño lo decidía la DISTANCIA DE LA CÁMARA: **12.5px en 1920 y ~5px en un
+celular**, donde la escena entera entra en 289px. Ningún encuadre arregla eso —
+para que el texto llegara a 11px en el celular, el cúmulo tendría que medir
+640px de ancho en una pantalla de 390. Agrandar el modelo era tratar el síntoma.
+
+La etiqueta es UI, no geometría. Ahora vive en **píxeles de pantalla** (HTML) y
+lo 3D es lo que importa: su POSICIÓN sale de proyectar cada sol con la cámara
+real por frame, así que va pegada a su sol, con su paralaje, y desaparece cuando
+el sol queda tapado (mismo test que decide si se puede clickear: si no lo ves,
+no está). Tres cosas que se ganaron de yapa:
+- **La etiqueta y su zona clickeable pasaron a ser la MISMA cosa** (un botón con
+  la pastilla colgando: tocás el sol o su nombre, es igual). Antes eran dos
+  sistemas paralelos: hit-areas invisibles + chips 3D.
+- Usa el vidrio REAL de la identidad (`.glass`, el mismo del HUD y los CTA) en
+  vez de imitarlo con planos opacos, y el texto sale nítido a cualquier DPI.
+- Se fue `drei/Text`, la fuente del atlas y toda la geometría de pills.
+
+Perf medida con las 5 pastillas de vidrio moviéndose: **56 FPS en movimiento con
+render por SOFTWARE** (SwiftShader, el peor caso). El blur no se nota.
+
+### La regla que hacía falta: el callout apunta hacia AFUERA
+Con la etiqueta en px fijos, en el celular es relativamente más grande y las de
+los soles de arriba (Perfil, Enfoque) caían **sobre el disco del sol central**.
+Se resolvió con una regla, no con un número: la etiqueta va siempre hacia afuera
+del cúmulo (arriba la de los soles del tope, abajo el resto). Como los soles
+están quietos, es una constante por nodo: cero trabajo por frame.
+
+### Encuadrar la geometría, no el resplandor
+Las constantes `CL_*` medidas de v5.4 estaban contaminadas: incluían el halo del
+bloom, que **no es modelable en unidades de mundo** (mide ~60px en 1920 y casi
+nada en un celular, donde los soles miden 10px). Por eso el celular quedaba un
+24% más chico de lo que podía. Ahora `CL` se **deriva de los nodos** (exacta, se
+recalcula sola si cambian las direcciones o el anillo) y el halo derrama sobre el
+aire del borde, que es lo que hace cualquier foto de una fuente de luz: se
+encuadra el objeto, no su resplandor.
+También se separó el aire en `HERO_MARGEN_X` (0.09) y `HERO_MARGEN_Y` (0.05): a
+los costados el aire es composición, pero arriba y abajo, en el celular, cada
+píxel se le saca al modelo.
+
+**Resultado en el celular (390x844)**: los soles pasan de 193 a 260px de ancho
+(+35%), las 5 secciones se leen, ninguna etiqueta pisa al sol, y la navegación
+por soles sigue viva. No hizo falta el plan B de apagar el 3D.
+
+### Verificación
+`gate` 0 · `clickable` 5/5 en las 5 secciones · `touch` (tap real en iPhone
+emulado) · `cta` · `anim` · `perf` · `smoke` · `dashcheck` · `seocheck` ·
+`hero-metrics` en 1920/1440/1280/390.
+Trampa que costó media hora y una medición fantasma: **`h1.is-in` NO significa
+que la escena esté lista** — el preloader se va solo por su techo de 2.4s, así
+que con el dev server compilando yo estaba midiendo la cámara EN PLENO VUELO
+(230px de error) y la medición contradecía a la captura. Hay que esperar al
+`canvas`. Cuando dos verificaciones no coinciden, una miente: vale la pena
+encontrar cuál antes de tocar el código.
 
 ---
 
