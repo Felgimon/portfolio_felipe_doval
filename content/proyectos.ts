@@ -52,14 +52,12 @@ export const proyectos: Proyecto[] = [
         alt: "Captura de la interfaz de Superlum",
       },
       {
-        src: "",
-        alt: "Vista de cliente con scoping de permisos (falta captura)",
-        falta: true,
+        src: "/assets/proyectos/superlum/superlum-clientes.png",
+        alt: "La base de Clientes de Taquion en vista galería, con sus vistas guardadas (tabla, por estado, stack) y las categorías de cada cliente",
       },
       {
-        src: "",
-        alt: "Sistema de permisos / default-deny (falta captura)",
-        falta: true,
+        src: "/assets/proyectos/superlum/superlum-admin-actividad.png",
+        alt: "Panel de administración del workspace: el registro de actividad con cada cambio y su autor, junto a las pestañas de miembros y perfiles de acceso",
       },
     ],
     acento: "#6D5BFF", // violeta aurora — marca de Superlum, citada dentro del caso
@@ -107,11 +105,13 @@ export const proyectos: Proyecto[] = [
     ],
     capturas: [
       {
-        src: "",
-        alt: "Predicción de un partido (falta captura)",
-        falta: true,
+        src: "/assets/proyectos/futbolvision/futbolvision-prediccion.png",
+        alt: "Predicción de Arsenal vs Sporting CP: marcador estimado, las tres probabilidades del modelo y el análisis por parámetro que las respalda (H2H, forma, lesiones, contexto y xG)",
       },
-      { src: "", alt: "Dashboard de estadísticas (falta captura)", falta: true },
+      {
+        src: "/assets/proyectos/futbolvision/futbolvision-app.png",
+        alt: "Una predicción dentro de la app: Manchester United vs Leeds, con la ficha del partido arriba y el desglose del modelo abajo",
+      },
       {
         src: "",
         alt: "Visualización del modelo ML (falta captura)",
@@ -180,11 +180,14 @@ export const proyectos: Proyecto[] = [
         url: "https://github.com/Felgimon/Buscaminas",
       },
     ],
+    // Los proyectos secundarios no tienen página de detalle (solo los
+    // destacados): su card muestra la PRIMERA captura y nada más. Por eso acá va
+    // una sola, y es la del tablero entero destapado: es la que muestra de un
+    // vistazo lo que dice el texto (los colores ANSI, los indicadores y la mina).
     capturas: [
       {
-        src: "",
-        alt: "Tablero en la terminal con colores ANSI (falta captura)",
-        falta: true,
+        src: "/assets/proyectos/buscaminas/buscaminas-perdida.png",
+        alt: "El tablero en la terminal al terminar la partida: los indicadores de minas adyacentes con su color ANSI, las banderas puestas y la mina que la terminó",
       },
     ],
     acento: "#7fd1a3",

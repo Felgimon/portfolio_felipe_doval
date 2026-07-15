@@ -44,12 +44,14 @@ Tirá 2–4 PNG (1600px+ de ancho) por proyecto en `public/assets/proyectos/<slu
 y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
 `falta: true`).
 
-- [x] Superlum — hay 1 captura (`superlum-screenshot.png`). Faltan 2–3 más:
-  vista de cliente, sistema de permisos.
-- [ ] FutbolVision — predicción de partido, dashboard de stats, viz del modelo.
+- [x] Superlum — 3 capturas: la interfaz, la base de Clientes en galería y el
+  panel de administración con el registro de actividad.
+- [x] FutbolVision — 2 capturas de predicción (Arsenal vs Sporting CP y
+  Manchester United vs Leeds). Si algún día querés, falta una del modelo ML.
 - [ ] CourtSide — home con partidos, búsqueda de jugadores, dark mode.
-- [ ] Buscaminas — 1–2 capturas de la terminal con el tablero (los colores ANSI
-  quedan muy bien).
+- [x] Buscaminas — 1 captura del tablero en la terminal (los colores ANSI
+  quedan muy bien). Su card muestra solo una: los secundarios no tienen página
+  de detalle.
 - [ ] Nindo — 2–3 de gameplay (o un GIF/video corto, mejor todavía).
 - [ ] PC Builder — 2–3 del producto.
 - [ ] LOST — 1–2 si tenés.
