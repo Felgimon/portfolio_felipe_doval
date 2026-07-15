@@ -46,9 +46,13 @@ try {
   const browser = await chromium.launch();
 
   // ---- MOBILE (iPhone: viewport angosto + touch + DPR 3) ----
-  console.log("— mobile 390×844 (touch) —");
+  // 393×659 es el viewport REAL de un iPhone Pro con la barra de Safari puesta
+  // (el descriptor de Playwright). NO son 844: eso es la pantalla entera, sin
+  // navegador, y probar con ese alto regala 185px que en el teléfono no existen
+  // — así se nos escapó que el modelo quedaba diminuto en el celular de Feli.
+  console.log("— mobile 393×659 (iPhone Pro real, touch) —");
   const ctxM = await browser.newContext({
-    viewport: { width: 390, height: 844 },
+    viewport: { width: 393, height: 659 },
     hasTouch: true,
     isMobile: true,
     deviceScaleFactor: 3,

@@ -231,9 +231,14 @@ function HudRail({
       aria-label="Secciones"
       className="fixed inset-x-0 bottom-0 z-40"
     >
+      {/* Abajo de 400px los 5 nombres NO entran a este tamaño: en un Android de
+          360 se cortaban "Perfil" y "Contacto", y en un iPhone Pro entraban
+          justo al límite (367 de 367 px). Ahí el HUD se compacta. No es un
+          detalle: en pantallas chatas el HUD es la ÚNICA navegación, así que
+          cortado deja a esa pantalla sin forma de moverse. */}
       <div
         ref={barraRef}
-        className="glass glass-spec mx-3 mb-3 flex items-center justify-center gap-0.5 rounded-full px-1.5 py-2 sm:mx-auto sm:mb-4 sm:max-w-fit sm:gap-2 sm:px-3"
+        className="glass glass-spec mx-3 mb-3 flex items-center justify-center gap-0.5 rounded-full px-1.5 py-2 max-[400px]:mx-2 max-[400px]:gap-0 max-[400px]:px-1 sm:mx-auto sm:mb-4 sm:max-w-fit sm:gap-2 sm:px-3"
       >
         {nodos.map((n, i) => {
           const active = i === activeIdx;
@@ -248,7 +253,7 @@ function HudRail({
               aria-label={`${n.label}: ${n.hint}`}
               aria-current={active ? "true" : undefined}
               className={cn(
-                "relative rounded-full px-2.5 py-1.5 font-mono text-[0.7rem] tracking-wide whitespace-nowrap transition-colors sm:px-4 sm:text-xs",
+                "relative rounded-full px-2.5 py-1.5 font-mono text-[0.7rem] tracking-wide whitespace-nowrap transition-colors max-[400px]:px-2 max-[400px]:text-[0.62rem] max-[400px]:tracking-normal sm:px-4 sm:text-xs",
                 active ? "text-acento" : "text-muted hover:text-chalk",
               )}
             >
@@ -291,6 +296,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const bandaRef = useRef<Banda>({ x0: 0, x1: 0, y0: 0, y1: 0 });
   const columnaRef = useRef<HTMLDivElement>(null);
   const barraRef = useRef<HTMLDivElement>(null);
+  const capaRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(-1); // -1 = portada; 0..4 = nodos
   const [hoverIdx, setHoverIdx] = useState(-1); // sol bajo el puntero
   // El canvas renderiza solo mientras hay actividad (scroll / cámara moviéndose);
@@ -429,22 +435,56 @@ export function GraphHome({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  // Pantallas demasiado CHATAS para el cúmulo. La cuenta, medida: el hero
+  // necesita ~350px de texto, y el cúmulo necesita ~270px de banda para que sus
+  // soles lleguen a la mitad del ancho de la pantalla y se puedan tocar. O sea
+  // que abajo de ~620px de alto ÚTIL no entran los dos. Y el alto útil de un
+  // celular no es el de su pantalla: en un iPhone Pro la barra de Safari se
+  // come 185 de los 844, y quedan 659 (alcanza). Los que no llegan son un
+  // iPhone SE (553) o un Android viejo: ahí el modelo se apaga y la navegación
+  // queda en el HUD y el scroll, que están siempre. Es preferible a un cúmulo
+  // de 120px con las etiquetas encimadas.
+  //
+  // El alto se lee del CANVAS (la misma caja que ve la cámara), no de
+  // window.innerHeight: en iOS no son lo mismo. No hay media query que sirva
+  // acá: las de CSS miden el viewport de layout, que en iOS ignora la barra.
+  const [chato, setChato] = useState(false);
+  useEffect(() => {
+    const medir = () => {
+      const capa = capaRef.current?.getBoundingClientRect();
+      if (capa) setChato(capa.height < 620);
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    const t = window.setTimeout(medir, 700);
+    return () => {
+      window.removeEventListener("resize", medir);
+      clearTimeout(t);
+    };
+  }, []);
+
   // La BANDA libre de la portada, medida contra el layout real. En ancho el
   // texto ocupa la columna izquierda → el hueco es lo que sobra a su derecha,
   // hasta arriba del HUD. En angosto el texto va abajo → el hueco es todo el
   // ancho, arriba de él. El ResizeObserver cubre el reflow por la carga de la
   // fuente; el listener de resize cubre el caso en que el bloque no cambia de
   // tamaño pero sí de lugar (el contenedor centrado corre con la ventana).
+  //
+  // Todo se mide contra la CAJA DEL CANVAS, no contra `window.innerHeight`. No
+  // es lo mismo: en iOS el alto de la ventana, el del viewport visual y el de
+  // un elemento fijo pueden diferir (la barra de Safari), y la cámara razona en
+  // las coordenadas de SU canvas. Midiendo contra la misma caja que ve la
+  // cámara, esa familia entera de bugs no puede pasar.
   const medirBanda = useCallback(() => {
-    const W = window.innerWidth;
-    const H = window.innerHeight;
+    const capa = capaRef.current?.getBoundingClientRect();
+    if (!capa) return;
     const col = columnaRef.current?.getBoundingClientRect();
     const barra = barraRef.current?.getBoundingClientRect();
-    const hud = barra ? barra.top : H;
+    const hud = barra ? barra.top - capa.top : capa.height;
     bandaRef.current =
       narrow || !col
-        ? { x0: 0, x1: W, y0: 0, y1: col ? col.top : hud }
-        : { x0: col.right, x1: W, y0: 0, y1: hud };
+        ? { x0: 0, x1: capa.width, y0: 0, y1: col ? col.top - capa.top : hud }
+        : { x0: col.right - capa.left, x1: capa.width, y0: 0, y1: hud };
   }, [narrow]);
 
   useEffect(() => {
@@ -461,7 +501,14 @@ export function GraphHome({ children }: { children: ReactNode }) {
     };
   }, [medirBanda]);
 
-  const usarCanvas = forceGl || webgl;
+  // El modelo se muestra si hay con qué (WebGL) y si ENTRA (ver `chato`). El
+  // preloader espera al hero: si no va a haber modelo, hay que soltarlo o la
+  // página se queda cargando para siempre.
+  const usarCanvas = (forceGl || webgl) && !chato;
+  const sinModelo = chato;
+  useEffect(() => {
+    if (sinModelo) marcarHeroCargado();
+  }, [sinModelo, marcarHeroCargado]);
   // Click en nodo/HUD: el contenido salta YA (sin speed-scroll por las
   // secciones intermedias, que marea); la transición la hace la CÁMARA, que
   // orbita en línea directa hasta el nodo elegido.
@@ -475,8 +522,11 @@ export function GraphHome({ children }: { children: ReactNode }) {
 
       {/* Capa fija: el grafo 3D (o poster si no hay WebGL). El encuadre por
           sección lo hace la CÁMARA (orbita + panea dentro del canvas); acá no
-          hay transforms. En mobile se atenúa al entrar a un tópico. */}
+          hay transforms. En mobile se atenúa al entrar a un tópico.
+          Su CAJA es además el sistema de coordenadas contra el que se mide la
+          banda: es la misma que ve la cámara. */}
       <div
+        ref={capaRef}
         className={cn(
           "graph-layer pointer-events-none fixed inset-0 z-0 transition-opacity duration-700",
           activeIdx >= 0 && "is-topic",
@@ -497,7 +547,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
             onActivity={onActivity}
             bandaRef={bandaRef}
           />
-        ) : (
+        ) : sinModelo ? null : (
           <PosterFallback onLoaded={marcarHeroCargado} />
         )}
       </div>
@@ -517,9 +567,15 @@ export function GraphHome({ children }: { children: ReactNode }) {
         {/* Portada: el nombre a la izquierda, el sol girando a la derecha (en
             mobile el sol queda arriba y este bloque abajo: lo resuelve el
             encuadre de la cámara, no un transform). */}
+        {/* En un celular REAL el alto útil son ~659px (la barra de Safari se
+            come 185 de los 844 de la pantalla), y el HUD flota abajo. Así que
+            en angosto el bloque va compacto y pegado al HUD: cada píxel que no
+            gasta acá es un píxel que la cámara le da al modelo, que es lo único
+            que no puede achicarse sin dejar de leerse. En md+ vuelven los aires
+            grandes, donde sobra lugar. */}
         <section
           id="inicio"
-          className="relative flex min-h-dvh items-end pb-28 md:items-center md:pb-0"
+          className="relative flex min-h-dvh items-end pb-16 md:items-center md:pb-0"
         >
           <Container size="wide">
             {/* `w-fit`: la columna mide exactamente lo que mide su hijo más
@@ -528,11 +584,11 @@ export function GraphHome({ children }: { children: ReactNode }) {
                 cúmulo en lo que sobra. El tope lo pone max-w-2xl. */}
             <div ref={columnaRef} className="w-fit max-w-2xl">
               <p className="eyebrow">{perfil.hero.kicker}</p>
-              <div className="mt-5">
+              <div className="mt-3 md:mt-5">
                 <HeroName />
               </div>
-              <p className="lead mt-6 max-w-md">{perfil.hero.lead}</p>
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              <p className="lead mt-4 max-w-md md:mt-6">{perfil.hero.lead}</p>
+              <div className="mt-6 flex flex-wrap items-center gap-3 md:mt-9">
                 <button
                   type="button"
                   onClick={() => goto("trabajo")}

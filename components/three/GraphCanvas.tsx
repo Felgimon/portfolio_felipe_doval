@@ -288,14 +288,14 @@ const CL = (() => {
  * justo donde falta). En escritorio manda el ancho, así que el de alto ni se
  * nota. */
 const HERO_MARGEN_X = 0.09;
-const HERO_MARGEN_Y = 0.05;
+const HERO_MARGEN_Y = 0.035;
 /** Lugar que hay que reservarle a las ETIQUETAS, en PÍXELES de pantalla: son
  * HTML y no escalan con la escena, así que su espacio no se puede expresar en
  * unidades de mundo ni como fracción. `X` es lo que sobresale una pastilla más
  * allá de su sol (la más ancha es RECORRIDO, y es también la del sol más a la
  * izquierda); `Y` es lo que la pastilla sobresale por arriba o por abajo. */
 const LABEL_X = 26;
-const LABEL_Y = 42;
+const LABEL_Y = 38;
 /** Retroceso de la cámara a mitad de camino ENTRE dos nodos (arco de respiro:
  * pasa por afuera en vez de rozar el sol). Explícito, en unidades de rBall: si
  * se derivara de (OVER - CLOSE) cambiaría de signo cada vez que se recalibra

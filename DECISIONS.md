@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.5** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.6** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1187,6 +1187,63 @@ números, esa premisa era FALSA:
 
 Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
 revisar los tests que dependían de él, en vez de compensar recortando features.
+
+---
+
+## v5.6 — El celular de verdad: 185px de alto que el emulador inventaba
+
+Feedback de Felipe: en el emulador de Chrome a 390px se ve perfecto, pero en su
+**iPhone real** el modelo queda mucho más chico, los mini-soles más cerca del sol
+central y las etiquetas los tapan.
+
+### El bug estaba en cómo probaba, no en el código
+Su observación era la pista exacta: que los mini-soles se vean "más cerca" del
+sol solo puede pasar si la CÁMARA está más lejos (achica todo junto,
+proporcionalmente). Y como las etiquetas ya no escalan (v5.5), quedan enormes.
+
+Causa: **estaba probando con un alto que no existe**. 844 es la PANTALLA de un
+iPhone; el viewport real, con la barra de Safari puesta, es **659** (descriptor
+`iPhone 15 Pro` de Playwright). Me faltaban 185px, un 22% del alto. Con el alto
+real, medido en producción:
+
+| | emulador (390x844) | iPhone real (393x659) |
+|---|---|---|
+| banda libre para el modelo | 388px | **233px** |
+| ancho de los soles | 260px | **95px** |
+
+O sea: el texto del hero se comía el **65%** de la pantalla de su teléfono. En un
+iPhone SE la banda daba **negativa**: no entraba ni el texto.
+
+### Lo que se hizo
+1. **Devolverle el alto al modelo**: en angosto el hero va compacto (`pb-16` en
+   vez de `pb-28`, aires `mt-3/4/6` en vez de `mt-5/6/9`) y el aire vertical de
+   la cámara baja a 3.5%. En md+ no cambia nada: ahí sobra lugar. La banda pasa
+   de 233 a **309px** y los soles de 95 a **220px** (2.3x), con el ajuste a lo
+   alto dando 100.5% (la cámara usa toda la banda).
+2. **Medir contra la caja del CANVAS, no contra `window.innerHeight`**. No son lo
+   mismo en iOS (ventana, viewport visual y elemento fijo pueden diferir por la
+   barra), y la cámara razona en las coordenadas de SU canvas. Midiendo la banda
+   contra la misma caja que ve la cámara, esa familia entera de bugs no puede
+   pasar. Ningún emulador la habría mostrado.
+3. **Plan B donde el modelo NO entra** (lo autorizó Felipe): abajo de 620px de
+   alto útil, el modelo se apaga y quedan el HUD y el scroll. La cuenta: el hero
+   necesita ~350px de texto y el cúmulo ~270 de banda; abajo de 620 no entran los
+   dos y el modelo quedaría en ~120px, ilegible e intocable. Afuera quedan el
+   iPhone SE (553) y Androids viejos; los iPhone modernos (659+) mantienen la
+   navegación por soles. El umbral se lee del canvas, no de una media query: las
+   de CSS miden el viewport de layout, que en iOS ignora la barra.
+4. **El HUD entraba justo o se cortaba**: en un Android de 360 se cortaban
+   "Perfil" y "Contacto", y en un iPhone Pro entraba al límite exacto (367 de
+   367px). Era un bug viejo, pero el plan B lo vuelve crítico: en pantallas
+   chatas el HUD es la ÚNICA navegación. Abajo de 400px ahora se compacta.
+   `scratchpad/hud-fit.mjs` lo verifica en 5 pantallas.
+5. **`scripts/touch.mjs` ahora emula 393x659**, no 390x844: la prueba mentía
+   regalando 185px. El test tiene que doler donde duele el teléfono.
+
+### Verificación
+`gate` 0 · `touch` (iPhone real, tap táctil) · `clickable` 5/5 en las 5
+secciones · `hud-fit` 5/5 pantallas · `cta` · `anim` · `smoke` · `dashcheck` ·
+`seocheck` · `hero-metrics` en 1920/1440/1280/393x659/320x568.
 
 ---
 
