@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.9** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.10** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1264,6 +1264,43 @@ Endurecimiento GPU, además (cinturón y tiradores para "todos los dispositivos"
 en los tres) · **SwiftShader** (GPU en blocklist, el caso real de la netbook):
 sol visible, 0 errores de consola · gap del nombre medido (arriba) · hover, HUD,
 chips, cards y página de proyecto inspeccionados de cerca en 2x · `smoke`.
+---
+
+## v5.10 — La lente en todos los contenedores
+
+A Felipe le gustó el resultado del nav-bar ("Hermoso quedó, ahora sí parece más
+liquid glass") y pidió extender el efecto al resto de los contenedores: cards
+de proyectos, botones, paneles. Hecho con criterio, no a ciegas:
+
+- **Reciben lente** (33 elementos): cards de proyectos + su pill "en progreso"
+  (flota sobre la captura: la lente dobla la imagen de atrás), panel y enlaces
+  de Contacto, principios de Enfoque, stack de Perfil, timeline de Recorrido,
+  el article de Superlum en Trabajo, el Button secundario (variante de vidrio),
+  "Volver al grafo" del nav y el cartel del Konami.
+- **NO reciben lente**: las cajas de capturas del detalle de proyecto (la
+  imagen opaca las cubre: el backdrop nunca se ve, sería costo sin efecto) y la
+  figure de la foto de Perfil (ídem).
+
+Dos piezas de infraestructura que esto exigió:
+1. **MutationObserver**: las páginas de proyecto montan sus elementos DESPUÉS
+   (navegación client-side con layout persistente); sin esto, todo lo que
+   aparece tras la carga inicial quedaba sin lente. childList solamente:
+   escribir style/dataset no dispara childList, así que no se retroalimenta.
+   Verificado navegando de la home a /proyectos/superlum con click real.
+2. **Cache por tamaño**: `data-liquid` guarda el WxH aplicado y si no cambió no
+   se rearma el data URI (el observer dispara seguido; el filtro solo se
+   regenera cuando el elemento cambió de verdad).
+
+Perf con 33 lentes (algunas de 600px+): SwiftShader 33 FPS moviéndose (peor
+caso sintético; eran 38 con 8 lentes) y GPU real 161 FPS. El costo real del
+backdrop-filter es por píxel cubierto, y las cards grandes están casi siempre
+fuera del viewport de la portada.
+
+Trampa de verificación que casi me hace corregir un bug inexistente: una
+captura salió con la página SIN CSS (HTML crudo). No era el sitio: era mi
+`next start` de fondo sirviendo un build que yo había pisado con `npm run
+build` (los chunks viejos ya no existían). Server limpio, captura limpia.
+
 ---
 
 ## v5.9 — Liquid Glass genuino: el port del componente de referencia

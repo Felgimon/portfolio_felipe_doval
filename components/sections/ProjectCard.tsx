@@ -44,6 +44,7 @@ export function ProjectCard({
   const contenido = (
     <div
       ref={ref}
+      data-lente
       onPointerMove={onMove}
       onPointerLeave={onLeave}
       className={cn(
@@ -64,8 +65,12 @@ export function ProjectCard({
         ) : (
           <Placeholder label={cap?.alt ?? "captura"} className="h-full border-0" />
         )}
+        {/* El pill flota sobre la captura: la lente dobla la imagen detrás. */}
         {proyecto.incompleto && (
-          <span className="glass glass-pill absolute top-3 right-3 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-chalk-dim">
+          <span
+            data-lente
+            className="glass glass-pill absolute top-3 right-3 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-chalk-dim"
+          >
             en progreso
           </span>
         )}

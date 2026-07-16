@@ -96,6 +96,7 @@ export function Perfil() {
                 <div
                   key={g.categoria}
                   data-reveal-item
+                  data-lente
                   className="glass glass-hover p-4"
                 >
                   <p className="font-mono text-[0.7rem] tracking-wider text-acento uppercase">

@@ -37,6 +37,10 @@ function soportaLente(): boolean {
 function aplicarLente(el: HTMLElement) {
   const r = el.getBoundingClientRect();
   if (r.width < 24 || r.height < 12) return;
+  // El filtro codifica el tamaño: si no cambió, el que tiene puesto sigue
+  // siendo exacto. Evita rearmar el data URI en cada pasada del observer.
+  const clave = `${Math.round(r.width)}x${Math.round(r.height)}`;
+  if (el.dataset.liquid === clave) return;
   const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
   const p = paramsPara(r.width, r.height, radio);
   const b = Math.min(p.width, p.height) < 30 ? 1 : 2;
@@ -45,7 +49,7 @@ function aplicarLente(el: HTMLElement) {
   const filtro = `blur(${b / 2}px) url('${filtroLente(p)}') blur(${b}px) saturate(1.7)`;
   el.style.backdropFilter = filtro;
   // TS/DOM no expone webkitBackdropFilter tipado; en Chromium alcanza el estándar.
-  el.dataset.liquid = "on";
+  el.dataset.liquid = clave;
 }
 
 export function LiquidGlass() {
@@ -63,10 +67,17 @@ export function LiquidGlass() {
     // Tras cargar la tipografía las pastillas cambian de ancho.
     const t = window.setTimeout(programar, 800);
     window.addEventListener("resize", programar);
+    // Las páginas de proyecto montan sus cards DESPUÉS (navegación client-side
+    // con el layout persistente): sin esto, todo lo que aparece tras la carga
+    // inicial quedaría sin lente. childList solamente — escribir style/dataset
+    // no dispara childList, así que no se retroalimenta.
+    const mo = new MutationObserver(programar);
+    mo.observe(document.body, { childList: true, subtree: true });
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(t);
       window.removeEventListener("resize", programar);
+      mo.disconnect();
     };
   }, []);
   return null;

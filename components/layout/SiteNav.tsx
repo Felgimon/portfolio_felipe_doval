@@ -32,6 +32,7 @@ export function SiteNav() {
 
         <Link
           href="/#trabajo"
+          data-lente
           className="glass glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-acento"
         >
           <ArrowLeft className="size-4" />

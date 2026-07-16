@@ -57,6 +57,8 @@ export function Button({
   "aria-label": ariaLabel,
 }: ButtonProps) {
   const classes = cn(base, variants[variant], sizes[size], className);
+  // Solo la variante de vidrio recibe la lente (data-lente ignora a las demás).
+  const lente = variant === "secondary" ? "" : undefined;
 
   if (href !== undefined) {
     const isExternal = external ?? /^https?:\/\//.test(href);
@@ -66,6 +68,7 @@ export function Button({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
+          data-lente={lente}
           className={classes}
           onClick={onClick}
           title={title}
@@ -79,6 +82,7 @@ export function Button({
     return (
       <Link
         href={href}
+        data-lente={lente}
         className={classes}
         onClick={onClick}
         title={title}
@@ -93,6 +97,7 @@ export function Button({
   return (
     <button
       type={type}
+      data-lente={lente}
       className={classes}
       onClick={onClick}
       disabled={disabled}

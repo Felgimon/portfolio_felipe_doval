@@ -33,6 +33,8 @@ export function KonamiEasterEgg() {
       if (!cont) return;
       const cartel = document.createElement("div");
       cartel.textContent = "⚽ ¡Modo hincha! 🏀";
+      // data-lente: el MutationObserver de LiquidGlass lo agarra al aparecer.
+      cartel.setAttribute("data-lente", "");
       cartel.className =
         "glass glass-pill absolute left-1/2 top-24 -translate-x-1/2 px-6 py-3 font-mono text-sm text-acento";
       cont.appendChild(cartel);
