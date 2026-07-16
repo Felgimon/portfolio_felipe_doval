@@ -386,12 +386,14 @@ body {
    Todo lo demás (frost, brillo) sale de ahí. Las tres capas, de atrás para
    adelante:
 
-   1. REFRACCIÓN (`::before`, solo Chromium): un feDisplacementMap dobla el
-      fondo siguiendo el bisel. El mapa lo genera lib/lente.ts por elemento (ver
-      la física ahí). Va en SU PROPIA CAPA y nunca en la misma declaración que el
-      blur: se probó en WebKit y `backdrop-filter: blur() url()` ahí revienta —
-      el fondo desaparece y queda un bulto blanco. En capas, Safari simplemente
-      la ignora y el frost del padre queda intacto.
+   1. REFRACCIÓN (solo Chromium): a los elementos `data-lente`, LiquidGlass.tsx
+      les escribe INLINE la cadena completa — blur(b/2) → url(filtro data URI)
+      → blur(b) → saturate. El filtro (lib/lente.ts, porteado de
+      srdavo/liquid-glass) dobla el fondo con la forma del elemento y desfasa
+      los canales RGB (aberración cromática). Va inline y solo en Chromium
+      porque WebKit revienta si su declaración de backdrop-filter incluye un
+      url() (probado con el motor real: el fondo desaparece); Safari/Firefox
+      ni la reciben y se quedan con el frost de esta clase.
    2. FROST (el elemento): blur BAJO + saturate sobre un tinte casi nulo. Es lo
       que hace TODO navegador. La regla que salió de calibrarlo: la leche no la
       hace el blur, la hace el ALPHA del tinte — 55% de blanco era una cortina;
@@ -430,18 +432,9 @@ body {
   box-shadow: var(--glass-drop), var(--glass-glints);
 }
 
-/* 1. Ranura de REFRACCIÓN. Sin `--lente` (Safari, Firefox, o antes de que el JS
-   mida el elemento) `var()` cae en `none` y esta capa no hace nada. */
-.glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  pointer-events: none;
-  -webkit-backdrop-filter: var(--lente, none);
-  backdrop-filter: var(--lente, none);
-}
+/* La lente NO pide cara propia: el tinte al 10% de la clase es justo lo que la
+   distorsión necesita para verse (cuanto menos velo, más se lee el doblez).
+   `data-liquid` queda como marcador de estado para tests/debug. */
 
 /* 3. Bisel especular: anillo fino con luz direccional que GIRA alrededor del
    canto (llena arriba-izquierda, casi se apaga en los flancos, vuelve

@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.8** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.9** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1264,6 +1264,69 @@ Endurecimiento GPU, además (cinturón y tiradores para "todos los dispositivos"
 en los tres) · **SwiftShader** (GPU en blocklist, el caso real de la netbook):
 sol visible, 0 errores de consola · gap del nombre medido (arriba) · hover, HUD,
 chips, cards y página de proyecto inspeccionados de cerca en 2x · `smoke`.
+---
+
+## v5.9 — Liquid Glass genuino: el port del componente de referencia
+
+Feedback de Felipe sobre v5.7, con razón: "el liquid glass no es el blur de los
+objetos que pasan detrás, es el efecto de un vidrio que refleja... ¿a vos te
+parece liquid glass esto? No lo es, en absoluto". Pasó el repo
+github.com/srdavo/liquid-glass (web component que adapta el artículo de
+ekino-France) con la orden de leerlo COMPLETO y portearlo.
+
+### En qué se equivocaba la v5.7 (leído el repo, admitido)
+1. **El bisel era tímido.** Mi mapa de Snell doblaba una franja de ~2px con
+   escala 17-34. El del repo cubre el ELEMENTO ENTERO con dos gradientes
+   lineales (R→x, G→y) de borde a borde, neutralizados en el centro por un
+   rectángulo #808080 redondeado y desenfocado (`depth`): el interior queda
+   limpio y el borde MAGNIFICA como una lupa, con strength 40-100.
+2. **Faltaba la aberración cromática.** El repo desplaza el fondo TRES veces
+   (strength+2ca / strength+ca / strength), aísla cada pasada a un canal con
+   feColorMatrix y recombina con feBlend screen. Ese fringe de color en el
+   borde es la mitad de lo que el ojo lee como "vidrio".
+3. **Mi propio frost tapaba el efecto.** blur(24px) + fondo al 55% no dejan
+   detalle que doblar. El repo usa blur 1-3px y fondo al 40%; la cadena es
+   blur(b/2) → url(filtro) → blur(b) → brightness → saturate, con el pre-blur
+   ablandando lo que la lente dobla (parte del look "líquido").
+
+### Simplificación que vino gratis
+El filtro viaja como data URI (`backdrop-filter: url('data:image/svg+xml;...')`):
+se fue el <svg> del DOM, el canvas y el PNG del mapa. `lib/lente.ts` ahora
+genera dos strings.
+
+### Lo que se conservó de v5.7 (verificado entonces, sigue valiendo)
+- WebKit revienta si la declaración de backdrop-filter incluye el url(): la
+  cadena va INLINE desde JS y SOLO en Chromium (detección por UA como el repo;
+  CSS.supports miente porque Safari parsea url() como válido). Safari/Firefox
+  se quedan con el frost del CSS: el mismo fallback del repo.
+- El bisel especular en `::after` y la sombra azul.
+- `data-lente` solo en lo que FLOTA (HUD, CTA, chips de los soles): 8 elementos.
+
+### Calibración por tamaño (del video del componente)
+"Si dejamos strength al 100% en un elemento chico se forma un borde raro
+alrededor": strength = clamp(lado*1.2, 26, 68), depth = clamp(lado*0.16, 4, 12),
+ca = 1 en chips / 2 en grandes, blur 1 chico / 2 grande.
+
+### Reconciliación con la v5.8 (sesión paralela)
+Este port aterrizó rebasado sobre la v5.8, que en paralelo había aclarado la
+CARA del vidrio (tinte 10%, glints de canto, sin brightness). Las dos mitades
+componen: la v5.8 puso la cara y el canto; esta pone la LENTE. Dos ajustes al
+integrar: (a) se descartó el fondo al 34% para elementos con lente — la cara
+al 10% de la v5.8 es mejor todavía (menos velo, más doblez visible), y el
+shorthand `background:` habría pisado su barrido de luz; (b) la cadena inline
+perdió el brightness(1.06) del repo, porque la calibración v5.8 encontró que
+aclarar el backdrop es exactamente lo que vuelve "leche" al vidrio.
+
+### Verificación (visual además de programática, como pidió Felipe)
+Sobre franjas de colores (el fondo de juicio): las diagonales se curvan en S al
+cruzar el borde del HUD y se ENVUELVEN alrededor de la punta redondeada del CTA
+— la distorsión fiel a la forma del video de referencia. Programático: 8/8 con
+la cadena inline en Chromium · WebKit con CERO estilos inline y su frost
+intacto · gate 0 · clickable 5/5 · touch · cta · smoke · dashcheck · hud-fit.
+Perf: SwiftShader (software, peor caso sintético) 38 FPS moviéndose; GPU real
+(RTX 2080) 95 FPS. El costo de las 3 pasadas vive solo en software rendering.
+
+Créditos en CREDITS.md: srdavo/liquid-glass (Salvador Camacho) + ekino-France.
 
 ---
 

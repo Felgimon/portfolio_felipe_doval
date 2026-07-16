@@ -1,109 +1,73 @@
 "use client";
 import { useEffect } from "react";
-import { escalaLente, grosorBisel, mapaLente } from "@/lib/lente";
+import { filtroLente, paramsPara } from "@/lib/lente";
 
 /**
- * Le pone la LENTE (la refracción del borde) a cada elemento marcado con
- * `data-lente`. Monta un único <svg> con un <filter> por elemento y le pasa a
- * cada uno su `--lente`, que `.glass::before` consume.
+ * Aplica el Liquid Glass real (lente + aberración cromática, ver lib/lente.ts)
+ * a cada elemento marcado con `data-lente`.
  *
- * Por qué hace falta JS: el mapa de desplazamiento tiene que medir lo MISMO que
- * el elemento (feImage no se estira solo), y los elementos de este sitio cambian
- * de tamaño con el viewport y con el texto. Se regenera al redimensionar.
+ * La cadena completa va INLINE en el elemento y solo en Chromium:
+ *   blur(b/2) → url(filtro) → blur(b) → brightness → saturate
+ * (el blur ANTES del desplazamiento ablanda lo que la lente dobla — es parte
+ * del look "líquido" — y el de después funde el resultado).
  *
- * Dónde se usa y dónde no: la lente va SOLO en lo que FLOTA (el HUD, los CTA,
- * las etiquetas de los soles). Es la regla de Apple, no una optimización: el
- * vidrio es una capa que se apoya SOBRE el contenido, no el contenido mismo.
- * Además es donde se ve: sobre el estudio blanco no hay nada que doblar, pero
- * las etiquetas flotan sobre el sol y ahí la refracción canta.
+ * Safari y Firefox no aplican filtros SVG en backdrop-filter, y peor: si la
+ * declaración entera incluye el url(), WebKit la descarta y el elemento pierde
+ * hasta el blur (probado con el motor real: el fondo desaparecía y quedaba un
+ * bulto blanco). Por eso acá NO se toca el estilo fuera de Chromium: esos
+ * navegadores se quedan con el frost del CSS, que es exactamente el fallback
+ * que usa el componente de referencia (github.com/srdavo/liquid-glass).
  *
- * Solo Chromium aplica filtros SVG en `backdrop-filter`. En Safari y Firefox
- * `--lente` queda sin efecto y el vidrio se queda con su frost: por eso la
- * refracción vive en su propia capa y nunca en la declaración del blur (con
- * las dos juntas, WebKit borra el fondo y deja un bulto blanco).
+ * Por qué hace falta JS: el filtro codifica el TAMAÑO del elemento (el mapa se
+ * genera a medida), y estos elementos cambian con el viewport y con la carga
+ * de la fuente. Se regenera al redimensionar; el costo es armar un string.
  */
+
+/** ¿Chromium? Es el único motor que aplica filtros SVG en backdrop-filter.
+ * Detección por UA como el componente de referencia: no hay feature-detect
+ * confiable (Safari PARSEA `backdrop-filter: url()` como válido y después lo
+ * ignora o lo rompe, así que CSS.supports miente). */
+function soportaLente(): boolean {
+  const ua = navigator.userAgent.toLowerCase();
+  const esChromium = /chrome|chromium|crios|edg/.test(ua) && !/firefox|fxios/.test(ua);
+  return esChromium && CSS.supports("backdrop-filter", "blur(1px)");
+}
+
+/** Mutación imperativa fuera del componente (regla react-hooks/immutability). */
+function aplicarLente(el: HTMLElement) {
+  const r = el.getBoundingClientRect();
+  if (r.width < 24 || r.height < 12) return;
+  const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
+  const p = paramsPara(r.width, r.height, radio);
+  const b = Math.min(p.width, p.height) < 30 ? 1 : 2;
+  // Sin brightness: aclarar el backdrop es lo que vuelve "leche" al vidrio
+  // (calibración v5.8); el saturate acompaña al frost de la clase (170%).
+  const filtro = `blur(${b / 2}px) url('${filtroLente(p)}') blur(${b}px) saturate(1.7)`;
+  el.style.backdropFilter = filtro;
+  // TS/DOM no expone webkitBackdropFilter tipado; en Chromium alcanza el estándar.
+  el.dataset.liquid = "on";
+}
+
 export function LiquidGlass() {
   useEffect(() => {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("width", "0");
-    svg.setAttribute("height", "0");
-    svg.style.position = "absolute";
-    svg.style.pointerEvents = "none";
-    document.body.appendChild(svg);
-
+    if (!soportaLente()) return;
     let raf = 0;
-    const medidos = new WeakMap<Element, string>();
-
     const pintar = () => {
-      const nodos = document.querySelectorAll<HTMLElement>("[data-lente]");
-      svg.replaceChildren();
-      nodos.forEach((el, i) => {
-        const r = el.getBoundingClientRect();
-        const w = Math.round(r.width);
-        const h = Math.round(r.height);
-        if (w < 8 || h < 8) return;
-        // Si no cambió de tamaño, se reusa el filtro y no se recalcula el mapa.
-        const clave = `${w}x${h}`;
-        const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
-        const grosor = grosorBisel(w, h);
-        const uri = mapaLente(w, h, radio, grosor);
-        if (!uri) return;
-        medidos.set(el, clave);
-
-        const id = `lente-${i}`;
-        const f = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        f.setAttribute("id", id);
-        // La región del filtro se ESTIRA más allá del elemento a propósito: la
-        // lente del borde tiene que traer píxeles de afuera. Sin ese margen no
-        // hay de dónde sacarlos y el fondo se desgarra en vez de doblarse.
-        f.setAttribute("x", "-50%");
-        f.setAttribute("y", "-50%");
-        f.setAttribute("width", "200%");
-        f.setAttribute("height", "200%");
-        f.setAttribute("color-interpolation-filters", "sRGB");
-        f.setAttribute("primitiveUnits", "userSpaceOnUse");
-
-        const img = document.createElementNS("http://www.w3.org/2000/svg", "feImage");
-        img.setAttribute("href", uri);
-        img.setAttribute("x", "0");
-        img.setAttribute("y", "0");
-        img.setAttribute("width", String(w));
-        img.setAttribute("height", String(h));
-        img.setAttribute("result", "mapa");
-
-        const dm = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "feDisplacementMap",
-        );
-        dm.setAttribute("in", "SourceGraphic");
-        dm.setAttribute("in2", "mapa");
-        dm.setAttribute("scale", String(escalaLente(grosor)));
-        dm.setAttribute("xChannelSelector", "R");
-        dm.setAttribute("yChannelSelector", "G");
-
-        f.append(img, dm);
-        svg.appendChild(f);
-        el.style.setProperty("--lente", `url(#${id})`);
-      });
+      document.querySelectorAll<HTMLElement>("[data-lente]").forEach(aplicarLente);
     };
-
     const programar = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(pintar);
     };
-
     programar();
-    // Tras cargar las fuentes las pastillas cambian de ancho.
+    // Tras cargar la tipografía las pastillas cambian de ancho.
     const t = window.setTimeout(programar, 800);
     window.addEventListener("resize", programar);
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(t);
       window.removeEventListener("resize", programar);
-      svg.remove();
     };
   }, []);
-
   return null;
 }

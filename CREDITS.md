@@ -40,6 +40,15 @@ CC BY 4.0); v3 el cielo diurno de Poly Haven (CC0). También se retiró el
 contenedor de metal (icosaedro truncado, propio) y los asteroides con textura
 de roca lunar de NASA. Todo eso vive en el historial de git.
 
+## Liquid Glass (v5.8 — técnica adaptada, sin assets)
+
+El efecto de vidrio líquido de la UI (`lib/lente.ts` + `LiquidGlass.tsx`) está
+porteado del web component de **Salvador Camacho**
+(github.com/srdavo/liquid-glass), que a su vez adapta el enfoque del artículo
+de **ekino-France** (medium.com/ekino-france/liquid-glass-in-css-and-svg).
+Es código adaptado a TypeScript/React con calibración propia por tamaño de
+elemento; no se incluye ningún archivo de terceros.
+
 ## Textura solar (v3.6 — CC-BY, con crédito en el footer)
 
 | Archivo | Qué es | Origen | Licencia |
