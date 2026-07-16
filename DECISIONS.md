@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.7** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.8** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1187,6 +1187,83 @@ números, esa premisa era FALSA:
 
 Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
 revisar los tests que dependían de él, en vez de compensar recortando features.
+
+---
+
+## v5.8 — El vidrio se aclara, el nombre se queda abierto, el sol llega a las netbooks
+
+Tres pedidos de Felipe: (a) que el Liquid Glass parezca **vidrio** de una vez
+(sus referencias: paneles de vidrio transparentes con glints blancos en el canto,
+y el blob del arte de WWDC25); (b) que el interlineado del nombre, que crece al
+entrar y le gusta, **se quede** en ese tamaño en vez de acomodarse con un golpe;
+(c) que el sol 3D aparezca en las netbooks del colegio, donde no se veía en
+absoluto aun con la aceleración por hardware activada.
+
+### (a) El vidrio era niebla — y la niebla la hacía el ALPHA, no el blur
+El v5.7 arregló la refracción pero el material seguía siendo **frosted**: un
+tinte `rgba(232,240,248,0.55)` + blur 24 + `brightness(1.04)`. Al 55% de blanco
+el fondo no se ve: eso es una cortina, no un vidrio — daba igual cuánto doblara
+el borde. La receta compartida por las recreaciones fieles de iOS 26 (kube.io,
+kevinbism, webtricks.dev, shuding/liquid-glass) es la inversa: **cara casi
+transparente (tinte ~10%), blur moderado, y TODA la definición en el canto**.
+
+- `--glass-bg` 0.55 → **0.10**; blur 24 → **10**; fuera el `brightness` (lavaba).
+- La cara lleva un **barrido diagonal de luz** (gradiente 115°, 0.22 → 0 → 0.16):
+  el reflejo del estudio sobre la cara plana, coherente con el bisel.
+- **`--glass-glints`** (inset box-shadows): labio superior nítido (0.95), eco
+  inferior tenue (0.6) y dos bloomos de esquina con spread negativo — el
+  "espesor" del vidrio. Es la firma del material; sin esto es un rectángulo.
+- El anillo especular del `::after` sube a 1.5px y alphas más presentes.
+- Un **hairline frío de 1px** en la sombra (`--glass-drop`): vidrio blanco sobre
+  pared blanca no tiene silueta; la sombra sola no alcanzaba a dibujar el borde.
+- `background-color` (no el shorthand) en los estados hover/activo, para no
+  pisar el gradiente de la cara. `Button secondary` pasa a usar el material.
+- La refracción de v5.7 (la lente por `feDisplacementMap`) quedó intacta: con la
+  cara clara, ahora por fin SE VE doblar el fondo en el borde.
+
+### (b) El interlineado del nombre: el reposo ES el pico
+Las dos líneas subían 0.18em escalonadas 90ms → el gap entre FELIPE y DOVAL
+crecía (lindo) y después se **cerraba de golpe** cuando DOVAL alcanzaba a
+FELIPE (el easing expo hace casi todo su recorrido en 300ms: un portazo).
+En vez de suavizar el portazo, se eliminó: el interlineado de reposo pasa de
+0.86 a **0.95** (el pico que la entrada alcanzaba), y cada línea sube desde una
+altura DISTINTA (`--sube`: 0.18em la primera, 0.09em la segunda) → el gap crece
+monótono de 0.86 a 0.95 y ahí se queda. Medido con Playwright muestreando
+`getBoundingClientRect` cada 100ms: gap 170.29px → 184.22px, mayor retroceso
+entre muestras 0.02px (ruido subpixel). El encuadre de la cámara no se toca:
+mide la columna real del DOM, así que absorbió el cambio solo.
+
+### (c) El sol en las netbooks: no era la GPU, era una regla de layout
+La regla `chato` (v5.6: viewport < 620px de alto → se apaga el canvas, sin
+poster siquiera) estaba pensada para un iPhone SE en layout ANGOSTO, donde el
+texto se apila sobre el modelo. Pero medía solo el ALTO: una netbook escolar
+(1024x600, o 1366x768 con el escalado de Windows al 125% → ~614px CSS) caía en
+la regla **en layout ancho**, donde el texto va al costado y el alto no compite
+— y se quedaba sin sol por completo. Ahora `chato` exige además ancho < 768px:
+en pantallas anchas y chatas el canvas vive y la cámara encuadra el cúmulo en
+la banda que haya (verificado por screenshot en 1024x600 y 1093x614).
+
+Endurecimiento GPU, además (cinturón y tiradores para "todos los dispositivos"):
+- **Bloom solo si hay con qué**: el EffectComposer renderiza a buffers
+  half-float (WebGL2 + `EXT_color_buffer_(half_)float`). Sin eso no arranca y el
+  canvas queda NEGRO. `bloomSupported()` (lib/gpu.ts) lo prueba antes de montar
+  el composer: en WebGL1 el sol se dibuja igual, solo que sin halo.
+- **Fuera los `precision highp float` a mano** de los fragment shaders: three
+  antepone la máxima precisión que la GPU soporta; el highp explícito no compila
+  en GPUs sin highp fragment y el mesh desaparece sin error visible.
+- **`CanvasGuard`** (error boundary) + `webglcontextlost` → poster estático y se
+  suelta el preloader: el 3D nunca deja la página rota ni colgada.
+- `onReady` (que suelta el preloader) recién en el **primer frame renderizado**,
+  no al montar: en una netbook el compile de shaders tarda segundos.
+- `powerPreference: "default"` en software rendering (pedir "high-performance"
+  a un driver viejo puede negar el contexto) y `failIfMajorPerformanceCaveat:
+  false` explícito.
+
+### Verificación
+`gate` 0 · screenshots Chromium en 1920x941, 1024x600 y 1366@125% (sol presente
+en los tres) · **SwiftShader** (GPU en blocklist, el caso real de la netbook):
+sol visible, 0 errores de consola · gap del nombre medido (arriba) · hover, HUD,
+chips, cards y página de proyecto inspeccionados de cerca en 2x · `smoke`.
 
 ---
 

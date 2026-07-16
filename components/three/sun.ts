@@ -80,12 +80,16 @@ export const sunVertex = /* glsl */ `
   }
 `;
 
+/* Ningún fragment shader declara `precision` a mano: three.js antepone la
+ * MÁXIMA precisión que la GPU soporta de verdad. Un `precision highp float;`
+ * explícito no compila en GPUs sin highp fragment (netbooks / integradas
+ * viejas) → el mesh entero desaparece sin error visible. */
+
 /** Superficie FULL: la FOTO solar real (granulación NASA/SDO) muestreada con
  * UVs DISTORSIONADAS por el domain-warp animado → la fotografía HIERVE. El
  * calor procedural modula el brillo (fáculas vivas); solo el núcleo y el limbo
  * pasan de 1.0 → el bloom encandila sin lavar el detalle fotográfico. */
 const sunFragmentFull = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   uniform float uBright;
   uniform float uInvR;
@@ -128,7 +132,6 @@ const sunFragmentFull = /* glsl */ `
 
 /** Superficie LITE (render por software): la foto + un fbm estático. */
 const sunFragmentLite = /* glsl */ `
-  precision highp float;
   uniform float uTime;  // sin uso (interfaz uniforme)
   uniform float uBright;
   uniform float uInvR;
@@ -153,7 +156,6 @@ const sunFragmentLite = /* glsl */ `
  * animado con deriva ascendente → lenguas de fuego lamiendo la silueta. El
  * centro queda transparente (el disco del sol se ve intacto). */
 const flameFragment = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   uniform float uInvR;
   varying vec3 vView;
@@ -188,7 +190,6 @@ const prominenceVertex = /* glsl */ `
 `;
 
 const prominenceFragment = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   uniform float uInvR;
   uniform float uAlpha; // sobre de vida (erupción → colapso), desde JS

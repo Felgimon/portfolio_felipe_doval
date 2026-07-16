@@ -55,13 +55,33 @@
   --paper: #10293b; /* slate profundo */
   --paper-ink: #eaf4fc; /* texto claro sobre esa superficie */
 
-  /* Liquid Glass claro (iOS-style: MUY translúcido, blur+saturación fuertes del
-     fondo, borde especular fino y sombra de profundidad — el estudio "moja" el
-     vidrio). Un pelín teñido de frío para que el panel se lea sobre el blanco. */
-  --glass-bg: rgba(232, 240, 248, 0.55); /* vidrio (el estudio se ve a través) */
-  --glass-bg-2: rgba(244, 249, 253, 0.72); /* vidrio hover / más denso */
-  --glass-brd: rgba(255, 255, 255, 0.85); /* borde especular */
-  --glass-blur: 24px;
+  /* Liquid Glass claro (iOS 26). El material es VIDRIO, no niebla: tinte casi
+     nulo (el fondo se ve DE VERDAD a través), blur moderado con saturación, y
+     toda la definición viene del CANTO — bisel especular, glints internos y la
+     refracción del borde. El v5.7 usaba 55% de blanco + brightness: eso es
+     frosted glass (leche), justo lo que Apple NO hace. */
+  --glass-bg: rgba(255, 255, 255, 0.1); /* la cara: casi nada, el fondo manda */
+  --glass-bg-2: rgba(255, 255, 255, 0.36); /* hover / activo: apenas más denso */
+  --glass-blur: 10px;
+  /* Sombras del vidrio (drop azul-oscura + hairline frío que lo recorta sobre
+     el estudio blanco, donde una sombra sola no alcanza a dibujar el borde). */
+  --glass-drop:
+    0 16px 40px -16px rgba(15, 41, 66, 0.34),
+    0 2px 8px -3px rgba(15, 41, 66, 0.16),
+    0 0 0 1px rgba(90, 120, 150, 0.09);
+  --glass-drop-hover:
+    0 24px 56px -20px rgba(15, 41, 66, 0.42),
+    0 3px 10px -3px rgba(15, 41, 66, 0.18),
+    0 0 0 1px rgba(90, 120, 150, 0.11);
+  /* Los GLINTS: la luz que el espesor del vidrio agarra por dentro. Un labio
+     brillante arriba (la luz del estudio), su eco tenue abajo (el reflejo), y
+     dos bloomos anchos en las esquinas opuestas (spread negativo: solo asoman
+     en el borde). Es la firma del vidrio real — sin esto es un rectángulo. */
+  --glass-glints:
+    inset 0 1.5px 1px -1px rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 1px -1px rgba(255, 255, 255, 0.6),
+    inset 3px 7px 16px -10px rgba(255, 255, 255, 0.85),
+    inset -3px -7px 16px -10px rgba(255, 255, 255, 0.6);
 
   /* Estados */
   --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
@@ -244,10 +264,16 @@ body {
      ancho, así que cuanto más chico el nombre, más grande el hueco entre los
      dos. A 12.2rem "FELIPE" mide ~591px en 1920 y el gap con el sol queda igual
      que el margen derecho (~11%); a 8rem medía 391px y el gap era el doble
-     (22%). El techo lo pone la columna: dos líneas a 0.86 de interlineado
-     entran en el alto con el kicker, la bajada y los botones. */
+     (22%). El techo lo pone la columna: dos líneas entran en el alto con el
+     kicker, la bajada y los botones (la cámara mide la columna real, así que
+     el encuadre se recalibra solo). */
   font-size: clamp(2.9rem, 10.1vw, 12.2rem);
-  line-height: 0.86;
+  /* 0.95 y no 0.86: es el interlineado ABIERTO que la entrada alcanza en su
+     pico. Antes las líneas subían escalonadas, el gap crecía hasta acá y
+     después se CERRABA de golpe al 0.86 final (pedido de Felipe: "me gusta que
+     se agrande — que se quede ahí"). Ahora el reposo ES el pico: la animación
+     crece hasta este valor y no se mueve más. Ver nombre-sube. */
+  line-height: 0.95;
   letter-spacing: -0.045em;
   text-transform: uppercase;
   /* Paralaje: HeroName escribe --rx/--ry siguiendo el puntero. */
@@ -259,6 +285,12 @@ body {
   display: block;
   width: fit-content;
   white-space: nowrap;
+  /* Desde dónde SUBE cada línea al entrar. La primera sube 0.18em y la segunda
+     solo 0.09em: la diferencia (0.09em) es exactamente lo que el interlineado
+     CRECE durante la entrada — arranca visualmente en 0.86 y termina en el
+     0.95 de reposo, monótono, sin cerrarse nunca de vuelta (el "acomodo
+     brusco" de antes era el gap volviendo a achicarse al final). */
+  --sube: calc(0.18em - var(--l, 0) * 0.09em);
   /* La LUZ DEL SOL entra por la derecha (que es donde está el sol) sobre el
      degradé de identidad: tinta → azul → celeste. Es luz CÁLIDA (blanco de
      sol), no pigmento dorado: el oro sobre el celeste vira a verde y ensucia. */
@@ -294,7 +326,7 @@ body {
 }
 @keyframes nombre-sube {
   from {
-    transform: translateY(0.18em);
+    transform: translateY(var(--sube, 0.18em));
     opacity: 0;
   }
   to {
@@ -360,28 +392,42 @@ body {
       blur: se probó en WebKit y `backdrop-filter: blur() url()` ahí revienta —
       el fondo desaparece y queda un bulto blanco. En capas, Safari simplemente
       la ignora y el frost del padre queda intacto.
-   2. FROST (el elemento): blur + saturate + un brillo apenas. Es lo que hace
-      TODO navegador, y sin esto no hay vidrio en ningún lado.
-   3. BISEL ESPECULAR (`::after`): la luz que agarra el filo. Es un anillo FINO
-      con luz direccional que gira alrededor (fuerte arriba-izquierda, se apaga
-      en el medio, vuelve abajo-derecha). En el vidrio real el brillo vive en el
-      canto, no como una mancha sobre la cara: el sheen plano que había antes
-      (un blanco al 45% sobre el tercio superior) era justo lo que lo hacía
-      parecer plástico, y además velaba las capturas de los proyectos.
+   2. FROST (el elemento): blur BAJO + saturate sobre un tinte casi nulo. Es lo
+      que hace TODO navegador. La regla que salió de calibrarlo: la leche no la
+      hace el blur, la hace el ALPHA del tinte — 55% de blanco era una cortina;
+      al 10% el fondo se ve y el blur solo lo ablanda.
+   3. BISEL ESPECULAR (`::after`) + GLINTS (box-shadows inset del elemento): la
+      luz que agarra el filo y el espesor. El anillo fino recorre el canto con
+      luz direccional, y los glints (labio superior nítido, eco inferior tenue,
+      bloomos de esquina con spread negativo) son el "grosor" del vidrio. Es la
+      receta compartida por las recreaciones fieles de iOS 26 (kube.io,
+      liquid-glass de shuding, kevinbism): cara transparente, canto que canta.
 
    La sombra es AZUL OSCURA, nunca negra: el negro puro ensucia y se ve muerto.
+   Sobre el estudio casi blanco lleva además un hairline frío de 1px (dentro de
+   --glass-drop): sin él, vidrio blanco sobre pared blanca no tiene silueta.
    ========================================================================== */
 
 .glass {
   position: relative;
   isolation: isolate;
-  background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
   border-radius: var(--radius-lg);
-  box-shadow:
-    0 18px 44px -18px rgba(15, 41, 66, 0.32),
-    0 2px 6px -2px rgba(15, 41, 66, 0.14);
+  /* La cara del vidrio: tinte MÍNIMO + un barrido diagonal de luz (la cara
+     plana refleja el estudio; entra fuerte arriba-izquierda, se apaga en el
+     medio y vuelve tenue abajo-derecha, coherente con el bisel del ::after). */
+  background-color: var(--glass-bg);
+  background-image: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.03) 38%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.16) 100%
+  );
+  /* Frost: blur bajo + saturación (lo de atrás se ablanda pero SE VE). Sin
+     brightness: aclarar el backdrop es lo que lo volvía plástico lechoso. */
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  box-shadow: var(--glass-drop), var(--glass-glints);
 }
 
 /* 1. Ranura de REFRACCIÓN. Sin `--lente` (Safari, Firefox, o antes de que el JS
@@ -397,21 +443,23 @@ body {
   backdrop-filter: var(--lente, none);
 }
 
-/* 3. Bisel especular: anillo fino con luz direccional. */
+/* 3. Bisel especular: anillo fino con luz direccional que GIRA alrededor del
+   canto (llena arriba-izquierda, casi se apaga en los flancos, vuelve
+   abajo-derecha). En vidrio real el brillo vive en el filo, no en la cara. */
 .glass::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.2px;
+  padding: 1.5px;
   pointer-events: none;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(255, 255, 255, 0.34) 26%,
-    rgba(255, 255, 255, 0.06) 48%,
-    rgba(255, 255, 255, 0.42) 74%,
-    rgba(255, 255, 255, 0.96) 100%
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.42) 24%,
+    rgba(255, 255, 255, 0.08) 46%,
+    rgba(255, 255, 255, 0.5) 72%,
+    rgba(255, 255, 255, 1) 100%
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -423,7 +471,7 @@ body {
   mask-composite: exclude;
 }
 .glass-strong {
-  background: var(--glass-bg-2);
+  background-color: var(--glass-bg-2);
 }
 .glass-pill {
   border-radius: 9999px;
@@ -436,11 +484,8 @@ body {
       transform 0.3s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .glass-hover:hover {
-    background: var(--glass-bg-2);
-    box-shadow:
-      0 26px 60px -22px rgba(15, 41, 66, 0.4),
-      inset 0 1px 1px rgba(255, 255, 255, 0.95),
-      inset 0 -1px 1px rgba(255, 255, 255, 0.32);
+    background-color: var(--glass-bg-2);
+    box-shadow: var(--glass-drop-hover), var(--glass-glints);
     transform: translateY(-2px);
   }
 }
@@ -506,14 +551,15 @@ body {
     background-color 0.35s ease,
     box-shadow 0.35s ease;
 }
-/* El sol ACTIVO canta su sección: tinta de acento y vidrio más sólido. */
+/* El sol ACTIVO canta su sección: tinta de acento y vidrio más sólido.
+   background-COLOR, no el shorthand: el gradiente de la cara no se pisa. */
 .solnodo__chip.is-on {
-  background: var(--glass-bg-2);
+  background-color: var(--glass-bg-2);
   color: var(--acento);
 }
 @media (hover: hover) {
   .solnodo:hover .solnodo__chip {
-    background: var(--glass-bg-2);
+    background-color: var(--glass-bg-2);
     color: var(--acento);
   }
   .solnodo:hover .solnodo__hilo {

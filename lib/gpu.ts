@@ -50,3 +50,29 @@ export function isSoftwareRenderer(): boolean {
     /swiftshader|software|llvmpipe|basic render|microsoft basic/.test(n);
   return _soft;
 }
+
+let _bloom: boolean | null = null;
+
+/** ¿La GPU banca el POSTPROCESADO? El EffectComposer renderiza a buffers
+ * half-float, que piden WebGL2 + EXT_color_buffer_(half_)float. En equipos con
+ * drivers viejos (netbooks escolares con ANGLE/D3D9: solo WebGL1) el composer
+ * no puede crear sus render targets y el canvas entero queda NEGRO — el sol
+ * "no aparece" aunque la escena compile perfecta. Antes de montar el Bloom se
+ * pregunta acá; si no se puede, el sol se dibuja igual, solo que sin halo. */
+export function bloomSupported(): boolean {
+  if (_bloom !== null) return _bloom;
+  if (typeof window === "undefined") return false;
+  try {
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webgl2");
+    _bloom =
+      !!gl &&
+      !!(
+        gl.getExtension("EXT_color_buffer_half_float") ||
+        gl.getExtension("EXT_color_buffer_float")
+      );
+  } catch {
+    _bloom = false;
+  }
+  return _bloom;
+}

@@ -1,5 +1,6 @@
 "use client";
 import {
+  Component,
   type ReactNode,
   type RefObject,
   useCallback,
@@ -34,6 +35,26 @@ const GraphCanvas = dynamic(() => import("@/components/three/GraphCanvas"), {
  * la etiqueta mide lo mismo en px y la escena entra en 280px, así que se le
  * monta encima. Como los soles están quietos, esto es una constante por nodo. */
 const ETIQUETA_ARRIBA = nodos.map((n) => n.dir[1] > 0.3);
+
+/** Red de seguridad del canvas 3D: si CUALQUIER cosa del árbol WebGL revienta
+ * (contexto negado, textura que no carga, shader que no compila en un driver
+ * exótico), no puede tirar abajo la página — se avisa al padre y el hero cambia
+ * al poster estático. En un equipo sano nunca se entera de que existe. */
+class CanvasGuard extends Component<
+  { onError: () => void; children: ReactNode },
+  { roto: boolean }
+> {
+  state = { roto: false };
+  static getDerivedStateFromError() {
+    return { roto: true };
+  }
+  componentDidCatch() {
+    this.props.onError();
+  }
+  render() {
+    return this.state.roto ? null : this.props.children;
+  }
+}
 
 /** Flag de preview `?gl` (fuerza el canvas aunque no haga falta). */
 function useForceGl(): boolean {
@@ -440,15 +461,19 @@ export function GraphHome({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  // Pantallas demasiado CHATAS para el cúmulo. La cuenta, medida: el hero
-  // necesita ~350px de texto, y el cúmulo necesita ~270px de banda para que sus
-  // soles lleguen a la mitad del ancho de la pantalla y se puedan tocar. O sea
-  // que abajo de ~620px de alto ÚTIL no entran los dos. Y el alto útil de un
-  // celular no es el de su pantalla: en un iPhone Pro la barra de Safari se
-  // come 185 de los 844, y quedan 659 (alcanza). Los que no llegan son un
-  // iPhone SE (553) o un Android viejo: ahí el modelo se apaga y la navegación
-  // queda en el HUD y el scroll, que están siempre. Es preferible a un cúmulo
-  // de 120px con las etiquetas encimadas.
+  // Pantallas demasiado CHATAS para el cúmulo — SOLO en layout angosto (texto
+  // apilado sobre el modelo). La cuenta, medida: en angosto el hero necesita
+  // ~350px de texto, y el cúmulo ~270px de banda para que sus soles se puedan
+  // tocar; abajo de ~620px de alto útil no entran los dos. Un iPhone Pro queda
+  // en 659 (alcanza); un iPhone SE (553) no: ahí el modelo se apaga y la
+  // navegación queda en el HUD y el scroll. Es preferible a un cúmulo de 120px
+  // con las etiquetas encimadas.
+  //
+  // La condición de ANCHO no es opcional: en pantallas anchas el texto va AL
+  // COSTADO y el alto no compite con él. Las netbooks escolares (1024x600, o
+  // 1366x768 con Windows al 125% → ~614px CSS) caían abajo de 620 y esta regla
+  // les apagaba el sol POR COMPLETO — el bug que reportó Felipe. Con banda
+  // lateral el cúmulo entra siempre: la cámara lo encuadra en lo que haya.
   //
   // El alto se lee del CANVAS (la misma caja que ve la cámara), no de
   // window.innerHeight: en iOS no son lo mismo. No hay media query que sirva
@@ -457,7 +482,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
   useEffect(() => {
     const medir = () => {
       const capa = capaRef.current?.getBoundingClientRect();
-      if (capa) setChato(capa.height < 620);
+      if (capa) setChato(capa.height < 620 && capa.width < 768);
     };
     medir();
     window.addEventListener("resize", medir);
@@ -506,10 +531,19 @@ export function GraphHome({ children }: { children: ReactNode }) {
     };
   }, [medirBanda]);
 
-  // El modelo se muestra si hay con qué (WebGL) y si ENTRA (ver `chato`). El
-  // preloader espera al hero: si no va a haber modelo, hay que soltarlo o la
-  // página se queda cargando para siempre.
-  const usarCanvas = (forceGl || webgl) && !chato;
+  // Si el 3D falla en runtime (contexto WebGL negado o perdido, driver que no
+  // compila un shader), se baja al POSTER y se suelta el preloader: la página
+  // nunca queda rehén del canvas. En un equipo sano este estado no se toca.
+  const [glRoto, setGlRoto] = useState(false);
+  const fallarGl = useCallback(() => {
+    setGlRoto(true);
+    marcarHeroCargado();
+  }, [marcarHeroCargado]);
+
+  // El modelo se muestra si hay con qué (WebGL), si no falló, y si ENTRA (ver
+  // `chato`). El preloader espera al hero: si no va a haber modelo, hay que
+  // soltarlo o la página se queda cargando para siempre.
+  const usarCanvas = (forceGl || webgl) && !chato && !glRoto;
   const sinModelo = chato;
   useEffect(() => {
     if (sinModelo) marcarHeroCargado();
@@ -539,19 +573,22 @@ export function GraphHome({ children }: { children: ReactNode }) {
         aria-hidden
       >
         {usarCanvas ? (
-          <GraphCanvas
-            camRef={camRef}
-            activeIndex={activeIdx}
-            hovered={hoverIdx}
-            reduced={reduced}
-            paused={!rendering}
-            onReady={marcarHeroCargado}
-            onProject={(p) => {
-              projRef.current = p;
-            }}
-            onActivity={onActivity}
-            bandaRef={bandaRef}
-          />
+          <CanvasGuard onError={fallarGl}>
+            <GraphCanvas
+              camRef={camRef}
+              activeIndex={activeIdx}
+              hovered={hoverIdx}
+              reduced={reduced}
+              paused={!rendering}
+              onReady={marcarHeroCargado}
+              onProject={(p) => {
+                projRef.current = p;
+              }}
+              onActivity={onActivity}
+              bandaRef={bandaRef}
+              onContextLost={fallarGl}
+            />
+          </CanvasGuard>
         ) : sinModelo ? null : (
           <PosterFallback onLoaded={marcarHeroCargado} />
         )}

@@ -16,7 +16,7 @@ import {
   advanceSuns,
   spinSun,
 } from "./sun";
-import { isSoftwareRenderer } from "@/lib/gpu";
+import { bloomSupported, isSoftwareRenderer } from "@/lib/gpu";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
 /** Escala del grafo. El sol queda centrado; la CÁMARA hace todo el movimiento. */
@@ -560,10 +560,17 @@ function NodeProjector({
   return null;
 }
 
+/** Avisa "hero cargado" recién en el PRIMER FRAME RENDERIZADO, no al montar:
+ * en una netbook lenta el compile de los shaders tarda segundos, y avisar al
+ * montar soltaba el preloader (y podía pausar el frameloop) antes de que el
+ * sol llegara a dibujarse una sola vez. */
 function SignalReady({ onReady }: { onReady?: () => void }) {
-  useEffect(() => {
+  const avisado = useRef(false);
+  useFrame(() => {
+    if (avisado.current) return;
+    avisado.current = true;
     onReady?.();
-  }, [onReady]);
+  });
   return null;
 }
 
@@ -629,6 +636,9 @@ export type GraphCanvasProps = {
   onActivity?: () => void;
   /** El hueco que el layout le deja al cúmulo en la portada (medido en el DOM). */
   bandaRef: RefObject<Banda>;
+  /** El contexto WebGL murió (driver flaco / GPU saturada): el padre cambia al
+   * poster. Mejor una foto del sol que un rectángulo vacío. */
+  onContextLost?: () => void;
 };
 
 export default function GraphCanvas({
@@ -641,10 +651,15 @@ export default function GraphCanvas({
   onProject,
   onActivity,
   bandaRef,
+  onContextLost,
 }: GraphCanvasProps) {
   // En render por software (SwiftShader) se capa DPR a 1 y sin antialias para
   // sostener FPS; en GPU real, calidad completa.
   const lite = useMemo(() => isSoftwareRenderer(), []);
+  // Bloom SOLO si la GPU puede crear sus buffers half-float (WebGL2 + ext).
+  // En una netbook WebGL1 el composer no arranca y el canvas queda negro:
+  // el sol sin halo se ve; un canvas negro no.
+  const bloom = useMemo(() => !lite && bloomSupported(), [lite]);
   const dpr = lite
     ? 1
     : typeof window !== "undefined"
@@ -660,7 +675,16 @@ export default function GraphCanvas({
         antialias: !lite,
         stencil: false,
         depth: true,
-        powerPreference: "high-performance",
+        // En software rendering no se le pide "high-performance" al navegador:
+        // en drivers viejos ese pedido puede directamente negar el contexto.
+        powerPreference: lite ? "default" : "high-performance",
+        failIfMajorPerformanceCaveat: false,
+      }}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener("webglcontextlost", (e) => {
+          e.preventDefault();
+          onContextLost?.();
+        });
       }}
       style={{ pointerEvents: "none" }}
     >
@@ -684,7 +708,7 @@ export default function GraphCanvas({
       {/* multisampling 0: el MSAA sobre el buffer HDR del composer es otra
           fuente conocida de frames negros en algunos drivers; el DPR alto
           compensa el aliasing. */}
-      {!lite && (
+      {bloom && (
         <EffectComposer multisampling={0}>
           <Bloom
             intensity={0.42}

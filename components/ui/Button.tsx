@@ -9,8 +9,9 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary: "bg-acento text-ink hover:bg-acento-hi",
-  secondary:
-    "border border-line bg-transparent text-chalk hover:border-acento hover:text-acento",
+  // secondary = Liquid Glass: el mismo material de los CTA del hero y el HUD
+  // (glass-pill porque .glass trae radius-lg y le ganaría al rounded-full base).
+  secondary: "glass glass-hover glass-pill text-chalk hover:text-acento",
   ghost: "bg-transparent text-chalk-dim hover:text-acento",
 };
 

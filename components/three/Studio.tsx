@@ -32,9 +32,10 @@ const domeVertex = /* glsl */ `
 `;
 /* Gradiente de ciclorama: piso casi blanco → pared gris muy claro, con un
  * apenas-más-oscuro en el rincón inferior (la unión piso-pared). Sin tonemap
- * (shader crudo) → el blanco se mantiene blanco. */
+ * (shader crudo) → el blanco se mantiene blanco. Sin `precision` a mano:
+ * three antepone la máxima soportada (highp explícito no compila en GPUs sin
+ * highp fragment y la cúpula desaparecería). */
 const domeFragment = /* glsl */ `
-  precision highp float;
   varying vec3 vDir;
   void main() {
     float y = clamp(vDir.y * 0.5 + 0.5, 0.0, 1.0); // 0 abajo .. 1 arriba
