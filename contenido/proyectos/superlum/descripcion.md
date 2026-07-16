@@ -1,8 +1,8 @@
 # Superlum
 
-**Una línea:** workspace operativo a medida que reemplazó a Notion en la operación diaria de una empresa real.
+**Una línea:** workspace operativo a medida para una empresa real, en desarrollo con ella.
 
-**Contexto / problema:** Taquion manejaba toda su operación en Notion: flexible, pero genérico. Faltaba estructura propia, permisos finos por cliente y flujos pensados para cómo trabaja la empresa de verdad. Después de mi pasantía ahí (automatización con n8n y workflows de Notion), la propuesta fue construirles su propia herramienta.
+**Contexto / problema:** Taquion maneja toda su operación en un workspace genérico: flexible, pero de nadie. Faltaba estructura propia, permisos finos por cliente y flujos pensados para cómo trabaja la empresa de verdad. Después de mi pasantía ahí (automatización con n8n y workflows sobre su workspace), la propuesta fue construirles su propia herramienta.
 
 **Qué hace:** centraliza la operación de Taquion en un workspace propio: gestión de clientes y proyectos con un modelo de acceso por cliente con scoping a nivel de fila (default-deny: nadie ve nada que no le corresponda), y un sistema de agentes para validación de features y consistencia de diseño. Cliente referente: Sergio Doval, CEO de Taquion.
 

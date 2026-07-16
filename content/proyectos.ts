@@ -15,15 +15,15 @@ export const proyectos: Proyecto[] = [
     nombre: "Superlum",
     categoria: "destacado",
     unaLinea:
-      "Workspace operativo a medida que reemplazó a Notion en la operación diaria de una empresa real.",
+      "Workspace operativo a medida para una empresa real, en desarrollo con ella.",
     resumen:
-      "El case study fuerte: cliente real, producto en uso. Un workspace propio para Taquion, con permisos finos por cliente y flujos hechos a la medida de cómo trabajan de verdad.",
+      "El case study fuerte: cliente real y trabajo en curso. Un workspace propio para Taquion, con permisos finos por cliente y flujos hechos a la medida de cómo trabajan de verdad. Hoy es un prototipo que avanza con ellos.",
     problema:
-      "Taquion manejaba toda su operación en Notion: flexible, pero genérico. Faltaba estructura propia, permisos finos por cliente y flujos pensados para cómo trabaja la empresa de verdad. Después de mi pasantía ahí (automatización con n8n y workflows de Notion), la propuesta fue construirles su propia herramienta.",
+      "Taquion maneja toda su operación en un workspace genérico: flexible, pero de nadie. Falta estructura propia, permisos finos por cliente y flujos pensados para cómo trabaja la empresa de verdad. Después de mi pasantía ahí (automatización con n8n y workflows sobre su workspace), la propuesta fue construirles su propia herramienta.",
     solucion:
-      "Centralicé la operación de Taquion en un workspace propio: gestión de clientes y proyectos con un modelo de acceso por cliente y scoping a nivel de fila (default-deny: nadie ve nada que no le corresponda), más un sistema de agentes para validación de features y consistencia de diseño.",
+      "Estoy centralizando la operación de Taquion en un workspace propio: gestión de clientes y proyectos con un modelo de acceso por cliente y scoping a nivel de fila (default-deny: nadie ve nada que no le corresponda), más un sistema de agentes para validación de features y consistencia de diseño.",
     queHace:
-      "Reemplaza a Notion como centro de operaciones: clientes, proyectos y accesos, todo con la estructura y los permisos que la empresa necesitaba.",
+      "Centraliza la operación: clientes, proyectos y accesos, con la estructura y los permisos que la empresa necesita. Es un prototipo en desarrollo, y esa es la parte interesante: cada iteración sale de los problemas concretos que traen del workspace que usan hoy y de lo que van necesitando.",
     rol: "Diseño y desarrollo full-stack de punta a punta: arquitectura, modelado de datos, UX y marketing del producto.",
     stack: [
       "Next.js",
@@ -36,7 +36,7 @@ export const proyectos: Proyecto[] = [
     destacados: [
       "Modelo de acceso por cliente con scoping a nivel de fila (default-deny): la seguridad es la arquitectura, no un parche encima.",
       "Sistema de agentes para validar features y mantener la consistencia de diseño.",
-      "Cliente referente: Sergio Doval, CEO de Taquion. Producto en uso real.",
+      "Cliente referente: Sergio Doval, CEO de Taquion. Prototipo que avanza con ellos.",
       "Presentado en TIC Experience y con entrevista en TN sobre el proyecto.",
     ],
     aprendizajes: [
@@ -62,23 +62,22 @@ export const proyectos: Proyecto[] = [
     ],
     acento: "#6D5BFF", // violeta aurora — marca de Superlum, citada dentro del caso
     anguloSitio:
-      "Cliente real + producto en uso. Problema → decisión de arquitectura (row-level default-deny) → resultado.",
+      "Cliente real + desarrollo en curso. Problema → decisión de arquitectura (row-level default-deny) → un prototipo que itera con el cliente.",
   },
   {
     slug: "futbolvision",
     nombre: "FutbolVision",
     categoria: "destacado",
     unaLinea:
-      "Plataforma de analítica de fútbol con predicciones por machine learning: para entender el juego, no para apostar.",
-    tagline: "Entendé el fútbol, no apuestes en él.",
+      "Predice el resultado de partidos de fútbol con un modelo de machine learning.",
     resumen:
-      "Un proyecto anterior donde me tocó el lado de machine learning: un modelo XGBoost que le baja al hincha la analítica que suele quedar encerrada en clubes y casas de apuestas. Ya no lo sigo, pero muestra bien cómo encaro un problema de datos de punta a punta.",
+      "Un proyecto anterior donde me tocó el lado de machine learning: un XGBoost Regressor que predice el marcador y las probabilidades de un partido. Ya no lo sigo, pero muestra bien cómo encaro un problema de datos de punta a punta.",
     problema:
-      "La analítica de fútbol seria está encerrada en clubes y casas de apuestas. FutbolVision baja esa capa de datos al hincha que quiere entender por qué pasa lo que pasa en la cancha.",
+      "Predecir cómo termina un partido con lo que se sabe antes de que empiece: los antecedentes entre los dos equipos, la forma de cada uno, las lesiones y el contexto de la liga.",
     solucion:
-      "Predice y analiza partidos con un modelo XGBoost de ~60 features alimentado por la API de Sportmonks (plan Growth). Targets: goles, precisión de pases, índice de agresividad y duración del partido.",
+      "Un XGBoost Regressor de ~60 features, alimentado por la API de Sportmonks (plan Growth), que devuelve el marcador estimado y la probabilidad de cada resultado. Cada predicción se abre y muestra los parámetros que la sostienen.",
     queHace:
-      "Predice y explica partidos: goles, precisión de pases, índice de agresividad y duración, con un posicionamiento ético explícito anti-apuestas.",
+      "Predice el marcador de un partido y la probabilidad de local, empate y visitante, y desglosa el análisis por parámetro: H2H, forma de cada equipo, lesiones, contexto de liga y xG.",
     rol: "IA/ML y arquitectura.",
     equipo: [
       { nombre: "Felipe Doval", rol: "IA/ML + arquitectura" },
@@ -87,13 +86,13 @@ export const proyectos: Proyecto[] = [
     ],
     stack: ["Next.js", "FastAPI", "XGBoost", "Sportmonks API", "Python"],
     destacados: [
-      "Modelo XGBoost con ~60 features sobre datos de Sportmonks.",
-      "Cuatro targets: goles, precisión de pases, índice de agresividad y duración del partido.",
-      "Posicionamiento ético anti-apuestas como parte de la identidad del proyecto.",
+      "XGBoost Regressor con ~60 features sobre datos de Sportmonks.",
+      "Cada predicción se abre y muestra por qué: H2H, forma, lesiones, contexto y xG.",
+      "Las predicciones se guardan y se siguen, en vivo o pre-match.",
       "Plan de marketing completo: análisis de audiencia, competitivo y Cinco Fuerzas de Porter.",
     ],
     aprendizajes: [
-      "Elegir bien los targets importa tanto como el modelo: predecir para entender no es lo mismo que predecir para apostar.",
+      "Elegir bien las features importa tanto como el modelo: un XGBoost solo es tan bueno como lo que se le da de comer.",
       "Separar frontend (Next.js) y servicio de ML (FastAPI) mantiene el modelo independiente de la UI.",
     ],
     enlaces: [
@@ -109,18 +108,13 @@ export const proyectos: Proyecto[] = [
         alt: "Predicción de Arsenal vs Sporting CP: marcador estimado, las tres probabilidades del modelo y el análisis por parámetro que las respalda (H2H, forma, lesiones, contexto y xG)",
       },
       {
-        src: "/assets/proyectos/futbolvision/futbolvision-app.png",
-        alt: "Una predicción dentro de la app: Manchester United vs Leeds, con la ficha del partido arriba y el desglose del modelo abajo",
-      },
-      {
-        src: "",
-        alt: "Visualización del modelo ML (falta captura)",
-        falta: true,
+        src: "/assets/proyectos/futbolvision/futbolvision-predicciones.png",
+        alt: "Las predicciones guardadas, filtrables entre en vivo y pre-match: cada una con su marcador estimado, las tres probabilidades y el modelo que la generó",
       },
     ],
     acento: "#47a88c",
     anguloSitio:
-      "Evidencia del lado ML: feature engineering, elección de targets y un servicio de modelo separado de la UI. Proyecto anterior.",
+      "Evidencia del lado ML: feature engineering y un servicio de modelo separado de la UI. Proyecto anterior.",
   },
 
   // ==========================================================================
@@ -149,9 +143,12 @@ export const proyectos: Proyecto[] = [
         url: "https://github.com/Felgimon/TP1_Front",
       },
     ],
+    // Los secundarios no tienen página de detalle: su card muestra la primera.
     capturas: [
-      { src: "", alt: "Home con partidos (falta captura)", falta: true },
-      { src: "", alt: "Búsqueda de jugadores (falta captura)", falta: true },
+      {
+        src: "/assets/proyectos/courtside/courtside-home.png",
+        alt: "La home de CourtSide: los partidos del día y el jugador destacado, con sus promedios de la temporada",
+      },
     ],
     acento: "#e7a06a",
     anguloSitio:
@@ -247,7 +244,13 @@ export const proyectos: Proyecto[] = [
         url: "https://github.com/Felgimon/TP2-ivo",
       },
     ],
-    capturas: [{ src: "", alt: "Captura de PC Builder (falta)", falta: true }],
+    // Los secundarios no tienen página de detalle: su card muestra la primera.
+    capturas: [
+      {
+        src: "/assets/proyectos/pcbuilder/pcbuilder-armado.png",
+        alt: "El armador en uso: el catálogo de componentes a la izquierda, la PC en 3D en el medio y el resumen del build con el total a la derecha",
+      },
+    ],
     acento: "#8fe3c6",
     incompleto: true,
     anguloSitio: "Configurador por componentes.",

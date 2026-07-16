@@ -23,7 +23,7 @@ export const perfil: Perfil = {
 
   bioLarga: [
     "Arranqué a programar en la escuela y no paré. Hoy tengo cosas que van desde un juego de terminal en C++ hasta plataformas web completas con Next.js, TypeScript y Python, pasando por modelos de machine learning. No me caso con una sola capa del stack: me gusta el ciclo entero (entender el problema, modelar los datos, diseñar la experiencia y shippear), y ese es el hilo que conecta todo lo que hago.",
-    "Hice mi pasantía en Taquion automatizando con n8n y workflows de Notion, y de ahí salió Superlum: el workspace a medida que terminé construyendo para reemplazar a Notion en la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguearon competencias como NASA Space Apps y los Premios Sadosky. El deporte (fútbol y básquet) fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
+    "Hice mi pasantía en Taquion automatizando con n8n y workflows sobre su workspace, y de ahí salió Superlum: el workspace a medida que estoy construyendo para la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguearon competencias como NASA Space Apps y los Premios Sadosky. El deporte (fútbol y básquet) fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
   ],
 
   enfoque: {
@@ -33,7 +33,7 @@ export const perfil: Perfil = {
       {
         titulo: "Entender antes de tocar código",
         texto:
-          "Primero el problema real, no el ideal del papel. Reemplazar algo que la gente ya usa (como hice con Notion en Superlum) te obliga a mirar cómo trabaja de verdad, no cómo debería.",
+          "Primero el problema real, no el ideal del papel. Reemplazar el workspace que una empresa ya usa (como en Superlum) te obliga a mirar cómo trabaja de verdad, no cómo debería.",
       },
       {
         titulo: "Los datos como cimiento",
@@ -99,7 +99,7 @@ export const perfil: Perfil = {
       titulo: "Pasantía",
       lugar: "Taquion",
       descripcion:
-        "Automatización con n8n y workflows de Notion. De esta experiencia salió Superlum, el workspace a medida que después construí para la empresa.",
+        "Automatización con n8n y workflows sobre su workspace. De esta experiencia salió Superlum, el workspace a medida que estoy construyendo para la empresa.",
       tipo: "trabajo",
     },
   ],

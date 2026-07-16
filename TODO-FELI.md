@@ -46,14 +46,14 @@ y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
 
 - [x] Superlum — 3 capturas: la interfaz, la base de Clientes en galería y el
   panel de administración con el registro de actividad.
-- [x] FutbolVision — 2 capturas de predicción (Arsenal vs Sporting CP y
-  Manchester United vs Leeds). Si algún día querés, falta una del modelo ML.
-- [ ] CourtSide — home con partidos, búsqueda de jugadores, dark mode.
+- [x] FutbolVision — 2 capturas: una predicción abierta (Arsenal vs Sporting CP)
+  y la lista de predicciones guardadas.
+- [x] CourtSide — 1 captura (la home con el jugador destacado). Su card muestra
+  solo una: los secundarios no tienen página de detalle.
 - [x] Buscaminas — 1 captura del tablero en la terminal (los colores ANSI
-  quedan muy bien). Su card muestra solo una: los secundarios no tienen página
-  de detalle.
+  quedan muy bien).
 - [ ] Nindo — 2–3 de gameplay (o un GIF/video corto, mejor todavía).
-- [ ] PC Builder — 2–3 del producto.
+- [x] PC Builder — 1 captura (el armador con la PC en 3D y el resumen del build).
 - [ ] LOST — 1–2 si tenés.
 
 ## 🟡 Tu foto
@@ -65,6 +65,18 @@ y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
   inmersivo. Si preferís otra foto (mejor luz, fondo simple), reemplazala en
   `public/assets/foto/`. La casual (Selección) encaja tanto con el tema fútbol
   que podríamos usarla — decime.
+
+## 🔴 Notion: queda en el HISTORIAL de git (decisión tuya)
+
+Sacamos la palabra de **todo el sitio y de todos los archivos del repo** (fue por
+tu pedido legal). Pero el repo es público y **cada commit viejo sigue teniendo el
+texto anterior**: `git log -p` o la vista de historial de GitHub lo muestran.
+Limpiar eso implica **reescribir la historia y hacer force-push** (cambia todos
+los hashes; si alguien clonó el repo, su copia queda desincronizada). No lo hice
+sin tu OK. Alternativa más simple si te preocupa: hacer el repo privado.
+
+- [ ] Decidime: ¿lo dejamos así (el sitio ya está limpio), reescribimos la
+  historia, o pasamos el repo a privado?
 
 ## 🟡 Confirmaciones
 
