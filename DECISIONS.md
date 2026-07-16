@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.6** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.7** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1187,6 +1187,72 @@ números, esa premisa era FALSA:
 
 Lección: cuando un invariante viejo (el balón tapaba) deja de existir, hay que
 revisar los tests que dependían de él, en vez de compensar recortando features.
+
+---
+
+## v5.7 — Liquid Glass de verdad: el borde que DOBLA el fondo
+
+Dos pedidos de Felipe que resultaron ser **el mismo bug**: (a) las capturas de los
+proyectos tenían un velo blanco arriba; (b) la UI no parecía Liquid Glass sino
+plástico. Los dos salían de `.glass-spec::after`: un lavado blanco al 45% sobre
+el tercio superior de cada elemento de vidrio, pintado ENCIMA de los hijos. En el
+vidrio real el brillo especular vive en el BISEL, no como una mancha sobre la
+cara. Sacando el lavado se fueron el velo y el plástico de una.
+
+### Qué dicen las fuentes (leídas, no resumidas de memoria)
+Apple define el material por una palabra: **lensing**. Su documentación habla de
+componentes que "dejan pasar sus elementos de color, resaltando el efecto de
+lente del material". O sea: el vidrio no difumina el fondo, lo **dobla** en el
+canto. Sin refracción es frosted glass, que es lo que teníamos. Donny Wals suma
+la regla de uso: el vidrio es una CAPA que se apoya sobre el contenido (toolbars,
+tab bars, botones flotantes), nunca el contenido mismo.
+
+La receta técnica salió de kube.io: un `feDisplacementMap` cuyo mapa codifica las
+normales de un bisel con perfil de **squircle convexo** (`y = (1-(1-x)^4)^(1/4)`,
+el que usa Apple porque mantiene el gradiente parejo aunque la forma se estire),
+con el desvío calculado por **Snell** (n = 1.5). El mapa va en R/G con 128 = cero
+y el `scale` del filtro lo lleva a píxeles.
+
+### Tres cosas que solo aparecieron al prototipar
+1. **El test mentía.** Probé la refracción sobre una grilla que se repite cada
+   20px, con un desplazamiento de ~20px: un patrón periódico corrido un período
+   se ve IDÉNTICO. No se veía nada y el código estaba bien. Con franjas
+   diagonales (sin repetición) el doblez saltó a la vista.
+2. **La región del filtro necesita margen.** La lente del borde tiene que traer
+   píxeles de AFUERA del elemento. Con la región terminando en el borde no hay de
+   dónde traerlos y el fondo se DESGARRA en vez de doblarse. Va a -50%/200%.
+3. **El mapa hay que desenfocarlo.** La pendiente del squircle se dispara en el
+   último píxel: sin suavizar, el desplazamiento sale como un pico de 1-2px que
+   corta el fondo en tajos.
+
+### Lo que decidió la arquitectura: WebKit
+Probado en WebKit real (Playwright trae el motor de Safari): con
+`backdrop-filter: blur() saturate() url(#lente)` **en una sola declaración**, el
+fondo DESAPARECE y queda un bulto blanco. En capas separadas (el frost en el
+elemento, la lente en `::before`), Safari simplemente ignora la lente y el frost
+queda intacto. Por eso la refracción vive en su propia capa: no es prolijidad, es
+lo único que no rompe el iPhone de Feli. Solo Chromium aplica filtros SVG en
+`backdrop-filter`; `--lente` sin definir cae en `none` por el `var()`.
+
+### Dónde se ve (y dónde no, dicho de frente)
+El sitio es un estudio BLANCO, y sobre un fondo plano el vidrio no tiene nada que
+doblar: ahí Liquid Glass es —también en iOS— una pastilla sutil con un buen
+bisel. Donde canta es donde el vidrio pasa sobre contenido: **el HUD flotando
+sobre el texto que scrollea**, que es exactamente el caso de la tab bar de iOS 26
+sobre una lista. Ahí se ve el texto doblarse en el filo. Por eso la lente va solo
+en lo que flota (HUD, CTA, etiquetas de los soles): 8 elementos, un canvas chico
+cada uno al cargar, cero costo por frame.
+
+### Verificación
+`gate` 0 · vidrio verificado en **Chromium Y WebKit** (8 lentes, y el HUD
+conserva su frost en los dos) · `perf` 56 FPS en movimiento con render por
+software · `clickable` 5/5 · `touch` · `cta` · `capturas` 6/6 sin velo ·
+`smoke` · `dashcheck` · `hud-fit`.
+
+Fuentes: developer.apple.com/documentation/technologyoverviews/liquid-glass ·
+donnywals.com/designing-custom-ui-with-liquid-glass-on-ios-26 ·
+kube.io/blog/liquid-glass-css-svg · medium.com/ekino-france/liquid-glass-in-css-and-svg ·
+webtricks.dev/blog/liquid-glass-css
 
 ---
 

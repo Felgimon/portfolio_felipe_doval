@@ -171,9 +171,13 @@ function NodeOverlay({
               botón: siguen siendo clickeables (el evento burbujea) y el
               overflow del contenedor los recorta contra la pantalla. */}
           <span className="solnodo__hilo" />
+          {/* `data-lente`: estas pastillas flotan SOBRE el sol, que es el único
+              lugar del sitio donde hay algo para doblar. Acá la refracción se
+              ve de verdad. */}
           <span
+            data-lente
             className={cn(
-              "solnodo__chip glass glass-spec glass-pill",
+              "solnodo__chip glass glass-pill",
               i === activeIdx && "is-on",
             )}
           >
@@ -238,7 +242,8 @@ function HudRail({
           cortado deja a esa pantalla sin forma de moverse. */}
       <div
         ref={barraRef}
-        className="glass glass-spec mx-3 mb-3 flex items-center justify-center gap-0.5 rounded-full px-1.5 py-2 max-[400px]:mx-2 max-[400px]:gap-0 max-[400px]:px-1 sm:mx-auto sm:mb-4 sm:max-w-fit sm:gap-2 sm:px-3"
+        data-lente
+        className="glass mx-3 mb-3 flex items-center justify-center gap-0.5 rounded-full px-1.5 py-2 max-[400px]:mx-2 max-[400px]:gap-0 max-[400px]:px-1 sm:mx-auto sm:mb-4 sm:max-w-fit sm:gap-2 sm:px-3"
       >
         {nodos.map((n, i) => {
           const active = i === activeIdx;
@@ -591,16 +596,20 @@ export function GraphHome({ children }: { children: ReactNode }) {
               <div className="mt-6 flex flex-wrap items-center gap-3 md:mt-9">
                 <button
                   type="button"
+                  data-lente
+
                   onClick={() => goto("trabajo")}
-                  className="glass glass-spec glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
+                  className="glass glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
                 >
                   Ver el trabajo
                   <ArrowDown className="size-4 text-acento transition-transform group-hover:translate-y-0.5" />
                 </button>
                 <button
                   type="button"
+                  data-lente
+
                   onClick={() => goto("contacto")}
-                  className="glass glass-spec glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
+                  className="glass glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
                 >
                   Hablemos
                   <ArrowUpRight className="size-4 text-acento transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

@@ -96,7 +96,7 @@ export function Perfil() {
                 <div
                   key={g.categoria}
                   data-reveal-item
-                  className="glass glass-spec glass-hover p-4"
+                  className="glass glass-hover p-4"
                 >
                   <p className="font-mono text-[0.7rem] tracking-wider text-acento uppercase">
                     {g.categoria}

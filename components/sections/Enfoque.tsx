@@ -29,7 +29,7 @@ export function Enfoque() {
             <div
               key={p.titulo}
               data-reveal-item
-              className="glass glass-spec glass-hover p-5"
+              className="glass glass-hover p-5"
             >
               <h3 className="type-h3 text-chalk">{p.titulo}</h3>
               <p className="mt-2 leading-relaxed text-chalk-dim">{p.texto}</p>

@@ -6,6 +6,7 @@ import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { AppReadyProvider } from "@/components/motion/AppReady";
 import { Preloader } from "@/components/motion/Preloader";
 import { CustomCursor } from "@/components/motion/CustomCursor";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { KonamiEasterEgg } from "@/components/motion/KonamiEasterEgg";
 import { DevOverlay } from "@/components/motion/DevOverlay";
 import { SiteNav } from "@/components/layout/SiteNav";
@@ -117,6 +118,8 @@ export default function RootLayout({
         <CustomCursor />
         <KonamiEasterEgg />
         <DevOverlay />
+        {/* La refracción del vidrio: le da su lente a cada `data-lente`. */}
+        <LiquidGlass />
         <AppReadyProvider>
           <Preloader />
           <SmoothScroll>

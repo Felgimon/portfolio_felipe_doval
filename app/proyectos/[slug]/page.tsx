@@ -178,7 +178,7 @@ export default async function ProyectoDetalle({
             {p.capturas.map((c, i) => (
               <div
                 key={i}
-                className="glass glass-spec relative aspect-[16/10] overflow-hidden"
+                className="glass relative aspect-[16/10] overflow-hidden"
               >
                 {c.src && !c.falta ? (
                   <Image

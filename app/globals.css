@@ -347,43 +347,71 @@ body {
 }
 
 /* ============================================================================
-   LIQUID GLASS — vidrio líquido estilo iOS.
-   Claves del material real: (1) MUY translúcido — el contenido de atrás se ve,
-   solo que borroso y saturado (blur 26px + saturate 200%); (2) borde especular
-   FINO que gira alrededor (claro arriba-izq, se apaga abajo-der: luz direccional
-   real, no un borde plano); (3) brillo interno arriba (la "cara" del vidrio);
-   (4) sombra de profundidad suave. Nada de glow.
+   LIQUID GLASS — el material, no una imitación.
+
+   Apple define a Liquid Glass por una propiedad: el LENSING. El vidrio no
+   "difumina" el fondo, lo DOBLA en el borde, como la orilla de un vidrio grueso.
+   Todo lo demás (frost, brillo) sale de ahí. Las tres capas, de atrás para
+   adelante:
+
+   1. REFRACCIÓN (`::before`, solo Chromium): un feDisplacementMap dobla el
+      fondo siguiendo el bisel. El mapa lo genera lib/lente.ts por elemento (ver
+      la física ahí). Va en SU PROPIA CAPA y nunca en la misma declaración que el
+      blur: se probó en WebKit y `backdrop-filter: blur() url()` ahí revienta —
+      el fondo desaparece y queda un bulto blanco. En capas, Safari simplemente
+      la ignora y el frost del padre queda intacto.
+   2. FROST (el elemento): blur + saturate + un brillo apenas. Es lo que hace
+      TODO navegador, y sin esto no hay vidrio en ningún lado.
+   3. BISEL ESPECULAR (`::after`): la luz que agarra el filo. Es un anillo FINO
+      con luz direccional que gira alrededor (fuerte arriba-izquierda, se apaga
+      en el medio, vuelve abajo-derecha). En el vidrio real el brillo vive en el
+      canto, no como una mancha sobre la cara: el sheen plano que había antes
+      (un blanco al 45% sobre el tercio superior) era justo lo que lo hacía
+      parecer plástico, y además velaba las capturas de los proyectos.
+
+   La sombra es AZUL OSCURA, nunca negra: el negro puro ensucia y se ve muerto.
    ========================================================================== */
 
 .glass {
   position: relative;
+  isolation: isolate;
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
   backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
-  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   box-shadow:
     0 18px 44px -18px rgba(15, 41, 66, 0.32),
-    inset 0 1px 1px rgba(255, 255, 255, 0.9),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.28),
-    inset 1.5px 0 1px -1px rgba(255, 255, 255, 0.55),
-    inset -1.5px 0 1px -1px rgba(255, 255, 255, 0.55);
+    0 2px 6px -2px rgba(15, 41, 66, 0.14);
 }
-/* Borde especular direccional: un gradiente EN el borde (arriba-izq brillante →
-   abajo-der tenue), recortado al anillo del border con mask compositing. */
+
+/* 1. Ranura de REFRACCIÓN. Sin `--lente` (Safari, Firefox, o antes de que el JS
+   mida el elemento) `var()` cae en `none` y esta capa no hace nada. */
 .glass::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -1;
   border-radius: inherit;
-  padding: 1px;
+  pointer-events: none;
+  -webkit-backdrop-filter: var(--lente, none);
+  backdrop-filter: var(--lente, none);
+}
+
+/* 3. Bisel especular: anillo fino con luz direccional. */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.2px;
   pointer-events: none;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.4) 38%,
-    rgba(255, 255, 255, 0.14) 62%,
-    rgba(255, 255, 255, 0.5) 100%
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.34) 26%,
+    rgba(255, 255, 255, 0.06) 48%,
+    rgba(255, 255, 255, 0.42) 74%,
+    rgba(255, 255, 255, 0.96) 100%
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -399,20 +427,6 @@ body {
 }
 .glass-pill {
   border-radius: 9999px;
-}
-/* Cara iluminada del vidrio: sheen amplio arriba (luz que entra al material). */
-.glass-spec::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(
-    172deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0.08) 38%,
-    rgba(255, 255, 255, 0) 60%
-  );
 }
 @media (hover: hover) {
   .glass-hover {

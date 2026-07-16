@@ -47,7 +47,7 @@ export function ProjectCard({
       onPointerMove={onMove}
       onPointerLeave={onLeave}
       className={cn(
-        "glass glass-spec group relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-300 will-change-transform",
+        "glass group relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-300 will-change-transform",
         linkable && "hover:shadow-[var(--shadow-float)]",
       )}
     >

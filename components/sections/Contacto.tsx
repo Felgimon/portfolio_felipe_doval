@@ -30,7 +30,7 @@ export function Contacto() {
 
       <Reveal className="mt-12">
         {/* Email — la micro-interacción de copiado */}
-        <div data-reveal-item className="glass glass-spec p-6">
+        <div data-reveal-item className="glass p-6">
           <p className="mb-3 font-mono text-xs tracking-wide text-acento">
             Email
           </p>
@@ -47,7 +47,7 @@ export function Contacto() {
             href={perfil.links.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="glass glass-spec glass-hover group inline-flex items-center gap-3 px-5 py-4"
+            className="glass glass-hover group inline-flex items-center gap-3 px-5 py-4"
           >
             <BrandIcon name="github" className="size-6 text-chalk" />
             <span className="text-left">
@@ -61,7 +61,7 @@ export function Contacto() {
             href={perfil.links.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="glass glass-spec glass-hover group inline-flex items-center gap-3 px-5 py-4"
+            className="glass glass-hover group inline-flex items-center gap-3 px-5 py-4"
           >
             <BrandIcon name="linkedin" className="size-6 text-chalk" />
             <span className="text-left">

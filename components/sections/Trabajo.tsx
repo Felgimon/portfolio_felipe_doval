@@ -36,7 +36,7 @@ export function Trabajo() {
       {/* Superlum — caso principal */}
       {superlum && (
         <Reveal className="mt-12">
-          <article className="glass glass-spec grid gap-6 overflow-hidden p-6 lg:grid-cols-2 lg:p-8">
+          <article className="glass grid gap-6 overflow-hidden p-6 lg:grid-cols-2 lg:p-8">
             <div className="flex flex-col justify-center gap-5">
               <p className="eyebrow">Caso principal</p>
               <h3 className="type-h2 text-chalk">{superlum.nombre}</h3>

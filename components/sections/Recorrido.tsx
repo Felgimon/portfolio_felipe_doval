@@ -33,7 +33,7 @@ export function Recorrido() {
             <div
               key={t.orden}
               data-reveal-item
-              className="glass glass-spec glass-hover p-5"
+              className="glass glass-hover p-5"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <h3 className="type-h3 text-chalk">{t.titulo}</h3>
