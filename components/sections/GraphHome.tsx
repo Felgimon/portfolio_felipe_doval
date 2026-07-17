@@ -641,15 +641,16 @@ export function GraphHome({ children }: { children: ReactNode }) {
                   Ver el trabajo
                   <ArrowDown className="size-4 text-acento transition-transform group-hover:translate-y-0.5" />
                 </button>
+                {/* CTA principal en vidrio PROMINENTE (tintado de acento):
+                    jerarquía sin perder el material. */}
                 <button
                   type="button"
                   data-lente
-
                   onClick={() => goto("contacto")}
-                  className="glass glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
+                  className="glass glass-prominent glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide"
                 >
                   Hablemos
-                  <ArrowUpRight className="size-4 text-acento transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </button>
               </div>
             </div>

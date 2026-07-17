@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.11** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.12** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1264,6 +1264,56 @@ Endurecimiento GPU, además (cinturón y tiradores para "todos los dispositivos"
 en los tres) · **SwiftShader** (GPU en blocklist, el caso real de la netbook):
 sol visible, 0 errores de consola · gap del nombre medido (arriba) · hover, HUD,
 chips, cards y página de proyecto inspeccionados de cerca en 2x · `smoke`.
+---
+
+## v5.12 — El estudio con textura, el vidrio interactivo y el iPhone arreglado
+
+### El bug del "Chrome sin blur" en el iPhone (era mío, y grave)
+Felipe reportó que en Chrome de su iPhone no había blur, solo transparencia.
+Causa: en iOS TODOS los navegadores son WebKit por regla de Apple — "Chrome"
+en iPhone es Safari con otra cara y su UA dice `CriOS`. Mi detección trataba
+CriOS como Chromium, le escribía la cadena con url()... y WebKit descartaba la
+declaración ENTERA: ni lente ni blur. Ahora iOS (iphone/ipad/ipod, y el iPad
+que se disfraza de Mac pero lo delata el multitouch) es SIEMPRE frost.
+Verificado con el UA real de CriOS: motor frost, cero cadenas inline, blur
+vivo. La distorsión real en iOS sigue siendo imposible (limitación de WebKit,
+no nuestra): ahí queda el frost + canto + reflejos, que es el mismo fallback
+del componente de referencia.
+
+### El tirón del interlineado del nombre (matemática, no estilo)
+La v5.8 dejaba el interlineado en el pico (0.95) con las líneas subiendo
+distancias distintas — pero mantenía un delay de 90ms entre líneas. Con ese
+desfase el gap NO es monótono: la línea de arriba aterriza primero y la de
+abajo sigue subiendo su resto, y subir la de abajo CIERRA el gap al final (el
+"tirón" que Felipe veía). Fix: mismo reloj para las dos líneas (sin delay); la
+cascada la siguen dando las letras. Verificado muestreando el gap real durante
+la entrada: 134.5 → 138.2px monótono, retroceso 0.00px, termina en el máximo.
+
+### Las ideas aprobadas, implementadas
+1. **Estudio con textura** (GLSL en el ciclorama): grilla técnica en el piso
+   (proyección gnomónica sobre el plano del piso → líneas RECTAS en perspectiva
+   real, AA por fwidth, doble desvanecido) + matriz de puntos sutil en la pared
+   frontal. No es solo estética: la lente del vidrio necesita detalle que
+   doblar, y ahora lo tiene en todo momento.
+2. **Resplandor del sol**: lobe cálido en la pared de atrás + pileta de luz en
+   el piso, DESPUÉS de la grilla (la entibia: una línea bajo luz naranja se ve
+   naranja). Todo < 1.0: el bloom (umbral 1.0) no florece jamás. Además de
+   clima, es un gradiente de COLOR: la aberración cromática lo agarra mucho
+   mejor que el gris.
+3. **CTA prominente** (el tinted glass de Apple): "Hablemos" con la cara al
+   azul de identidad (0.78 sobre blanco ≈ #425f80 → AA con texto #f2f8fc).
+   Sigue siendo vidrio: la lente dobla el fondo detrás del tinte.
+4. **Vidrio interactivo** (.interactive() de SwiftUI): al PRESIONAR cualquier
+   vidrio flotante, la lupa se HUNDE (depth ×1.8, strength ×1.4, CA +2) y
+   vuelve al soltar. Cadenas precalculadas (nada se arma en el pointerdown),
+   listeners cableados una sola vez. El vidrio suave no lo hace: no es control.
+5. **Barrido especular en hover**: una línea de luz diagonal cruza el vidrio
+   (capa extra de background que viaja de -160% a 160% en 0.9s). Solo
+   `background-position`: compositor, cero layout.
+
+Póster regenerado (el estudio cambió). Batería completa verde, perf 50 FPS en
+SwiftShader con la grilla y el resplandor incluidos.
+
 ---
 
 ## v5.11 — El reflejo especular, el azul intencional y la lente que no fantasmea

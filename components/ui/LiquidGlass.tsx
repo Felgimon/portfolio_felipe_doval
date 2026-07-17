@@ -23,15 +23,30 @@ import { filtroLente, paramsPara } from "@/lib/lente";
  * de la fuente. Se regenera al redimensionar; el costo es armar un string.
  */
 
-/** ¿Chromium? Es el único motor que aplica filtros SVG en backdrop-filter.
- * Detección por UA como el componente de referencia: no hay feature-detect
- * confiable (Safari PARSEA `backdrop-filter: url()` como válido y después lo
- * ignora o lo rompe, así que CSS.supports miente). */
+/** ¿Chromium DE VERDAD? Es el único motor que aplica filtros SVG en
+ * backdrop-filter. Detección por UA como el componente de referencia: no hay
+ * feature-detect confiable (Safari PARSEA `backdrop-filter: url()` como válido
+ * y después lo descarta, así que CSS.supports miente).
+ *
+ * La trampa que rompió el celular de Feli: en iOS TODOS los navegadores son
+ * WebKit por regla de Apple — "Chrome" en iPhone es Safari con otra cara y su
+ * UA dice `CriOS` (Edge dice `EdgiOS`). La primera versión trataba CriOS como
+ * Chromium, le escribía la cadena con url()... y WebKit descartaba la
+ * declaración ENTERA: ni lente ni blur, solo transparencia. iOS es frost,
+ * siempre, sin importar el nombre del navegador. */
 function soportaLente(): boolean {
   const ua = navigator.userAgent.toLowerCase();
-  const esChromium = /chrome|chromium|crios|edg/.test(ua) && !/firefox|fxios/.test(ua);
+  // iPad moderno se disfraza de Mac; lo delata el multitouch.
+  const esIOS =
+    /iphone|ipad|ipod/.test(ua) ||
+    (ua.includes("mac") && navigator.maxTouchPoints > 1);
+  if (esIOS) return false;
+  const esChromium = /chrome|chromium|edg/.test(ua) && !/firefox/.test(ua);
   return esChromium && CSS.supports("backdrop-filter", "blur(1px)");
 }
+
+/** Las dos cadenas de cada elemento: reposo y PRESIONADO (la lupa se hunde). */
+const cadenas = new WeakMap<HTMLElement, { normal: string; honda: string }>();
 
 /** Mutación imperativa fuera del componente (regla react-hooks/immutability). */
 function aplicarLente(el: HTMLElement) {
@@ -44,14 +59,47 @@ function aplicarLente(el: HTMLElement) {
   const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
   // data-lente="suave" = vidrio en flujo (cards en grillas): lente contenida
   // para no traer a la card vecina adentro. Ver paramsPara.
-  const p = paramsPara(r.width, r.height, radio, el.dataset.lente === "suave");
+  const suave = el.dataset.lente === "suave";
+  const p = paramsPara(r.width, r.height, radio, suave);
   const b = Math.min(p.width, p.height) < 30 ? 1 : 2;
   // Sin brightness: aclarar el backdrop es lo que vuelve "leche" al vidrio
   // (calibración v5.8); el saturate acompaña al frost de la clase (170%).
-  const filtro = `blur(${b / 2}px) url('${filtroLente(p)}') blur(${b}px) saturate(1.7)`;
-  el.style.backdropFilter = filtro;
+  const arma = (q: typeof p) =>
+    `blur(${b / 2}px) url('${filtroLente(q)}') blur(${b}px) saturate(1.7)`;
+  const normal = arma(p);
+  el.style.backdropFilter = normal;
   // TS/DOM no expone webkitBackdropFilter tipado; en Chromium alcanza el estándar.
   el.dataset.liquid = clave;
+
+  if (suave) return;
+  // VIDRIO INTERACTIVO (el .interactive() de SwiftUI, el "clicked" del
+  // componente de referencia): al PRESIONAR, la lupa se hunde — más espesor
+  // óptico y más aberración por un instante. Solo el vidrio flotante (el
+  // suave no es un control). Las cadenas se precalculan acá (nada de armar
+  // data URIs en el pointerdown) y los listeners se cablean UNA vez.
+  cadenas.set(el, {
+    normal,
+    honda: arma({
+      ...p,
+      depth: Math.round(p.depth * 1.8),
+      strength: Math.round(p.strength * 1.4),
+      chromaticAberration: p.chromaticAberration + 2,
+    }),
+  });
+  if (el.dataset.lenteInteractiva) return;
+  el.dataset.lenteInteractiva = "1";
+  const hundir = () => {
+    const c = cadenas.get(el);
+    if (c) el.style.backdropFilter = c.honda;
+  };
+  const soltar = () => {
+    const c = cadenas.get(el);
+    if (c) el.style.backdropFilter = c.normal;
+  };
+  el.addEventListener("pointerdown", hundir);
+  el.addEventListener("pointerup", soltar);
+  el.addEventListener("pointerleave", soltar);
+  el.addEventListener("pointercancel", soltar);
 }
 
 export function LiquidGlass() {

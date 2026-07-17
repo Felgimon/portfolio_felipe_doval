@@ -318,11 +318,16 @@ body {
   font-variation-settings: "wght" var(--w);
 }
 
-/* Entrada: la línea sube y cada letra se forma, en cascada. */
+/* Entrada: las líneas suben JUNTAS (mismo reloj, sin delay por línea) y cada
+   letra se forma en cascada. El delay de 90ms que había acá era el "tirón" que
+   reportó Felipe: la línea de arriba aterrizaba primero y la de abajo seguía
+   subiendo su resto — y subir la de abajo CIERRA el interlineado al final.
+   Con el mismo reloj y la de arriba subiendo el doble (--sube), el gap crece
+   monótono de 0.86 a 0.95 y se queda en el pico. La cascada la siguen dando
+   las letras (nombre-forma, índice global). */
 .nombre.is-in .nombre__linea {
   opacity: 1;
   animation: nombre-sube 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(var(--l, 0) * 90ms);
 }
 .nombre.is-in .nombre__letra {
   animation: nombre-forma 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -422,19 +427,37 @@ body {
      plana refleja el estudio; entra fuerte arriba-izquierda, se apaga en el
      medio y vuelve tenue abajo-derecha, coherente con el bisel del ::after). */
   background-color: var(--glass-bg);
-  /* El REFLEJO de cara (las fotos de referencia de Felipe: paneles de vidrio
-     con un barrido blanco diagonal bien visible). Dos luces: la entrada fuerte
-     por arriba-izquierda y una réplica FRÍA (celeste, el cielo reflejado) por
-     abajo-derecha. Pinta DETRÁS de los hijos: nunca vela texto ni capturas. */
-  background-image: linear-gradient(
-    115deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.16) 18%,
-    rgba(255, 255, 255, 0) 34%,
-    rgba(255, 255, 255, 0) 58%,
-    rgba(214, 238, 252, 0.22) 78%,
-    rgba(214, 238, 252, 0.06) 100%
-  );
+  /* Dos capas de luz, pintadas DETRÁS de los hijos (nunca velan texto ni
+     capturas):
+     1. El BARRIDO en hover: una línea de luz diagonal que cruza el vidrio,
+        como la luz corriéndose sobre un vidrio real al inclinarlo. En reposo
+        espera fuera de cuadro (-160%); .glass-hover:hover la hace viajar.
+     2. El REFLEJO de cara (las fotos de referencia de Felipe): entrada fuerte
+        por arriba-izquierda y réplica FRÍA (el cielo) por abajo-derecha. */
+  background-image:
+    linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0) 42%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(210, 240, 255, 0.28) 55%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.16) 18%,
+      rgba(255, 255, 255, 0) 34%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(214, 238, 252, 0.22) 78%,
+      rgba(214, 238, 252, 0.06) 100%
+    );
+  background-size:
+    240% 100%,
+    100% 100%;
+  background-position:
+    -160% 0,
+    0 0;
+  background-repeat: no-repeat;
   /* Frost: blur bajo + saturación (lo de atrás se ablanda pero SE VE). Sin
      brightness: aclarar el backdrop es lo que lo volvía plástico lechoso. */
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
@@ -526,17 +549,36 @@ html[data-lente-motor="frost"] .glass::before {
 .glass-pill {
   border-radius: 9999px;
 }
+/* Vidrio PROMINENTE (el "tinted glass" de Apple): la cara toma el azul de la
+   identidad con alpha — sigue siendo vidrio (el fondo pasa, la lente dobla, el
+   canto brilla) pero de COLOR, y por eso se lee como vidrio incluso sobre el
+   estudio blanco. Para el CTA principal. El texto va claro: 0.78 de alpha
+   sobre blanco compone ~#425f80 → contraste AA con #f2f8fc. */
+.glass-prominent {
+  background-color: rgba(11, 83, 133, 0.78);
+  color: #f2f8fc;
+}
 @media (hover: hover) {
   .glass-hover {
     transition:
       background-color 0.3s ease,
       box-shadow 0.3s ease,
+      background-position 0.9s cubic-bezier(0.25, 0.6, 0.3, 1),
       transform 0.3s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .glass-hover:hover {
     background-color: var(--glass-bg-2);
     box-shadow: var(--glass-drop-hover), var(--glass-glints);
     transform: translateY(-2px);
+    /* El BARRIDO especular: la línea de luz cruza el vidrio en diagonal (la
+       primera capa de background viaja de -160% a 160%; la cara queda quieta). */
+    background-position:
+      160% 0,
+      0 0;
+  }
+  /* El tintado conserva su cara azul al hover (no la de vidrio claro). */
+  .glass-prominent.glass-hover:hover {
+    background-color: rgba(13, 92, 148, 0.85);
   }
 }
 

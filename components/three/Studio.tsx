@@ -32,18 +32,65 @@ const domeVertex = /* glsl */ `
 `;
 /* Gradiente de ciclorama: piso casi blanco → pared gris muy claro, con un
  * apenas-más-oscuro en el rincón inferior (la unión piso-pared). Sin tonemap
- * (shader crudo) → el blanco se mantiene blanco. Sin `precision` a mano:
- * three antepone la máxima soportada (highp explícito no compila en GPUs sin
- * highp fragment y la cúpula desaparecería). */
+ * (shader crudo) → el blanco se mantiene blanco y NADA llega a 1.0 (el bloom
+ * del canvas corta en 1.0: el estudio no debe florecer jamás). Sin `precision`
+ * a mano: three antepone la máxima soportada (highp explícito no compila en
+ * GPUs sin highp fragment y la cúpula desaparecería).
+ *
+ * v5.12 — el estudio deja de ser liso, por pedido de Felipe y por el VIDRIO
+ * (la lente del Liquid Glass solo se ve si atrás hay detalle que doblar):
+ *  - PISO: grilla fina tipo papel técnico. El rayo del ciclorama se proyecta
+ *    sobre el plano del piso (gnomónica: p = dir.xz/|dir.y|) → líneas RECTAS
+ *    con perspectiva real, como cinta de marcado de un estudio fotográfico.
+ *    AA por fwidth, y doble desvanecido (horizonte + distancia).
+ *  - PARED: matriz de puntos apenas visible (proyección al plano frontal).
+ *  - RESPLANDOR: el sol tiñe la pared de atrás y el piso cercano con un lobe
+ *    cálido difuso. Además de clima, es un gradiente de COLOR: la aberración
+ *    cromática del vidrio lo agarra muchísimo mejor que el gris parejo. */
 const domeFragment = /* glsl */ `
   varying vec3 vDir;
+
+  /* Malla de líneas con AA sobre coords proyectadas (una línea por unidad). */
+  float lineas(vec2 p) {
+    vec2 g = abs(fract(p - 0.5) - 0.5) / fwidth(p);
+    float d = min(g.x, g.y);
+    return 1.0 - smoothstep(0.6, 1.6, d);
+  }
+
   void main() {
-    float y = clamp(vDir.y * 0.5 + 0.5, 0.0, 1.0); // 0 abajo .. 1 arriba
+    vec3 dir = normalize(vDir);
+    float y = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0); // 0 abajo .. 1 arriba
     vec3 floorC = vec3(0.972, 0.980, 0.990);
     vec3 wallC  = vec3(0.843, 0.874, 0.912);
     vec3 c = mix(floorC, wallC, smoothstep(0.30, 1.0, y));
     c = mix(c, wallC * 0.965, smoothstep(0.24, 0.0, y) * 0.5);
-    gl_FragColor = vec4(c, 1.0);
+
+    /* PISO: grilla técnica (solo por debajo del horizonte). */
+    if (dir.y < -0.045) {
+      vec2 p = dir.xz / -dir.y * 1.15;
+      float fade = smoothstep(0.045, 0.16, -dir.y)
+                 * (1.0 - smoothstep(4.0, 11.0, length(p)));
+      c = mix(c, vec3(0.665, 0.735, 0.80), lineas(p) * fade * 0.16);
+    }
+
+    /* PARED: puntos sutiles (plano frontal, donde mira la cámara). */
+    if (dir.z < -0.1 && dir.y > 0.02) {
+      vec2 q = vec2(dir.x, dir.y) / -dir.z * 2.1;
+      vec2 celda = fract(q) - 0.5;
+      float punto = 1.0 - smoothstep(1.1, 2.2, length(celda) / max(fwidth(q.x), 1e-4));
+      float fadeW = smoothstep(0.02, 0.14, dir.y)
+                  * (1.0 - smoothstep(2.2, 5.0, length(q)));
+      c = mix(c, vec3(0.70, 0.77, 0.84), punto * fadeW * 0.10);
+    }
+
+    /* RESPLANDOR del sol: va DESPUÉS de la grilla (también la entibia — una
+       línea bajo luz naranja se ve naranja, no gris). Tope < 1.0, sin bloom. */
+    float lobe = pow(clamp(dot(dir, normalize(vec3(0.0, -0.10, -1.0))), 0.0, 1.0), 3.5);
+    c = mix(c, vec3(0.998, 0.878, 0.746), lobe * 0.42);
+    float pileta = pow(clamp(dot(dir, normalize(vec3(0.0, -1.0, -0.35))), 0.0, 1.0), 7.0);
+    c = mix(c, vec3(0.995, 0.885, 0.77), pileta * 0.30);
+
+    gl_FragColor = vec4(min(c, vec3(0.999)), 1.0);
   }
 `;
 
