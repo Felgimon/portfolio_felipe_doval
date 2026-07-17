@@ -44,7 +44,7 @@ export function ProjectCard({
   const contenido = (
     <div
       ref={ref}
-      data-lente
+      data-lente="suave"
       onPointerMove={onMove}
       onPointerLeave={onLeave}
       className={cn(

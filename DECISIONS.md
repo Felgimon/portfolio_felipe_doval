@@ -3,7 +3,7 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.10** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.11** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
@@ -1264,6 +1264,60 @@ Endurecimiento GPU, además (cinturón y tiradores para "todos los dispositivos"
 en los tres) · **SwiftShader** (GPU en blocklist, el caso real de la netbook):
 sol visible, 0 errores de consola · gap del nombre medido (arriba) · hover, HUD,
 chips, cards y página de proyecto inspeccionados de cerca en 2x · `smoke`.
+---
+
+## v5.11 — El reflejo especular, el azul intencional y la lente que no fantasmea
+
+Tres reportes de Felipe sobre la v5.10:
+
+### 1. Cards fantasma en el stack (bug real, diagnóstico geométrico)
+En el stack de Perfil las cards se veían "superpuestas". No era layout: era la
+LENTE PLENA en vidrio EN FLUJO. Una card de ~90px con strength 68 muestra en su
+borde lo que hay hasta 68px afuera — y la card vecina está a 12px: el borde la
+traía ADENTRO como un fantasma. Solución: `data-lente="suave"` para el vidrio
+en flujo (cards en grillas: stack, Enfoque, Recorrido, Contacto, Trabajo,
+ProjectCard) con depth 3-7 / strength 12-24 / ca 1 — distorsión de borde sutil
+que nunca alcanza a la vecina. El vidrio FLOTANTE (HUD, CTAs, chips, pill sobre
+captura) mantiene la lente plena: no tiene vecinos pegados y es donde luce.
+Bonus medido: el peor caso de perf subió de 33 a 53 FPS (SwiftShader).
+
+### 2. El reflejo especular de las referencias (fotos de paneles de vidrio)
+Felipe pasó fotos stock de paneles con el brillo blanco característico. Se
+implementó en TODO el vidrio, por capas y sin JS:
+- CARA: barrido diagonal visible (blanco 0.5 entrando por arriba-izquierda,
+  réplica FRÍA celeste saliendo por abajo-derecha). Pinta DETRÁS de los hijos:
+  no vela texto ni capturas (la lección del velo de v5.7 sigue vigente).
+- CANTO (`::after`): el anillo ahora lleva dos HOTSPOTS (arcos quemados de
+  blanco en esquinas opuestas), la firma de las fotos de referencia.
+- GLINTS: el eco inferior y los bloomos pasan de blanco puro a AZUL FRÍO.
+
+### 3. El "borde azul" que Felipe cazó al scrollear
+Lo que vio es un artefacto de la aberración cromática: en el borde del
+viewport, el canal ROJO (el de mayor desplazamiento) muestrea fuera de lo
+renderizado y desaparece → queda G+B = destello celeste. Le gustó. En vez de
+intentar reproducir el artefacto (incontrolable), el vidrio ahora lleva ese
+reflejo frío A PROPÓSITO y SIEMPRE: glints y hotspot inferior en celeste — el
+vidrio real refleja el cielo.
+
+### El iPhone: la verdad de la plataforma + hallazgo de tooling
+Safari (incluido Safari 26 / iOS 26) NO soporta filtros SVG en backdrop-filter:
+la refracción real es imposible ahí hoy. Las libs que "refractan en Safari" lo
+hacen CLONANDO el DOM de atrás — y un canvas WebGL clonado queda EN BLANCO, así
+que nuestros soles no se pueden refractar con ese truco. Lo que sí se hizo:
+canto grueso perimetral + los reflejos nuevos (CSS puro, cross-browser).
+HALLAZGO: el WebKit de Playwright EN WINDOWS (WinCairo) no compone
+backdrop-filter — sirve para validar CSS/JS, NO los píxeles del iPhone. Por eso
+el canto del fallback es SOLO PINTURA: un backdrop-filter anidado no se puede
+validar desde acá, y si rompiera el blur del padre en iOS real, el vidrio se
+perdería entero sin que lo veamos.
+
+### Verificación
+gate 0 · lg-juicio 33/33 · clickable 5/5 · touch · cta · smoke · dashcheck ·
+hud-fit · perf 53 FPS (SwiftShader) · stack sin fantasmas (verificado con
+captura en los dos motores) · deploy manual con `vercel deploy --prod` (el
+webhook de GitHub sigue sin disparar builds — pendiente de revisar en el
+dashboard).
+
 ---
 
 ## v5.10 — La lente en todos los contenedores

@@ -133,10 +133,32 @@ export function filtroLente({
  * componente: los elementos chicos piden strength ~40% o "se forma un borde
  * raro alrededor" (sic); los grandes aguantan más. `depth` es el espesor
  * óptico: mucho depth = zoom exagerado.
+ *
+ * `suave` es para el vidrio EN FLUJO (cards adentro de una grilla): la lente
+ * plena en una card de ~90px trae a la card VECINA adentro — con strength 68
+ * el borde muestra lo que hay hasta 68px afuera, y la vecina está a 12px. En
+ * el stack de Perfil eso se veía como cards fantasma superpuestas (bug que
+ * reportó Felipe). El vidrio que FLOTA (HUD, CTAs, chips) mantiene la lente
+ * plena: no tiene vecinos pegados y es donde el efecto luce.
  */
-export function paramsPara(w: number, h: number, radius: number): ParamsLente {
+export function paramsPara(
+  w: number,
+  h: number,
+  radius: number,
+  suave = false,
+): ParamsLente {
   const lado = Math.min(w, h);
   const chico = lado < 30;
+  if (suave) {
+    return {
+      width: Math.round(w),
+      height: Math.round(h),
+      radius: Math.round(Math.min(radius, lado / 2)),
+      depth: Math.round(Math.min(Math.max(lado * 0.1, 3), 7)),
+      strength: Math.round(Math.min(Math.max(lado * 0.3, 12), 24)),
+      chromaticAberration: 1,
+    };
+  }
   return {
     width: Math.round(w),
     height: Math.round(h),

@@ -76,12 +76,16 @@
   /* Los GLINTS: la luz que el espesor del vidrio agarra por dentro. Un labio
      brillante arriba (la luz del estudio), su eco tenue abajo (el reflejo), y
      dos bloomos anchos en las esquinas opuestas (spread negativo: solo asoman
-     en el borde). Es la firma del vidrio real — sin esto es un rectángulo. */
+     en el borde). Es la firma del vidrio real — sin esto es un rectángulo.
+     El eco y los bloomos van en AZUL FRÍO, no en blanco puro: el vidrio real
+     refleja el cielo. (Felipe lo cazó de rebote: la aberración cromática
+     pierde el canal rojo en el borde del viewport y deja un destello celeste;
+     le gustó y acá queda como parte del material, a propósito y siempre.) */
   --glass-glints:
-    inset 0 1.5px 1px -1px rgba(255, 255, 255, 0.95),
-    inset 0 -1.5px 1px -1px rgba(255, 255, 255, 0.6),
-    inset 3px 7px 16px -10px rgba(255, 255, 255, 0.85),
-    inset -3px -7px 16px -10px rgba(255, 255, 255, 0.6);
+    inset 0 1.5px 1px -1px rgba(255, 255, 255, 0.98),
+    inset 0 -2px 1.5px -1px rgba(190, 228, 250, 0.75),
+    inset 4px 8px 18px -10px rgba(255, 255, 255, 0.9),
+    inset -4px -9px 20px -10px rgba(175, 220, 248, 0.75);
 
   /* Estados */
   --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
@@ -418,12 +422,18 @@ body {
      plana refleja el estudio; entra fuerte arriba-izquierda, se apaga en el
      medio y vuelve tenue abajo-derecha, coherente con el bisel del ::after). */
   background-color: var(--glass-bg);
+  /* El REFLEJO de cara (las fotos de referencia de Felipe: paneles de vidrio
+     con un barrido blanco diagonal bien visible). Dos luces: la entrada fuerte
+     por arriba-izquierda y una réplica FRÍA (celeste, el cielo reflejado) por
+     abajo-derecha. Pinta DETRÁS de los hijos: nunca vela texto ni capturas. */
   background-image: linear-gradient(
     115deg,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0.03) 38%,
-    rgba(255, 255, 255, 0) 62%,
-    rgba(255, 255, 255, 0.16) 100%
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.16) 18%,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, 0) 58%,
+    rgba(214, 238, 252, 0.22) 78%,
+    rgba(214, 238, 252, 0.06) 100%
   );
   /* Frost: blur bajo + saturación (lo de atrás se ablanda pero SE VE). Sin
      brightness: aclarar el backdrop es lo que lo volvía plástico lechoso. */
@@ -438,7 +448,10 @@ body {
 
 /* 3. Bisel especular: anillo fino con luz direccional que GIRA alrededor del
    canto (llena arriba-izquierda, casi se apaga en los flancos, vuelve
-   abajo-derecha). En vidrio real el brillo vive en el filo, no en la cara. */
+   abajo-derecha). En vidrio real el brillo vive en el filo, no en la cara.
+   Sobre el gradiente van dos HOTSPOTS: arcos quemados de blanco en las
+   esquinas opuestas, la firma de los paneles de vidrio de las referencias de
+   Felipe (el destello puntual donde la luz pega de lleno en el canto). */
 .glass::after {
   content: "";
   position: absolute;
@@ -446,13 +459,57 @@ body {
   border-radius: inherit;
   padding: 1.5px;
   pointer-events: none;
+  background:
+    radial-gradient(
+      36% 55% at 16% 0%,
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 0) 72%
+    ),
+    radial-gradient(
+      36% 55% at 84% 100%,
+      rgba(205, 236, 255, 0.95),
+      rgba(205, 236, 255, 0) 72%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.42) 24%,
+      rgba(255, 255, 255, 0.1) 46%,
+      rgba(214, 240, 255, 0.55) 72%,
+      rgba(236, 250, 255, 1) 100%
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* Canto GRUESO para los motores SIN lente (Safari/Firefox, el iPhone de Feli):
+   una banda perimetral lechosa-fría que insinúa el espesor del vidrio, que es
+   lo que la refracción hace en Chromium. Es SOLO PINTURA a propósito: un
+   backdrop-filter anidado (::before adentro de un elemento que ya filtra) no
+   se puede validar contra el Safari real desde acá (el WebKit de Playwright
+   en Windows no compone backdrop-filter), y si rompiera el blur del padre en
+   iOS el vidrio se perdería entero. Pintura no rompe nada, nunca.
+   LiquidGlass.tsx marca el <html>; en Chromium esta capa no existe (la lente
+   real ya hace el borde y esto la ensuciaría). */
+html[data-lente-motor="frost"] .glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 8px;
+  pointer-events: none;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.42) 24%,
-    rgba(255, 255, 255, 0.08) 46%,
-    rgba(255, 255, 255, 0.5) 72%,
-    rgba(255, 255, 255, 1) 100%
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(244, 251, 255, 0.1) 34%,
+    rgba(224, 243, 255, 0.08) 62%,
+    rgba(205, 236, 255, 0.34) 100%
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,

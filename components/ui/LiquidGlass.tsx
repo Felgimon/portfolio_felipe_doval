@@ -42,7 +42,9 @@ function aplicarLente(el: HTMLElement) {
   const clave = `${Math.round(r.width)}x${Math.round(r.height)}`;
   if (el.dataset.liquid === clave) return;
   const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
-  const p = paramsPara(r.width, r.height, radio);
+  // data-lente="suave" = vidrio en flujo (cards en grillas): lente contenida
+  // para no traer a la card vecina adentro. Ver paramsPara.
+  const p = paramsPara(r.width, r.height, radio, el.dataset.lente === "suave");
   const b = Math.min(p.width, p.height) < 30 ? 1 : 2;
   // Sin brightness: aclarar el backdrop es lo que vuelve "leche" al vidrio
   // (calibración v5.8); el saturate acompaña al frost de la clase (170%).
@@ -54,7 +56,12 @@ function aplicarLente(el: HTMLElement) {
 
 export function LiquidGlass() {
   useEffect(() => {
-    if (!soportaLente()) return;
+    // Marca el motor en <html>: "lente" (Chromium, refracción real) o "frost"
+    // (Safari/Firefox). El CSS usa la marca para darle al frost su canto
+    // grueso — y para NO dárselo a Chromium, donde ensuciaría la lente.
+    const conLente = soportaLente();
+    document.documentElement.dataset.lenteMotor = conLente ? "lente" : "frost";
+    if (!conLente) return;
     let raf = 0;
     const pintar = () => {
       document.querySelectorAll<HTMLElement>("[data-lente]").forEach(aplicarLente);
