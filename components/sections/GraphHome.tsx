@@ -311,7 +311,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
   const webgl = useWebGL();
   const forceGl = useForceGl();
-  const { marcarHeroCargado } = useAppReady();
+  const { marcarHeroCargado, ready } = useAppReady();
   const { scrollTo } = useSmoothScroll();
 
   const camRef = useRef<CamState>({ t: 0, active: 0 });
@@ -505,7 +505,15 @@ export function GraphHome({ children }: { children: ReactNode }) {
   // un elemento fijo pueden diferir (la barra de Safari), y la cámara razona en
   // las coordenadas de SU canvas. Midiendo contra la misma caja que ve la
   // cámara, esa familia entera de bugs no puede pasar.
+  // Congelamiento durante la ENTRADA del nombre: la animación engorda las
+  // letras de wght 200 a 800 y una letra flaca es más ANGOSTA — la columna se
+  // angosta y recrece durante ~1.4s. Si la banda siguiera ese vaivén, la
+  // cámara lo seguiría y el sol haría un "acomodo" al final (el tirón que
+  // reportó Felipe, visto en el modelo). La medición de ANTES de la entrada ya
+  // tiene el ancho final: el reposo ES wght 800.
+  const bandaCongeladaHasta = useRef(0);
   const medirBanda = useCallback(() => {
+    if (performance.now() < bandaCongeladaHasta.current) return;
     const capa = capaRef.current?.getBoundingClientRect();
     if (!capa) return;
     const col = columnaRef.current?.getBoundingClientRect();
@@ -517,17 +525,35 @@ export function GraphHome({ children }: { children: ReactNode }) {
         : { x0: col.right - capa.left, x1: capa.width, y0: 0, y1: hud };
   }, [narrow]);
 
+  // La entrada arranca cuando el preloader se va (`ready`): banda congelada
+  // hasta que la última letra termina de engordar (~1.4s + margen), y una
+  // medición final por si algo del layout cambió mientras tanto.
+  useEffect(() => {
+    if (!ready) return;
+    bandaCongeladaHasta.current = performance.now() + 2400;
+    const t = window.setTimeout(() => {
+      bandaCongeladaHasta.current = 0;
+      medirBanda();
+    }, 2450);
+    return () => clearTimeout(t);
+  }, [ready, medirBanda]);
+
   useEffect(() => {
     medirBanda();
     const ro = new ResizeObserver(medirBanda);
     if (columnaRef.current) ro.observe(columnaRef.current);
     if (barraRef.current) ro.observe(barraRef.current);
     window.addEventListener("resize", medirBanda);
-    const t = window.setTimeout(medirBanda, 700); // tras cargar la tipografía
+    // Tras cargar la tipografía (las métricas del fallback difieren): la señal
+    // real, no un timeout a ciegas.
+    let vivo = true;
+    document.fonts?.ready?.then(() => {
+      if (vivo) medirBanda();
+    });
     return () => {
+      vivo = false;
       ro.disconnect();
       window.removeEventListener("resize", medirBanda);
-      clearTimeout(t);
     };
   }, [medirBanda]);
 

@@ -477,7 +477,14 @@ function CameraRig({
     const remaining = camera.position.distanceTo(_target);
     const far = THREE.MathUtils.clamp(remaining / (rBall * 3), 0, 1);
     const damp = THREE.MathUtils.lerp(SETTLE, 0.05, far);
-    const k = 1 - Math.pow(damp, Math.min(delta, 0.05));
+    // Cap del delta ALTO (0.25 y no 0.05): el damping exponencial es exacto en
+    // el TIEMPO para cualquier dt, y con la capa baja la cámara viajaba en
+    // cámara lenta durante los frames largos — la entrada del nombre (peso
+    // variable → layout por frame) tira los FPS abajo y el vuelo quedaba a
+    // medio hacer, "recuperándose" recién al terminar (el acomodo tardío del
+    // sol que cazó Felipe). 0.25 solo protege del dt monstruo (volver de otra
+    // pestaña), no del jank normal.
+    const k = 1 - Math.pow(damp, Math.min(delta, 0.25));
     camera.position.lerp(_target, k);
     _lookCur.lerp(_lookGoal, k);
     camera.lookAt(_lookCur);

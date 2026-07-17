@@ -1266,6 +1266,36 @@ sol visible, 0 errores de consola · gap del nombre medido (arriba) · hover, HU
 chips, cards y página de proyecto inspeccionados de cerca en 2x · `smoke`.
 ---
 
+## v5.12.1 — El acomodo del sol: la cámara viajaba en cámara lenta
+
+Felipe insistió (con razón) en que el tirón seguía, y agregó la pista decisiva:
+también lo veía en el MODELO del sol. El gap de texto ya era monótono (medido:
+retroceso 0.00px), así que el tirón que quedaba era del sol. Dos capas de
+diagnóstico:
+
+1. Primera hipótesis (parcialmente cierta): la entrada del nombre anima el PESO
+   de las letras (200→800) y una letra flaca es más angosta — la columna
+   respira ~50px y la cámara, que mide la columna real, la seguía. Se congeló
+   la banda durante la entrada (la medición previa ya tiene el ancho final: el
+   reposo ES wght 800) + medición por `document.fonts.ready` en vez del timeout
+   a ciegas. Necesario… pero el acomodo seguía: 9.1px de movimiento tardío.
+2. La causa REAL, cazada con una timeline fina (chip del sol + columna + capa +
+   HUD muestreados juntos): la columna ya NO cambiaba — el que se movía era el
+   vuelo de la cámara, estirado en el tiempo. La animación de las letras
+   (font-variation → layout por frame) tira los FPS abajo, y el rig capaba el
+   delta a 0.05s: con frames reales de 0.2s la cámara avanzaba a 1/4 de su
+   velocidad TEMPORAL, y al terminar la entrada "recuperaba" el viaje
+   pendiente. Ese catch-up era el acomodo. Fix: cap del delta a 0.25s — el
+   damping exponencial (damp^dt) es exacto en el tiempo para cualquier dt; la
+   capa solo debe proteger del dt monstruo (volver de otra pestaña), no del
+   jank normal.
+
+Verificado con el test de acomodo (muestrea la etiqueta del sol 4.2s):
+movimiento después de t=2.6s: 0.0px (era 9.1). Gap: retroceso 0.00px, termina
+en el máximo. Regresión: clickable 5/5, touch, cta, smoke, gap — verdes.
+
+---
+
 ## v5.12 — El estudio con textura, el vidrio interactivo y el iPhone arreglado
 
 ### El bug del "Chrome sin blur" en el iPhone (era mío, y grave)
