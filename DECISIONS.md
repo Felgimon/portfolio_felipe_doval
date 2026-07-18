@@ -3,8 +3,42 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.12** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.12.2** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.12.2 — El salto del texto: reflow de peso, no el paralaje
+
+Felipe reportó que el TEXTO seguía acomodándose (el sol ya estaba quieto), con
+un dato de oro: sólo saltaban 4 letras — la E de FELIPE y VAL de DOVAL. Intuía
+el paralaje del mouse.
+
+Diagnóstico MEDIDO (scratchpad/letras.mjs, cada letra cuadro a cuadro):
+- El paralaje es INOCENTE: con jitter de mouse los saltos son idénticos que sin
+  mouse (la F se mueve 0.3px), siempre en los mismos ms.
+- La causa real: la entrada anima el PESO de cada letra (200→800 vía
+  font-variation-settings) y una letra más pesada es más ANCHA. Con las letras
+  inline, cada una empuja a las de su derecha → las del borde acumulan todo el
+  corrimiento (la L de DOVAL: 35px). Y animar font-variation-settings re-maqueta
+  el texto entero por frame (con la drop-shadow + background-clip:text, carísimo)
+  → la entrada corría a ~5fps (13 frames en 2.6s): las letras no se deslizaban,
+  TELETRANSPORTABAN en saltos de 20-40px. Las 4 que vio Felipe eran las de
+  mayor salto (E de FELIPE 23px, A 34px, L 42px).
+
+La cura (HeroName.congelarAnchos): cada letra pasa a `inline-block` con el ANCHO
+de su glifo a peso 800 (el reposo), medido forzando el peso 800 en el momento
+(a prueba de si la animación ya arrancó) y tras `document.fonts.ready` (el
+fallback tiene otras métricas). El peso sigue animando, pero DENTRO de una caja
+fija: el glifo engorda sin mover a nadie. Verificado: recorrido y salto de las
+11 letras = 0.0px. El degradado que atraviesa la línea y la drop-shadow
+sobreviven (comparado A/B/C con screenshots: idéntico). Re-mide en resize (el
+font-size cambia por el vw); verificado que la caja re-congela al tamaño nuevo.
+
+Bonus: esto arregla el sol en la RAÍZ. La columna ya no respira (ancho constante
+desde el primer frame), así que la cámara que la mide tampoco se acomoda — el
+band-freeze de v5.12.1 y el cap de delta quedan como red de seguridad, no como
+el fix. Batería completa verde.
 
 ---
 

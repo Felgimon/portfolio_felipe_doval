@@ -50,10 +50,86 @@ function tiltHacia(el: HTMLElement, px: number, py: number) {
   el.style.setProperty("--ry", `${(dx * 6).toFixed(2)}deg`);
 }
 
+/**
+ * CONGELA el ancho de cada letra a su tamaño de peso 800 (el reposo). Es lo que
+ * hace que la entrada NO salte.
+ *
+ * El problema (medido cuadro a cuadro): la entrada anima el peso de cada letra
+ * (200→800) y una letra más pesada es más ANCHA. Con las letras inline, cada
+ * una empuja a las de su derecha, así que las del borde acumulan todo el
+ * corrimiento (la L de DOVAL: 35px). Y como animar `font-variation-settings`
+ * re-maqueta el texto entero por frame — con la drop-shadow y el clip encima,
+ * carísimo — la entrada corre a ~5fps: en vez de deslizarse, las letras
+ * TELETRANSPORTAN en saltos de 20-40px. Ese era el "acomodo brusco".
+ *
+ * La cura: cada letra pasa a `inline-block` con el ANCHO de su glifo a peso 800.
+ * El peso sigue animando, pero DENTRO de una caja fija: el glifo engorda sin
+ * mover a nadie. Cero reflow → cero salto. De paso, la columna deja de respirar,
+ * así que la cámara (que la mide) tampoco se acomoda.
+ *
+ * Se mide forzando el peso 800 en el momento (no depende de si la animación ya
+ * arrancó) y sólo tras cargar la fuente real (el fallback tiene otras métricas).
+ */
+function congelarAnchos(el: HTMLElement) {
+  const letras = [...el.querySelectorAll<HTMLElement>(".nombre__letra")];
+  if (!letras.length) return;
+  // 1) Soltar cualquier candado previo (para poder RE-medir en resize, donde el
+  //    font-size cambia por el vw) y forzar peso 800 en todas (gana al var(--w)
+  //    de la animación, así el ancho medido es el FINAL aunque ya esté corriendo).
+  for (const l of letras) {
+    l.style.width = "";
+    l.style.display = "";
+    l.style.fontVariationSettings = '"wght" 800';
+  }
+  const anchos = letras.map((l) => l.getBoundingClientRect().width);
+  // 2) Candado: ancho fijo + inline-block + glifo centrado, y soltar el forzado
+  //    (el --w de la animación vuelve a mandar, ahora dentro de la caja fija).
+  //    Todo en el mismo tick sincrónico → sin frame intermedio visible.
+  letras.forEach((l, i) => {
+    l.style.width = `${anchos[i]}px`;
+    l.style.display = "inline-block";
+    l.style.textAlign = "center";
+    l.style.fontVariationSettings = "";
+  });
+}
+
 export function HeroName() {
   const reduced = useReducedMotion();
   const { ready } = useAppReady();
   const root = useRef<HTMLHeadingElement>(null);
+
+  // Congelar los anchos ANTES de la entrada. Corre en cuanto la fuente real
+  // está lista (con el fallback las métricas no son las de Bricolage). Los
+  // spans arrancan con opacity 0 hasta `is-in`, así que el candado es invisible
+  // aunque la fuente tarde; si la entrada ya empezó, la medición fuerza el peso
+  // 800 igual, así que el ancho sale correcto.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    let cancelado = false;
+    const lock = () => {
+      if (!cancelado) congelarAnchos(el);
+    };
+    if (typeof document !== "undefined" && document.fonts) {
+      if (document.fonts.status === "loaded") lock();
+      else document.fonts.ready.then(lock);
+    } else {
+      lock();
+    }
+    // En resize el font-size cambia (clamp con vw) → los anchos fijos quedan
+    // viejos. Se re-mide (congelarAnchos limpia el candado antes de medir).
+    let raf = 0;
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(lock);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      cancelado = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
   // Paralaje: solo con puntero fino (mouse) y sin reduced-motion.
   useEffect(() => {
