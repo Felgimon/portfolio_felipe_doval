@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
 import { BALL_R, GRAPH_SCALE } from "./scene-config";
 
 /**
@@ -49,12 +50,14 @@ const domeVertex = /* glsl */ `
  *    cromática del vidrio lo agarra muchísimo mejor que el gris parejo. */
 const domeFragment = /* glsl */ `
   varying vec3 vDir;
+  uniform vec3 uSunGlow; // dirección cámara→sol (halo cálido que sigue al sol)
 
-  /* Malla de líneas con AA sobre coords proyectadas (una línea por unidad). */
-  float lineas(vec2 p) {
+  /* Malla de líneas con AA sobre coords proyectadas. El grosor va en px de
+     sub-línea: mayor = líneas más gruesas (para que el vidrio tenga qué doblar). */
+  float lineas(vec2 p, float grosor) {
     vec2 g = abs(fract(p - 0.5) - 0.5) / fwidth(p);
     float d = min(g.x, g.y);
-    return 1.0 - smoothstep(0.6, 1.6, d);
+    return 1.0 - smoothstep(grosor, grosor + 1.2, d);
   }
 
   void main() {
@@ -65,30 +68,38 @@ const domeFragment = /* glsl */ `
     vec3 c = mix(floorC, wallC, smoothstep(0.30, 1.0, y));
     c = mix(c, wallC * 0.965, smoothstep(0.24, 0.0, y) * 0.5);
 
-    /* PISO: grilla técnica (solo por debajo del horizonte). */
-    if (dir.y < -0.045) {
-      vec2 p = dir.xz / -dir.y * 1.15;
-      float fade = smoothstep(0.045, 0.16, -dir.y)
-                 * (1.0 - smoothstep(4.0, 11.0, length(p)));
-      c = mix(c, vec3(0.665, 0.735, 0.80), lineas(p) * fade * 0.16);
+    /* PISO: grilla técnica GRUESA, con contraste y DENSA. La densidad no es
+       estética: con la grilla rala muchos vidrios caían ENTRE líneas y no
+       tenían nada que doblar (medido: desplazar un degradado liso da 0.3
+       niveles de diferencia = invisible). Con paso corto, todo contenedor
+       tiene varias líneas cruzándolo y la refracción se lee. */
+    if (dir.y < -0.03) {
+      vec2 p = dir.xz / -dir.y * 2.9;
+      float fade = smoothstep(0.03, 0.13, -dir.y)
+                 * (1.0 - smoothstep(9.0, 26.0, length(p)));
+      c = mix(c, vec3(0.40, 0.51, 0.64), lineas(p, 2.1) * fade * 0.50);
     }
 
-    /* PARED: puntos sutiles (plano frontal, donde mira la cámara). */
-    if (dir.z < -0.1 && dir.y > 0.02) {
-      vec2 q = vec2(dir.x, dir.y) / -dir.z * 2.1;
-      vec2 celda = fract(q) - 0.5;
-      float punto = 1.0 - smoothstep(1.1, 2.2, length(celda) / max(fwidth(q.x), 1e-4));
-      float fadeW = smoothstep(0.02, 0.14, dir.y)
-                  * (1.0 - smoothstep(2.2, 5.0, length(q)));
-      c = mix(c, vec3(0.70, 0.77, 0.84), punto * fadeW * 0.10);
+    /* PARED: la misma grilla, más tenue (proyección al plano frontal). */
+    if (dir.z < -0.1 && dir.y > 0.0) {
+      vec2 q = vec2(dir.x, dir.y) / -dir.z * 4.6;
+      float fadeW = smoothstep(0.0, 0.12, dir.y)
+                  * (1.0 - smoothstep(5.5, 12.0, length(q)));
+      c = mix(c, vec3(0.58, 0.67, 0.78), lineas(q, 2.1) * fadeW * 0.26);
     }
 
-    /* RESPLANDOR del sol: va DESPUÉS de la grilla (también la entibia — una
-       línea bajo luz naranja se ve naranja, no gris). Tope < 1.0, sin bloom. */
-    float lobe = pow(clamp(dot(dir, normalize(vec3(0.0, -0.10, -1.0))), 0.0, 1.0), 3.5);
-    c = mix(c, vec3(0.998, 0.878, 0.746), lobe * 0.42);
-    float pileta = pow(clamp(dot(dir, normalize(vec3(0.0, -1.0, -0.35))), 0.0, 1.0), 7.0);
-    c = mix(c, vec3(0.995, 0.885, 0.77), pileta * 0.30);
+    /* RESPLANDOR del sol: un HALO cálido que SIGUE al sol (uSunGlow = dir
+       cámara→sol), no una mancha fija. Va DESPUÉS de la grilla (también la
+       entibia — una línea bajo luz naranja se ve naranja). Dos lobes: uno
+       intenso y ceñido, otro amplio y suave para que el color LLEGUE a los
+       vidrios de alrededor. El sol tapa su propio centro, así que el halo se ve
+       como aura. Tope < 1.0: el bloom (umbral 1.0) no florece. */
+    float d = max(dot(dir, uSunGlow), 0.0);
+    /* El lobe ancho va CEÑIDO (pow 2.6, no 1.6): si se derrama por todo el
+       estudio, tiñe línea y piso por igual y COMPRIME su contraste — la grilla
+       se apagaba justo donde están los vidrios de la izquierda. */
+    float halo = pow(d, 6.0) * 0.58 + pow(d, 2.6) * 0.26;
+    c = mix(c, vec3(1.0, 0.80, 0.56), clamp(halo, 0.0, 0.74));
 
     gl_FragColor = vec4(min(c, vec3(0.999)), 1.0);
   }
@@ -113,6 +124,14 @@ function makeShadowTexture(): THREE.CanvasTexture {
   return t;
 }
 
+/** Actualiza el halo del sol: dirección de la CÁMARA al sol (world origin). El
+ * dome está en el origen y es enorme, así que el `dir` de cada píxel ≈ la
+ * dirección de vista; el halo aparece como aura alrededor del sol y lo sigue
+ * cuando la cámara panea. Mutación imperativa fuera del componente. */
+function seguirSol(mat: THREE.ShaderMaterial, camPos: THREE.Vector3) {
+  mat.uniforms.uSunGlow.value.copy(camPos).normalize().negate();
+}
+
 export function Studio() {
   const dome = useMemo(
     () =>
@@ -122,6 +141,9 @@ export function Studio() {
         side: THREE.BackSide,
         depthWrite: true,
         toneMapped: false,
+        uniforms: {
+          uSunGlow: { value: new THREE.Vector3(0, 0, -1) },
+        },
       }),
     [],
   );
@@ -132,6 +154,9 @@ export function Studio() {
       shadowTex.dispose();
     };
   }, [dome, shadowTex]);
+
+  // El halo sigue al sol cada frame (barato: una normalización).
+  useFrame(({ camera }) => seguirSol(dome, camera.position));
 
   return (
     <group>

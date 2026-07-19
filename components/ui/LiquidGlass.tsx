@@ -61,7 +61,10 @@ function aplicarLente(el: HTMLElement) {
   // para no traer a la card vecina adentro. Ver paramsPara.
   const suave = el.dataset.lente === "suave";
   const p = paramsPara(r.width, r.height, radio, suave);
-  const b = Math.min(p.width, p.height) < 30 ? 1 : 2;
+  // Blur BAJO a propósito: es lo que decide cuánto detalle del fondo sobrevive
+  // para que la lente tenga qué doblar. Con blur 1+2 las líneas del estudio
+  // (~5px) se lavaban y el doblez no se leía; a la mitad, pasan.
+  const b = Math.min(p.width, p.height) < 30 ? 0.5 : 1;
   // Sin brightness: aclarar el backdrop es lo que vuelve "leche" al vidrio
   // (calibración v5.8); el saturate acompaña al frost de la clase (170%).
   const arma = (q: typeof p) =>

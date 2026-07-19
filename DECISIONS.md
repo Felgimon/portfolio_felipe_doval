@@ -3,8 +3,49 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.12.2** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.12.3** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.12.3 — La refracción que por fin se VE (y el detective de por qué no)
+
+Felipe: "la textura no se nota, el vidrio no la deforma, el color ambiental no
+se nota, y no veo la aberración cromática". Cadena de diagnóstico MEDIDA (cada
+paso descartó una hipótesis):
+
+1. ¿El backdrop-filter ve el canvas 3D? SÍ — vidrio de prueba inyectado sobre el
+   disco del sol: refracta. El mecanismo nunca estuvo roto.
+2. ¿Qué capa del vidrio "borra" las líneas? NINGUNA — apagando glints, reflejo,
+   tinte y anillo de a uno, el contraste interior no cambió (rango ~15 en todos
+   los casos). Ni siquiera era el blur: sin filtro alguno el interior daba 17.
+3. La verdad (medida contra el fondo desnudo): DETRÁS del vidrio casi no había
+   nada. La grilla era rala (muchos vidrios caían entre líneas → desplazar un
+   degradado liso da 0.3 niveles de diferencia = invisible), de bajo contraste
+   (sd 5.5), y el lobe ancho del halo la COMPRIMÍA más (teñía línea y piso por
+   igual).
+
+Fixes, cada uno contra una causa medida:
+- Grilla DENSA (paso 2.9 en vez de 1.15): todo contenedor tiene varias líneas
+  cruzándolo. Con contraste real (sd 5.5 → 12.1) y grosor 2.1.
+- Halo del sol como UNIFORM que sigue a la cámara (uSunGlow = dir cámara→sol):
+  antes era una dirección fija del mundo y quedaba descentrado en los tópicos.
+  Lobe ceñido (pow 2.6) para no aplastar el contraste de la grilla.
+- Bisel de la lente más ancho (depth ~30% del lado, techo 22px): con 12px el
+  doblez quedaba escondido en el filo. CA 4 en grandes / 2 en chicos y suaves.
+- Blur de la cadena a la mitad (0.5/1): con blur 1+2 las líneas de ~5px se
+  lavaban antes de llegar a la lente.
+- Glints de esquina ceñidos (blur 11-12, no 18-20): inundaban de blanco el
+  interior de los elementos chicos.
+
+Resultado (zoom 2x): la línea que cruza el CTA entra y sale doblada en S con
+los canales de color separados (rojo/naranja por dentro, celeste por fuera) —
+la firma del componente de referencia. El HUD dobla las líneas del piso.
+Herramientas nuevas en scratchpad: prueba-doblez.mjs (diferencia con/sin lente),
+atenuacion.mjs (fondo desnudo vs a través del vidrio), quien-tapa.mjs (bisección
+de capas), culpa-blur.mjs (bisección de la cadena).
+
+Batería verde + póster regenerado.
 
 ---
 

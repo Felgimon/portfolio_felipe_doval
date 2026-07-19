@@ -80,12 +80,16 @@
      El eco y los bloomos van en AZUL FRÍO, no en blanco puro: el vidrio real
      refleja el cielo. (Felipe lo cazó de rebote: la aberración cromática
      pierde el canal rojo en el borde del viewport y deja un destello celeste;
-     le gustó y acá queda como parte del material, a propósito y siempre.) */
+     le gustó y acá queda como parte del material, a propósito y siempre.)
+     El bloom de esquina va CEÑIDO (blur 11-12, no 18-20): con radio grande
+     inundaba de blanco el interior de los elementos chicos y borraba el fondo
+     que la lente tiene que doblar. Ceñido, el glint sigue leyéndose en el canto
+     y el centro queda limpio. */
   --glass-glints:
     inset 0 1.5px 1px -1px rgba(255, 255, 255, 0.98),
     inset 0 -2px 1.5px -1px rgba(190, 228, 250, 0.75),
-    inset 4px 8px 18px -10px rgba(255, 255, 255, 0.9),
-    inset -4px -9px 20px -10px rgba(175, 220, 248, 0.75);
+    inset 3px 6px 11px -7px rgba(255, 255, 255, 0.92),
+    inset -3px -7px 12px -7px rgba(175, 220, 248, 0.78);
 
   /* Estados */
   --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */

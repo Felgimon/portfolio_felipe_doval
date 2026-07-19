@@ -154,17 +154,21 @@ export function paramsPara(
       width: Math.round(w),
       height: Math.round(h),
       radius: Math.round(Math.min(radius, lado / 2)),
-      depth: Math.round(Math.min(Math.max(lado * 0.1, 3), 7)),
-      strength: Math.round(Math.min(Math.max(lado * 0.3, 12), 24)),
-      chromaticAberration: 1,
+      depth: Math.round(Math.min(Math.max(lado * 0.22, 5), 14)),
+      strength: Math.round(Math.min(Math.max(lado * 0.34, 14), 26)),
+      chromaticAberration: 2,
     };
   }
   return {
     width: Math.round(w),
     height: Math.round(h),
     radius: Math.round(Math.min(radius, lado / 2)),
-    depth: Math.round(Math.min(Math.max(lado * 0.16, 4), 12)),
+    // `depth` es el ANCHO de la banda donde el borde hace de lupa. Con 12px en
+    // un botón de 50 el doblez quedaba escondido en el filo y no se leía; con
+    // ~30% del lado la lente ocupa una franja visible y el fondo se curva de
+    // verdad (el techo evita el "zoom exagerado" que advierte el video).
+    depth: Math.round(Math.min(Math.max(lado * 0.3, 6), 22)),
     strength: Math.round(Math.min(Math.max(lado * 1.2, 26), 68)),
-    chromaticAberration: chico ? 1 : 2,
+    chromaticAberration: chico ? 2 : 4,
   };
 }
