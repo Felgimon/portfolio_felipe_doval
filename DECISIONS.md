@@ -3,10 +3,59 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.15** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.16** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
 
 ---
+
+## v5.16 — Feli apoyado en el texto (y no una foto en un marco)
+
+Idea de Felipe: en vez de la foto enmarcada en vidrio, un recorte suyo APOYADO
+sobre el texto. Dos versiones, porque la forma de la pantalla manda: en ancho hay
+lugar al costado (del lado opuesto al sol) y se para de espaldas contra la
+columna; en angosto no hay costados, así que se apoya ENCIMA, con el bloque de
+texto haciendo de mesa. Sin el "Feli · Buenos Aires" (ya se dice en el footer y
+en Contacto).
+
+### Auditoría de los recortes (antes de escribir una línea)
+Los cuatro PNG se midieron: alfa real, filo, resolución y peso. El susto inicial
+—30-46% de píxeles con alfa "parcial"— era falso: ese tramo es 250-254, o sea el
+cuerpo, visualmente opaco. La banda de transición REAL es 1.4-2.7%, un antialias
+normal, y `claros=0%` descarta el halo blanco que arruina un recorte sobre fondo
+claro. A 6x sobre el pelo (lo más difícil) el filo se funde sin línea de matte.
+Veredicto: sirven como están.
+
+### Las dos piezas
+- **Ancho** (`feli-parado.png`, 446x1600): cuerpo entero con zapatillas, que es
+  lo que lo deja PARADO sobre la grilla del piso 3D — el recorte a media pierna
+  se hundía en el suelo. Va espejado (`-scale-x-100`) porque en la foto la
+  espalda queda del lado equivocado. Alto en vh con `clamp` y ancho automático:
+  se acomoda a cualquier pantalla sin deformarse, y alineado al final de su
+  columna la espalda toca el texto sea cual sea el alto que resulte. El texto
+  arranca con `pl-3` y no más: con 2rem se leía "parado al lado", que es otra
+  cosa.
+- **Angosto** (`feli-apoyado.png`, 1600x1561): brazos cruzados, recortado a la
+  altura de los antebrazos. Acá estuvo el único problema de verdad: el PNG ya
+  viene cortado en el torso, así que SIEMPRE queda un filo recto abajo y se leía
+  "foto cortada", no "apoyado". Recortar más no lo arregla, sólo lo mueve. Se
+  disuelve con `mask-image`: los antebrazos quedan nítidos y lo que sigue se
+  desvanece.
+
+Las dos llevan sombra de contacto (un radial suave) — sin eso quedan pegoteadas
+sobre el estudio 3D en vez de apoyadas en él.
+
+### Art direction sin pagar dos descargas
+Los dos recortes se montan y se ocultan por CSS (`md:hidden` / `hidden md:block`).
+Como next/image es lazy por defecto, el que no corresponde NUNCA entra al
+viewport y el navegador no lo baja: art direction real sin el costo de bajar las
+dos imágenes.
+
+### De paso
+El stack pasó DEBAJO y a ancho completo: la figura se queda con el costado del
+texto, y las cards dejan de competir por los ~430px que les quedaban.
+
+Verificado a 1920, 1440, 820 y 768 (el límite de `md`): sin desborde horizontal
+en ninguno, y la figura apoyada en todos.
 
 ## v5.15 — El sol no puede cambiar de color según la máquina
 
