@@ -1,6 +1,11 @@
 "use client";
 import { useEffect } from "react";
 import { filtroLente, paramsPara } from "@/lib/lente";
+import {
+  alCambiarRendimiento,
+  nivelRendimiento,
+  vigilarRendimiento,
+} from "@/lib/rendimiento";
 
 /**
  * Aplica el Liquid Glass real (lente + aberración cromática, ver lib/lente.ts)
@@ -48,19 +53,32 @@ function soportaLente(): boolean {
 /** Las dos cadenas de cada elemento: reposo y PRESIONADO (la lupa se hunde). */
 const cadenas = new WeakMap<HTMLElement, { normal: string; honda: string }>();
 
-/** Mutación imperativa fuera del componente (regla react-hooks/immutability). */
-function aplicarLente(el: HTMLElement) {
-  const r = el.getBoundingClientRect();
-  if (r.width < 24 || r.height < 12) return;
+/** Mutación imperativa fuera del componente (regla react-hooks/immutability).
+ * `medida` viene del ResizeObserver (borde-caja, sin flush de layout); si no
+ * está, se cae a medir el elemento. */
+function aplicarLente(el: HTMLElement, medida?: { w: number; h: number }) {
+  const r = medida ?? (() => {
+    const b = el.getBoundingClientRect();
+    return { w: b.width, h: b.height };
+  })();
+  if (r.w < 24 || r.h < 12) return;
+  // Equipo que no llega (lib/rendimiento.ts): el vidrio se queda con el frost
+  // del CSS y NO se le arma la cadena SVG. El sitio pierde el doblez pero se
+  // mueve; el criterio es que la fluidez manda sobre el efecto.
+  if (nivelRendimiento() === "bajo") {
+    el.style.backdropFilter = "";
+    delete el.dataset.liquid;
+    return;
+  }
   // El filtro codifica el tamaño: si no cambió, el que tiene puesto sigue
   // siendo exacto. Evita rearmar el data URI en cada pasada del observer.
-  const clave = `${Math.round(r.width)}x${Math.round(r.height)}`;
+  const clave = `${Math.round(r.w)}x${Math.round(r.h)}`;
   if (el.dataset.liquid === clave) return;
   const radio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
   // data-lente="suave" = vidrio en flujo (cards en grillas): lente contenida
   // para no traer a la card vecina adentro. Ver paramsPara.
   const suave = el.dataset.lente === "suave";
-  const p = paramsPara(r.width, r.height, radio, suave);
+  const p = paramsPara(r.w, r.h, radio, suave);
   // Blur BAJO a propósito: es lo que decide cuánto detalle del fondo sobrevive
   // para que la lente tenga qué doblar. Con blur 1+2 las líneas del estudio
   // (~5px) se lavaban y el doblez no se leía; a la mitad, pasan.
@@ -113,29 +131,71 @@ export function LiquidGlass() {
     const conLente = soportaLente();
     document.documentElement.dataset.lenteMotor = conLente ? "lente" : "frost";
     if (!conLente) return;
+
+    /* El filtro sólo depende del TAMAÑO del elemento, así que quien manda es un
+     * ResizeObserver: dispara una vez al observar (aplicación inicial) y después
+     * únicamente cuando el elemento cambia de medida de verdad — carga de la
+     * tipografía, resize de ventana, reflow del layout. Todo eso queda cubierto
+     * sin escuchar 'resize' ni re-medir nada a mano.
+     *
+     * Antes esto colgaba del MutationObserver: CADA mutación del DOM (y GSAP
+     * muta estilos por frame) reprogramaba un pase que hacía querySelectorAll +
+     * getBoundingClientRect sobre los ~33 vidrios, o sea un LAYOUT SINCRÓNICO
+     * forzado por frame para descubrir que casi nunca había cambiado nada.
+     * `borderBoxSize` además da la medida de layout sin flush y sin contaminarse
+     * con los transforms de las animaciones. */
+    const ro = new ResizeObserver((entradas) => {
+      for (const e of entradas) {
+        const caja = e.borderBoxSize?.[0];
+        aplicarLente(
+          e.target as HTMLElement,
+          caja
+            ? { w: caja.inlineSize, h: caja.blockSize }
+            : { w: e.contentRect.width, h: e.contentRect.height },
+        );
+      }
+    });
+
+    const observados = new WeakSet<Element>();
+    const observar = () => {
+      for (const el of document.querySelectorAll("[data-lente]")) {
+        if (observados.has(el)) continue;
+        observados.add(el);
+        ro.observe(el);
+      }
+    };
+    observar();
+
+    /* Las páginas de proyecto montan sus cards DESPUÉS (navegación client-side
+     * con el layout persistente). El MutationObserver queda SÓLO para descubrir
+     * vidrio nuevo — ya no mide nada: el alta la resuelve el ResizeObserver. Se
+     * coalescen las ráfagas en un rAF y se ignoran las mutaciones que no suman
+     * nodos (escribir style/dataset no dispara childList, así que no se
+     * retroalimenta). */
     let raf = 0;
-    const pintar = () => {
-      document.querySelectorAll<HTMLElement>("[data-lente]").forEach(aplicarLente);
-    };
-    const programar = () => {
+    const mo = new MutationObserver((muts) => {
+      if (!muts.some((m) => m.addedNodes.length > 0)) return;
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(pintar);
-    };
-    programar();
-    // Tras cargar la tipografía las pastillas cambian de ancho.
-    const t = window.setTimeout(programar, 800);
-    window.addEventListener("resize", programar);
-    // Las páginas de proyecto montan sus cards DESPUÉS (navegación client-side
-    // con el layout persistente): sin esto, todo lo que aparece tras la carga
-    // inicial quedaría sin lente. childList solamente — escribir style/dataset
-    // no dispara childList, así que no se retroalimenta.
-    const mo = new MutationObserver(programar);
+      raf = requestAnimationFrame(observar);
+    });
     mo.observe(document.body, { childList: true, subtree: true });
+
+    /* Vigilancia de FPS: si el equipo no llega, se le saca la cadena SVG a TODO
+     * el vidrio de una (el frost del CSS queda). Pasa una sola vez por sesión. */
+    const cortarVigilancia = vigilarRendimiento();
+    const bajaNivel = alCambiarRendimiento(() => {
+      for (const el of document.querySelectorAll<HTMLElement>("[data-lente]")) {
+        el.style.backdropFilter = "";
+        delete el.dataset.liquid;
+      }
+    });
+
     return () => {
       cancelAnimationFrame(raf);
-      clearTimeout(t);
-      window.removeEventListener("resize", programar);
       mo.disconnect();
+      ro.disconnect();
+      cortarVigilancia();
+      bajaNivel();
     };
   }, []);
   return null;

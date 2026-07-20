@@ -1,5 +1,12 @@
 "use client";
-import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+  type RefObject,
+} from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
@@ -17,6 +24,7 @@ import {
   spinSun,
 } from "./sun";
 import { bloomSupported, isSoftwareRenderer } from "@/lib/gpu";
+import { alCambiarRendimiento, nivelRendimiento } from "@/lib/rendimiento";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
 /** Escala del grafo. El sol queda centrado; la CÁMARA hace todo el movimiento. */
@@ -663,15 +671,27 @@ export default function GraphCanvas({
   // En render por software (SwiftShader) se capa DPR a 1 y sin antialias para
   // sostener FPS; en GPU real, calidad completa.
   const lite = useMemo(() => isSoftwareRenderer(), []);
+  /* Calidad adaptativa (lib/rendimiento.ts): si el equipo no sostiene la
+   * cadencia, el canvas también baja. Es el ahorro más grande de MEMORIA de la
+   * página: a DPR 2 en 1920x1080 el buffer de dibujo es de 3840x2160, y el
+   * composer del bloom se lleva varios más de ese tamaño. A DPR 1 son 4x menos
+   * píxeles (y 4x menos VRAM) por buffer. Arranca en "alto" siempre para no
+   * romper la hidratación; el veredicto llega después de medir. */
+  const bajo = useSyncExternalStore(
+    alCambiarRendimiento,
+    () => nivelRendimiento() === "bajo",
+    () => false, // en servidor no hay nada medido: calidad plena
+  );
   // Bloom SOLO si la GPU puede crear sus buffers half-float (WebGL2 + ext).
   // En una netbook WebGL1 el composer no arranca y el canvas queda negro:
   // el sol sin halo se ve; un canvas negro no.
-  const bloom = useMemo(() => !lite && bloomSupported(), [lite]);
-  const dpr = lite
-    ? 1
-    : typeof window !== "undefined"
-      ? Math.min(window.devicePixelRatio, 2)
-      : 1.5;
+  const bloom = useMemo(() => !lite && !bajo && bloomSupported(), [lite, bajo]);
+  const dpr =
+    lite || bajo
+      ? 1
+      : typeof window !== "undefined"
+        ? Math.min(window.devicePixelRatio, 2)
+        : 1.5;
 
   return (
     <Canvas

@@ -3,8 +3,77 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.13.2** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.14** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.14 — Los FPS: el vidrio costaba una pasada de más (×2, y ×4 en gama baja)
+
+Felipe reportó bajones de FPS en Trabajo y Recorrido, con la pregunta correcta
+detrás: "si a mí me pasa, ¿cómo le irá a una máquina de gama baja?".
+
+### El método: ablación, no intuición
+El WebGL de headless es SwiftShader y tapa cualquier otra medición, así que se
+midió el costo del DOM con el CANVAS OCULTO (en una GPU real el WebGL es barato;
+lo que queda es lo que de verdad pesa). Frame-times reales scrolleando con
+eventos wheel, apagando de a una las capas sospechosas:
+
+| escenario (#trabajo, canvas oculto) | frame time |
+| --- | --- |
+| actual (lente SVG en las 33) | 117 ms |
+| lente sólo en las 16 visibles | 120 ms |
+| blur simple, sin SVG | 39 ms |
+| sin ningún backdrop-filter | 17 ms |
+
+Dos hallazgos que cambiaron el plan:
+1. **El gating por viewport NO sirve** (117 → 120ms): Chrome ya no rasteriza lo
+   que está fuera de pantalla. Se descartó antes de escribirlo.
+2. **El filtro SVG es el 78% del costo.** Inventario: 33 elementos con lente,
+   1.51 M px² filtrados. Y como el canvas 3D repinta detrás, el backdrop se
+   invalida y TODO eso se recalcula por frame.
+
+Segunda tanda, para saber de dónde sale ese costo: la cadena es **lineal en
+pasadas** de `feDisplacementMap` (~30ms cada una, porque cada pasada reprocesa
+el área entera) y proporcional al ÁREA — 1 pasada 57ms, 2 pasadas 94ms, 3
+pasadas 110ms. Las cards "suave" aportan ~90% del área.
+
+### Los arreglos
+- **Una pasada para el vidrio EN FLUJO** (lente.ts): `chromaticAberration: 0` en
+  `paramsPara({suave})` y `filtroLente` emite un único `feDisplacementMap`.
+  Conserva la REFRACCIÓN entera (el doblez de las líneas, que es el efecto que
+  se ve) y sólo resigna el fringe de color, que en esas cards ya era de 2px.
+  Medido contra la versión de 3 pasadas: diferencia media **0.44/255 (0.17%)**,
+  y sólo el **2.24%** de los píxeles cambia de forma perceptible. El vidrio
+  FLOTANTE (HUD, CTAs, chips) mantiene las 3 pasadas con CA completa: es chico,
+  cuesta centavos y es donde el efecto luce.
+- **ResizeObserver en vez de re-medir por mutación** (LiquidGlass.tsx): antes
+  cada mutación del DOM (y GSAP muta estilos por frame) reprogramaba un pase de
+  `querySelectorAll` + `getBoundingClientRect` sobre los 33 vidrios — un layout
+  sincrónico forzado por frame para descubrir que casi nunca cambiaba nada. El
+  filtro sólo depende del TAMAÑO, así que ahora manda un ResizeObserver
+  (`borderBoxSize`, sin flush). El MutationObserver queda sólo para descubrir
+  vidrio nuevo, e ignora las mutaciones que no agregan nodos.
+- **Calidad adaptativa** (lib/rendimiento.ts, nuevo): mide la cadencia real en
+  ventanas de 100 frames y, si la MEDIANA supera 26ms (~38fps) dos ventanas
+  seguidas, degrada UNA vez y no vuelve (el parpadeo de subir y bajar calidad
+  molesta más que unos FPS). Al degradar: el vidrio se queda con el frost del
+  CSS (sin cadena SVG) y el canvas baja a DPR 1 sin bloom — que además es el
+  mayor ahorro de MEMORIA (a DPR 2 en 1920x1080 el buffer es de 3840x2160, y el
+  composer del bloom se lleva varios más). Descarta los dt monstruo (pestaña en
+  segundo plano) y deja de vigilar a los 25s. `?perf=bajo` / `?perf=alto` fuerzan
+  el nivel para probar sin una netbook a mano.
+
+### Resultado
+| | #trabajo medio | #trabajo p95 | #recorrido | heap JS |
+| --- | --- | --- | --- | --- |
+| antes | 109.6 ms | 135.9 ms | — | 17.4 MB |
+| después (calidad plena) | **52.1 ms** | 94.2 ms | 25.9 ms | **13.6 MB** |
+| gama baja (automático) | **25.7 ms** | **28.4 ms** | 16.6 ms | 12.1 MB |
+
+×2.1 en calidad plena y ×4.3 con la degradación, con el p95 de 135.9 a 28.4ms
+(que es el bajón que se siente). Sin regresión visual: verificado por captura y
+por diferencia numérica.
 
 ---
 

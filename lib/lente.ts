@@ -80,8 +80,22 @@ export function mapaDesplazamiento({
 }
 
 /**
- * El filtro completo (desplazamiento × 3 canales + recombinación) como data URI
- * listo para `backdrop-filter: url(...)`.
+ * El filtro completo como data URI listo para `backdrop-filter: url(...)`.
+ *
+ * COSTO (medido, ver DECISIONS v5.14): cada `feDisplacementMap` reprocesa el
+ * ÁREA ENTERA del elemento, así que la cadena es LINEAL en pasadas — ~30ms por
+ * pasada con los vidrios de la sección Trabajo. Y como el canvas 3D repinta
+ * detrás, el backdrop se invalida y todo esto se recalcula POR FRAME.
+ *
+ * Por eso hay dos calidades, siguiendo la división que ya existía:
+ *  - `chromaticAberration > 0` (vidrio FLOTANTE: HUD, CTAs, chips) → las 3
+ *    pasadas con la aberración cromática completa. Son elementos CHICOS, así
+ *    que las 3 pasadas cuestan centavos, y es donde el efecto luce.
+ *  - `chromaticAberration === 0` (vidrio en FLUJO: cards de las grillas) → UNA
+ *    sola pasada. Conserva la REFRACCIÓN íntegra (el doblez de las líneas del
+ *    piso, que es el efecto que se ve) y sólo resigna el fringe de color, que
+ *    en estas cards ya era de 2px — invisible. Son las que aportan ~90% del
+ *    área filtrada de la página: acá está el grueso del ahorro.
  */
 export function filtroLente({
   width,
@@ -92,11 +106,9 @@ export function filtroLente({
   chromaticAberration,
 }: ParamsLente): string {
   const mapa = mapaDesplazamiento({ width, height, radius, depth });
-  const svg = `<svg height="${height}" width="${width}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <filter id="displace" color-interpolation-filters="sRGB">
-                <feImage x="0" y="0" height="${height}" width="${width}" href="${mapa}" result="displacementMap" />
-                <feDisplacementMap in="SourceGraphic" in2="displacementMap"
+  const desplazar =
+    chromaticAberration > 0
+      ? `<feDisplacementMap in="SourceGraphic" in2="displacementMap"
                     scale="${strength + chromaticAberration * 2}"
                     xChannelSelector="R" yChannelSelector="G" />
                 <feColorMatrix type="matrix"
@@ -121,7 +133,15 @@ export function filtroLente({
                             0 0 1 0 0
                             0 0 0 1 0" result="displacedB" />
                 <feBlend in="displacedR" in2="displacedG" mode="screen"/>
-                <feBlend in2="displacedB" mode="screen"/>
+                <feBlend in2="displacedB" mode="screen"/>`
+      : `<feDisplacementMap in="SourceGraphic" in2="displacementMap"
+                    scale="${strength}"
+                    xChannelSelector="R" yChannelSelector="G" />`;
+  const svg = `<svg height="${height}" width="${width}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="displace" color-interpolation-filters="sRGB">
+                <feImage x="0" y="0" height="${height}" width="${width}" href="${mapa}" result="displacementMap" />
+                ${desplazar}
             </filter>
         </defs>
     </svg>`;
@@ -156,7 +176,11 @@ export function paramsPara(
       radius: Math.round(Math.min(radius, lado / 2)),
       depth: Math.round(Math.min(Math.max(lado * 0.22, 5), 14)),
       strength: Math.round(Math.min(Math.max(lado * 0.34, 14), 26)),
-      chromaticAberration: 2,
+      // CA 0 = UNA sola pasada de desplazamiento (ver filtroLente). Estas cards
+      // son las grandes: aportan ~90% del área filtrada y las 3 pasadas se
+      // pagaban por frame. La refracción queda intacta; el fringe que se
+      // resigna medía 2px sobre una card de 300px — no se veía.
+      chromaticAberration: 0,
     };
   }
   return {
