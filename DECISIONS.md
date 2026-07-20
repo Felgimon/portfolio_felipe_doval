@@ -3,8 +3,38 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.13.1** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.13.2** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.13.2 — El grosor lo manda la perspectiva, no la pantalla
+
+El diagnóstico lo hizo Felipe y desarmó las dos versiones anteriores: v5.13 y
+v5.13.1 fijaban el grosor **en píxeles de pantalla**, y eso IGNORA la perspectiva.
+Si las celdas se achican con la distancia pero la línea conserva su ancho en
+píxeles, la línea queda cada vez más desproporcionada respecto del cuadrado que
+delimita — por eso las de atrás "parecen tener un grosor enorme". El pedido
+original ("que sea constante") se había tomado literal; lo constante tiene que
+ser la RELACIÓN línea/celda, no el ancho en píxeles.
+
+Fix (función `lineas`, Studio.tsx): el ancho pasa a definirse como **fracción de
+la celda** (espacio del mundo, no de pantalla) — 0.028 el piso, 0.026 la pared.
+Así la línea se achica en proporción con su cuadrado, como cinta de marcar
+pegada al piso. El precio es la minificación (a lo lejos la línea baja de un
+píxel y titila), resuelto como en la técnica "pristine grid" de Ben Golus:
+
+1. Nunca se dibuja más fino que ~1px (`dibujo = max(objetivo, medio px)`) y se
+   COMPENSA la intensidad por `objetivo / dibujo`. En vez de una línea que
+   parpadea, una de 1px cada vez más tenue: se conserva la "tinta" total, que es
+   lo que percibe el ojo.
+2. Pasado un cuadrado por píxel se funde al PROMEDIO (la fracción cubierta), así
+   el fondo converge a un tono plano en lugar de moiré.
+
+Las dos familias se unen con `mix(x, 1, y)` (unión tipo "over"), más suave que
+`max` en los cruces. Verificado en el render de producción a 2x: la relación
+línea/celda se mantiene de cerca a lejos y el vidrio conserva detalle que doblar
+(la refracción cromática sigue leyéndose en los CTAs).
 
 ---
 

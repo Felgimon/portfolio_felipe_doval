@@ -52,34 +52,37 @@ const domeFragment = /* glsl */ `
   varying vec3 vDir;
   uniform vec3 uSunGlow; // dirección cámara→sol (halo cálido que sigue al sol)
 
-  /* Malla de líneas de GROSOR CONSTANTE EN PANTALLA. Para cada eje medimos la
-     distancia en PÍXELES a la línea más cercana (distancia en celdas ÷ gradiente
-     exacto del eje) → el núcleo mide "grosor" px igual cerca que lejos.
+  /* Malla de líneas con PERSPECTIVA CORRECTA: el ancho se define como FRACCIÓN
+     DE LA CELDA (mundo 3D), no en píxeles de pantalla. Es la corrección que pidió
+     Felipe: fijar el grosor en píxeles ignora la perspectiva, así que al achicarse
+     las celdas a lo lejos la línea conserva su ancho y queda desproporcionada —
+     se lee "enorme" contra su propia celda. Con el ancho en celdas, la línea se
+     achica EN PROPORCIÓN con el cuadrado que delimita, como cinta de marcar
+     pegada al piso: es lo que hace la perspectiva de verdad.
 
-     El bug que cazó Felipe NO era el ancho en sí, sino la MINIFICACIÓN: a lo
-     lejos entran muchas celdas por píxel; con d = min(g.x, g.y) y un grosor de
-     ~1.7px la línea ocupaba casi TODA la celda y d < grosor daba verdadero en el
-     píxel entero → la grilla se empastaba en una banda sólida que se lee como
-     "más gruesa". El viejo término de saturación no alcanzaba a apagarla antes
-     de que eso pasara. La cura es medir la COBERTURA real de la línea dentro de
-     la celda (cob = ancho_línea / ancho_celda, ambos en px) y atenuar por
-     1 - cob: apenas la línea empieza a comerse la celda, la grilla se DESVANECE
-     en vez de engordar. Resultado: mismo grosor en todo el piso y desaparición
-     limpia hacia el horizonte, sin manchas. Cada eje se evalúa por separado (no
-     con min) para que una familia densa se apague sin arrastrar a la otra, y se
-     unen con max. */
-  float lineas(vec2 p, float grosor) {
-    vec2 w = vec2(
-      length(vec2(dFdx(p.x), dFdy(p.x))),
-      length(vec2(dFdx(p.y), dFdy(p.y)))
-    );
-    w = max(w, vec2(1e-6));
-    const float aa = 1.0;                                // suavizado, en px
-    vec2 pix = abs(fract(p - 0.5) - 0.5) / w;            // dist. a la línea, en px
-    vec2 axis = 1.0 - smoothstep(grosor, grosor + aa, pix);
-    vec2 cob = min((2.0 * grosor + aa) * w, 1.0);        // línea/celda ∈ [0,1]
-    axis *= 1.0 - cob;                                   // apaga si celda < línea
-    return max(axis.x, axis.y);                          // unión de las familias
+     El precio de trabajar en mundo es la MINIFICACIÓN: a lo lejos la línea baja
+     de un píxel y, sin cuidado, titila o desaparece. Se resuelve como en la
+     técnica "pristine grid" (Ben Golus), en dos pasos:
+      1. No se dibuja nunca más fino que ~1px (dibujo = max(objetivo, medio px)),
+         y se COMPENSA bajando la intensidad por objetivo/dibujo → en vez de una
+         línea que parpadea, una línea de 1px cada vez más tenue. La "tinta"
+         total se conserva, que es lo que percibe el ojo.
+      2. Pasado un cuadrado por píxel se funde al PROMEDIO (la fracción cubierta
+         = ancho), así el fondo converge a un tono plano en lugar de moiré.
+     Las dos familias se unen con mix(x, 1, y) (unión tipo "over"), más suave que
+     max en los cruces. */
+  float lineas(vec2 p, float ancho) {
+    vec2 dx = dFdx(p), dy = dFdy(p);
+    // Celdas por píxel, por eje (norma exacta del gradiente de cada componente).
+    vec2 w = max(vec2(length(vec2(dx.x, dy.x)), length(vec2(dx.y, dy.y))), vec2(1e-6));
+    vec2 objetivo = vec2(ancho * 0.5);            // semi-ancho, en CELDAS
+    vec2 dibujo = max(objetivo, w * 0.5);         // piso de ~1px (anti-titileo)
+    vec2 aa = w * 0.5;                            // transición de ~1px
+    vec2 d = abs(fract(p - 0.5) - 0.5);           // dist. a la línea, en celdas
+    vec2 l = smoothstep(dibujo + aa, dibujo - aa, d);
+    l *= clamp(objetivo / dibujo, 0.0, 1.0);      // compensa el ensanche a 1px
+    l = mix(l, vec2(ancho), clamp(w * 2.0 - 1.0, 0.0, 1.0)); // promedio a lo lejos
+    return mix(l.x, 1.0, l.y);                    // unión de las dos familias
   }
 
   void main() {
@@ -99,7 +102,7 @@ const domeFragment = /* glsl */ `
       vec2 p = dir.xz / -dir.y * 2.9;
       float fade = smoothstep(0.03, 0.13, -dir.y)
                  * (1.0 - smoothstep(9.0, 26.0, length(p)));
-      c = mix(c, vec3(0.40, 0.51, 0.64), lineas(p, 1.2) * fade * 0.50);
+      c = mix(c, vec3(0.40, 0.51, 0.64), lineas(p, 0.028) * fade * 0.50);
     }
 
     /* PARED: la misma grilla, más tenue (proyección al plano frontal). */
@@ -107,7 +110,7 @@ const domeFragment = /* glsl */ `
       vec2 q = vec2(dir.x, dir.y) / -dir.z * 4.6;
       float fadeW = smoothstep(0.0, 0.12, dir.y)
                   * (1.0 - smoothstep(5.5, 12.0, length(q)));
-      c = mix(c, vec3(0.58, 0.67, 0.78), lineas(q, 1.0) * fadeW * 0.26);
+      c = mix(c, vec3(0.58, 0.67, 0.78), lineas(q, 0.026) * fadeW * 0.26);
     }
 
     /* RESPLANDOR del sol: un HALO cálido que SIGUE al sol (uSunGlow = dir
