@@ -23,7 +23,13 @@ import {
   advanceSuns,
   spinSun,
 } from "./sun";
-import { bloomSupported, isSoftwareRenderer } from "@/lib/gpu";
+import {
+  bloomForzado,
+  bloomSupported,
+  compensacionForzada,
+  dprForzado,
+  isSoftwareRenderer,
+} from "@/lib/gpu";
 import { alCambiarRendimiento, nivelRendimiento } from "@/lib/rendimiento";
 import { ladoModelo, nodos } from "@/lib/navigation";
 
@@ -83,11 +89,15 @@ function SunCore({
   lite,
   reduced,
   activeIndex,
+  sinBloom,
 }: {
   radius: number;
   lite: boolean;
   reduced: boolean;
   activeIndex: number;
+  /** No hay post-proceso: el shader compensa el recorte a 8 bits (ver
+   * CHUNK_SIN_BLOOM en sun.ts) para que el sol tenga la misma gradación. */
+  sinBloom: boolean;
 }) {
   const R = radius * 0.5;
   const group = useRef<THREE.Group>(null);
@@ -100,8 +110,14 @@ function SunCore({
   useEffect(() => prepSunTexture(solTex), [solTex]);
   const mat = useMemo(
     () =>
-      makeSunMaterial({ bright: 1.3, invR: 1 / R, animated: !lite, map: solTex }),
-    [R, lite, solTex],
+      makeSunMaterial({
+        bright: 1.3,
+        invR: 1 / R,
+        animated: !lite,
+        map: solTex,
+        sinBloom,
+      }),
+    [R, lite, solTex, sinBloom],
   );
   // 4 protuberancias, cada una con su MATERIAL propio (uAlpha independiente:
   // cada arco vive y muere en su propio ciclo). Usan blending NORMAL → se ven
@@ -113,6 +129,15 @@ function SunCore({
         : Array.from({ length: 4 }, () => makeProminenceMaterial(1 / (R * 0.5))),
     [R, lite],
   );
+  /* Nota para el próximo que lo intente: se probó una CORONA aditiva (sprite
+   * radial, makeCoronaTexture en sun.ts) para reemplazar el derrame del bloom
+   * cuando no hay post-proceso. NO sirve y está medido: el contraste local
+   * quedó en sd 36.8 contra los 36.4 de no poner nada (referencia con bloom:
+   * 29.8). La razón es de fondo — el bloom baja el contraste porque desenfoca
+   * la PROPIA imagen y las vetas brillantes sangran sobre las oscuras; un
+   * degradado radial fijo sólo suma una rampa de baja frecuencia y no toca la
+   * alta. Igualar ese resto pide un blur real, que es exactamente el post-proceso
+   * que en este escalón no podemos pagar. */
   useEffect(() => {
     return () => {
       mat.dispose();
@@ -174,11 +199,13 @@ function GraphGroup({
   hovered,
   lite,
   reduced,
+  sinBloom,
 }: {
   activeIndex: number;
   hovered: number;
   lite: boolean;
   reduced: boolean;
+  sinBloom: boolean;
 }) {
   return (
     <group scale={S}>
@@ -187,12 +214,14 @@ function GraphGroup({
         hovered={hovered}
         lite={lite}
         reduced={reduced}
+        sinBloom={sinBloom}
       />
       <SunCore
         radius={BALL_R}
         lite={lite}
         reduced={reduced}
         activeIndex={activeIndex}
+        sinBloom={sinBloom}
       />
     </group>
   );
@@ -595,6 +624,7 @@ function Scene({
   hovered,
   reduced,
   lite,
+  sinBloom,
   onReady,
   onProject,
   onActivity,
@@ -605,6 +635,7 @@ function Scene({
   hovered: number;
   reduced: boolean;
   lite: boolean;
+  sinBloom: boolean;
   onReady?: () => void;
   onProject?: (p: NodeProj[]) => void;
   onActivity?: () => void;
@@ -620,6 +651,7 @@ function Scene({
         hovered={hovered}
         lite={lite}
         reduced={reduced}
+        sinBloom={sinBloom}
       />
       <CameraRig
         camRef={camRef}
@@ -677,21 +709,36 @@ export default function GraphCanvas({
    * composer del bloom se lleva varios más de ese tamaño. A DPR 1 son 4x menos
    * píxeles (y 4x menos VRAM) por buffer. Arranca en "alto" siempre para no
    * romper la hidratación; el veredicto llega después de medir. */
-  const bajo = useSyncExternalStore(
+  const nivel = useSyncExternalStore(
     alCambiarRendimiento,
-    () => nivelRendimiento() === "bajo",
-    () => false, // en servidor no hay nada medido: calidad plena
+    nivelRendimiento,
+    () => "alto" as const, // en servidor no hay nada medido: calidad plena
   );
-  // Bloom SOLO si la GPU puede crear sus buffers half-float (WebGL2 + ext).
-  // En una netbook WebGL1 el composer no arranca y el canvas queda negro:
-  // el sol sin halo se ve; un canvas negro no.
-  const bloom = useMemo(() => !lite && !bajo && bloomSupported(), [lite, bajo]);
+  // "bajo" ya baja el DPR; sólo "minimo" llega a soltar el bloom.
+  const degradado = nivel !== "alto";
+  const minimo = nivel === "minimo";
+  /* Bloom SOLO si la GPU puede crear sus buffers half-float (WebGL2 + ext).
+   * En una netbook WebGL1 el composer no arranca y el canvas queda negro:
+   * el sol sin halo se ve; un canvas negro no.
+   *
+   * El bloom NO se apaga en gama baja, y esa es una decisión de COLOR, no de
+   * perf: los soles salen en HDR (uBright 1.3, toneMapped false) y el composer
+   * los resuelve en un buffer half-float. Sin él, three dibuja directo a 8 bits
+   * y el 1.3 se RECORTA por canal → el sol pierde el degradé al blanco y queda
+   * un naranja duro y saturado, o sea otra gradación de color (lo cazó Felipe
+   * comparando ?perf=bajo). Medido: el bloom es fill-rate puro y en una GPU real
+   * sale barato; el ahorro de la gama baja lo dan el DPR y la lente del DOM. */
+  const bloom = useMemo(
+    () => bloomForzado() ?? (!lite && !minimo && bloomSupported()),
+    [lite, minimo],
+  );
   const dpr =
-    lite || bajo
+    dprForzado() ??
+    (lite || degradado
       ? 1
       : typeof window !== "undefined"
         ? Math.min(window.devicePixelRatio, 2)
-        : 1.5;
+        : 1.5);
 
   return (
     <Canvas
@@ -722,6 +769,7 @@ export default function GraphCanvas({
           hovered={hovered}
           reduced={reduced}
           lite={lite}
+          sinBloom={!bloom && (compensacionForzada() ?? true)}
           onReady={onReady}
           onProject={onProject}
           onActivity={onActivity}

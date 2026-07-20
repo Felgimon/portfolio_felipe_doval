@@ -3,8 +3,75 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.14** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.15** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.15 — El sol no puede cambiar de color según la máquina
+
+Felipe, comparando ?perf=bajo contra la portada normal: "¿por qué el sol y los
+mini-soles son más rojizos e intensos, y el color que emana a la escena es más
+fuerte?". Tenía razón y el bug era de v5.14: al degradar, yo apagaba el bloom.
+
+### El diagnóstico
+Los soles salen en **HDR** (uBright 1.3, toneMapped false) contando con que el
+EffectComposer los resuelva en un buffer half-float. La cúpula, en cambio, está
+clampeada a 0.999 a propósito, así que **los únicos que pasan de 1.0 son los
+soles**. Sin bloom, three dibuja directo a 8 bits y ese exceso se **recorta POR
+CANAL**: el rojo se clava en 1.0 y verde/azul se quedan abajo → naranja duro. No
+es "lo mismo sin halo": es otra gradación. Medido sobre la región del sol:
+
+| | R | G | B | saturación |
+| --- | --- | --- | --- | --- |
+| con bloom (referencia) | 254.4 | 211.4 | 162.4 | 0.362 |
+| sin bloom, crudo | 253.3 | 172.3 | 108.0 | **0.572** |
+
+63% más saturado. Y el "color que emana" era lo mismo al revés: la cúpula es
+idéntica en ambos casos, pero el bloom le pinta encima un resplandor pálido que
+la LAVA. Sin bloom no emana más — es que ya no está tapada.
+
+### Los arreglos
+- **El bloom deja de apagarse al degradar.** Se midió por separado con overrides
+  nuevos (`?bloom=0|1`, `?dpr=n`): el DPR solo ya da 3.9x (1137→293ms), y el
+  cuello real medido en v5.14 era el DOM, no el canvas. El bloom es fill-rate
+  puro: caro en el SwiftShader de headless, barato en cualquier GPU real.
+- **Tercer escalón `minimo`** (lib/rendimiento.ts): si después de `bajo` el
+  equipo SIGUE sin dar, recién ahí se suelta el bloom. La degradación pasa a ser
+  escalonada, con ventana de gracia tras cada cambio (el reflow y el recompile
+  de shaders ensucian la primera medición y condenarían al escalón nuevo).
+- **Compensación de gradación** (CHUNK_SIN_BLOOM en sun.ts): donde el bloom es
+  IMPOSIBLE (GPU sin half-float, render por software) el shader emula lo que el
+  bloom hace al sumar luz —los tres canales suben juntos y el núcleo rueda al
+  blanco— derramando el excedente sobre 1.0 a todos los canales. El factor 0.91
+  no es a ojo: con derrame pleno el núcleo se pasaba de blanco, y la saturación
+  y el canal azul, por separado, dieron 0.905 y 0.912.
+
+### Resultado
+Con el plasma congelado (reduced-motion) para que la única variable sea el modo:
+
+| | R | G | B | sat | sd (contraste) |
+| --- | --- | --- | --- | --- | --- |
+| alto | 254.4 | 211.4 | 162.4 | 0.3615 | 29.8 |
+| bajo | 254.4 | 211.4 | 162.4 | 0.3615 | 29.8 |
+| minimo | 253.3 | 212.6 | 168.5 | 0.3353 | 36.4 |
+
+**alto vs bajo: diferencia media 0/255** — idénticos pixel a pixel, que era el
+pedido. `minimo` queda parejo en color (venía de 0.572 de saturación) pero
+conserva ~22% más de contraste local.
+
+### Un resultado NEGATIVO que queda documentado
+Se probó una CORONA aditiva (sprite radial; makeCoronaTexture ya existía en
+sun.ts, sin usar) para reemplazar el derrame del bloom en `minimo`. **No sirve**:
+sd 36.8 contra 36.4 de no poner nada. La razón es de fondo — el bloom baja el
+contraste porque desenfoca la PROPIA imagen y las vetas brillantes sangran sobre
+las oscuras; un degradado radial fijo sólo suma una rampa de baja frecuencia y no
+toca la alta. Se revirtió y quedó la nota en el código para que nadie lo reintente:
+igualar ese resto pide un blur real, o sea el post-proceso que en ese escalón no
+se puede pagar.
+
+Overrides de debug disponibles: `?perf=alto|bajo|minimo`, `?bloom=0|1`, `?dpr=n`,
+`?comp=0|1` (apaga la compensación, para comparar).
 
 ---
 

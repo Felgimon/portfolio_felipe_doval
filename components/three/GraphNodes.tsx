@@ -79,11 +79,15 @@ export function GraphNodes({
   hovered,
   lite,
   reduced,
+  sinBloom = false,
 }: {
   activeIndex: number;
   hovered: number;
   lite: boolean;
   reduced: boolean;
+  /** No hay post-proceso: el shader compensa el recorte a 8 bits para que los
+   * mini-soles tengan la misma gradación con y sin bloom. */
+  sinBloom?: boolean;
 }) {
   const radius = BALL_R;
   // Los mini-soles orbitan el sol central (anillo compartido con NodeProjector).
@@ -106,9 +110,10 @@ export function GraphNodes({
           invR: 1 / base,
           animated: !lite,
           map: solTex,
+          sinBloom,
         }),
       ),
-    [base, lite, solTex],
+    [base, lite, solTex, sinBloom],
   );
 
   useEffect(() => {

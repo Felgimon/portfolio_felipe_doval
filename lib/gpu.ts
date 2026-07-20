@@ -51,6 +51,35 @@ export function isSoftwareRenderer(): boolean {
   return _soft;
 }
 
+/** Lee un override de la query string (debug). Devuelve null si no está. */
+function query(clave: string): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get(clave);
+}
+
+/** Override de debug `?bloom=0|1`: fuerza el post-procesado apagado/prendido.
+ * Sirve para MEDIR cuánto cuesta el bloom por separado del DPR (que era lo que
+ * faltaba saber cuando se calibró la calidad adaptativa). null = sin override. */
+export function bloomForzado(): boolean | null {
+  const b = query("bloom");
+  return b === "1" ? true : b === "0" ? false : null;
+}
+
+/** Override de debug `?dpr=1.5`: fija el device pixel ratio del canvas. Igual
+ * que arriba, para aislar el costo del fill-rate. null = sin override. */
+export function dprForzado(): number | null {
+  const d = Number(query("dpr"));
+  return Number.isFinite(d) && d > 0 ? Math.min(d, 3) : null;
+}
+
+/** Override de debug `?comp=0`: apaga la compensación de gradación que corrige
+ * el recorte a 8 bits cuando no hay bloom (ver CHUNK_SIN_BLOOM en sun.ts).
+ * Sirve para comparar el sol con y sin la corrección. null = sin override. */
+export function compensacionForzada(): boolean | null {
+  const c = query("comp");
+  return c === "1" ? true : c === "0" ? false : null;
+}
+
 let _bloom: boolean | null = null;
 
 /** ¿La GPU banca el POSTPROCESADO? El EffectComposer renderiza a buffers

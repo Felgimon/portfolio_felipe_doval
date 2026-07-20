@@ -85,6 +85,36 @@ export const sunVertex = /* glsl */ `
  * explícito no compila en GPUs sin highp fragment (netbooks / integradas
  * viejas) → el mesh entero desaparece sin error visible. */
 
+/* EL SOL SIN BLOOM — la compensación de gradación (v5.15).
+ *
+ * Los soles salen en HDR (uBright 1.3, toneMapped false) contando con que el
+ * EffectComposer los resuelva en un buffer half-float. Cuando NO hay bloom
+ * (GPU sin EXT_color_buffer_half_float, o render por software), three dibuja
+ * directo a 8 bits y todo lo que pasa de 1.0 se RECORTA POR CANAL: el rojo se
+ * clava en 1.0, verde y azul se quedan donde estaban, y el núcleo del sol —que
+ * debería ser blanco incandescente— queda un naranja duro y plano. Es OTRA
+ * gradación de color, no "lo mismo sin halo" (lo cazó Felipe comparando
+ * ?perf=bajo contra la portada normal).
+ *
+ * El bloom no recorta: SUMA luz encima, y al sumar, los tres canales suben
+ * juntos hasta que el núcleo rueda al blanco. Se emula derramando el EXCEDENTE
+ * sobre 1.0 a todos los canales (highlight bleed): el mismo destino visual, sin
+ * post-proceso y a costo cero (tres max y una suma). Sólo toca los píxeles que
+ * de verdad pasan de 1.0 — o sea el núcleo y el limbo; el resto del disco no se
+ * entera. */
+const CHUNK_SIN_BLOOM = /* glsl */ `
+  uniform float uSinBloom; // 1 = no hay post-proceso: compensar el recorte
+  /* 0.91 no es a ojo: se midió la región del sol contra la versión CON bloom.
+     Con derrame pleno (1.0) el núcleo se pasaba de blanco — saturación media
+     0.338 contra 0.362 de la referencia, y el azul +5.6 niveles. Las dos
+     métricas, por separado, dieron el mismo factor (0.905 y 0.912). */
+  const float SANGRADO = 0.91;
+  vec3 compensarSinBloom(vec3 col) {
+    float exceso = max(0.0, max(col.r, max(col.g, col.b)) - 1.0);
+    return mix(col, min(col + exceso * SANGRADO, vec3(1.0)), uSinBloom);
+  }
+`;
+
 /** Superficie FULL: la FOTO solar real (granulación NASA/SDO) muestreada con
  * UVs DISTORSIONADAS por el domain-warp animado → la fotografía HIERVE. El
  * calor procedural modula el brillo (fáculas vivas); solo el núcleo y el limbo
@@ -98,6 +128,7 @@ const sunFragmentFull = /* glsl */ `
   varying vec3 vLocal;
   varying vec2 vUv;
   ${CHUNK_NOISE}
+  ${CHUNK_SIN_BLOOM}
 
   void main() {
     float facing = clamp(vView.z, 0.0, 1.0);
@@ -126,7 +157,7 @@ const sunFragmentFull = /* glsl */ `
     // Limbo naranja intenso en la silueta
     col += vec3(1.0, 0.32, 0.05) * pow(1.0 - facing, 2.0) * 0.8;
 
-    gl_FragColor = vec4(col * uBright, 1.0);
+    gl_FragColor = vec4(compensarSinBloom(col * uBright), 1.0);
   }
 `;
 
@@ -140,6 +171,7 @@ const sunFragmentLite = /* glsl */ `
   varying vec3 vLocal;
   varying vec2 vUv;
   ${CHUNK_NOISE}
+  ${CHUNK_SIN_BLOOM}
 
   void main() {
     float facing = clamp(vView.z, 0.0, 1.0);
@@ -148,7 +180,7 @@ const sunFragmentLite = /* glsl */ `
     vec3 col = tex * (0.8 + 0.45 * v);
     col = mix(col, vec3(1.0, 0.95, 0.85), pow(facing, 5.0) * 0.6);
     col += vec3(1.0, 0.32, 0.05) * pow(1.0 - facing, 2.2) * 0.7;
-    gl_FragColor = vec4(col * uBright, 1.0);
+    gl_FragColor = vec4(compensarSinBloom(col * uBright), 1.0);
   }
 `;
 
@@ -305,6 +337,10 @@ export function makeSunMaterial(opts: {
   invR: number;
   animated: boolean;
   map: THREE.Texture;
+  /** true cuando NO hay post-proceso: el shader compensa el recorte a 8 bits
+   * para que la gradación del sol sea la misma con y sin bloom. Ver
+   * CHUNK_SIN_BLOOM. */
+  sinBloom?: boolean;
 }): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: sunVertex,
@@ -315,6 +351,7 @@ export function makeSunMaterial(opts: {
       uBright: { value: opts.bright },
       uInvR: { value: opts.invR },
       uMap: { value: opts.map },
+      uSinBloom: { value: opts.sinBloom ? 1 : 0 },
     },
   });
 }

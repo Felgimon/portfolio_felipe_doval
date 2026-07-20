@@ -62,10 +62,10 @@ function aplicarLente(el: HTMLElement, medida?: { w: number; h: number }) {
     return { w: b.width, h: b.height };
   })();
   if (r.w < 24 || r.h < 12) return;
-  // Equipo que no llega (lib/rendimiento.ts): el vidrio se queda con el frost
-  // del CSS y NO se le arma la cadena SVG. El sitio pierde el doblez pero se
-  // mueve; el criterio es que la fluidez manda sobre el efecto.
-  if (nivelRendimiento() === "bajo") {
+  // Equipo que no llega (lib/rendimiento.ts, cualquier escalón degradado): el
+  // vidrio se queda con el frost del CSS y NO se le arma la cadena SVG. El
+  // sitio pierde el doblez pero se mueve; la fluidez manda sobre el efecto.
+  if (nivelRendimiento() !== "alto") {
     el.style.backdropFilter = "";
     delete el.dataset.liquid;
     return;
