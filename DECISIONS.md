@@ -3,8 +3,78 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.16** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17 — Robustez: lo que sí hacía falta (y lo que no)
+
+Pedido de Felipe: que el sitio aguante miles de personas y ande estable.
+
+### El diagnóstico primero, para no agregar cosas al pedo
+El build lo dice: **TODAS las rutas salen `○ Static` / `● SSG`**. No hay cómputo
+por request, ni base de datos, ni API, ni sesiones. Lo que Vercel sirve es HTML
+prerenderizado desde su CDN, así que "miles de visitantes" **no es un problema de
+carga**: no hay servidor que saturar. Rate limiting, pool de conexiones,
+autoescalado o una capa de cache serían features de adorno acá.
+
+Los riesgos REALES de este sitio son otros tres, y sobre esos se trabajó.
+
+### 1. Que un error de JS no se lleve puesta la página
+El canvas 3D ya estaba cubierto (`CanvasGuard` es un error boundary de verdad y
+cae al poster), pero **no había red para el resto**: cualquier otro componente
+cliente que tirara dejaba la pantalla del framework.
+- `app/error.tsx` — fallback de marca con "Reintentar" y salida al inicio. A
+  propósito NO usa el diccionario de idioma ni componentes del sitio: si el error
+  viene de ahí, importarlo lo volvería a tirar.
+- `app/global-error.tsx` — para cuando el que falla es el layout raíz. Trae su
+  propio `<html>` y estilos INLINE, porque en ese escenario no se puede contar
+  con que haya cargado nada.
+- `app/not-found.tsx` — 404 de marca en vez del genérico.
+
+**Verificado en navegador**, no supuesto: se montó una ruta que tira después de
+hidratar y devolvió 200 con el fallback ("Algo se rompió" + Reintentar). Dato que
+salió de ahí: un `throw` en render lo caza el BUILD (falla el prerender), así que
+el boundary sólo entra para errores de runtime — que son justo los que le pasan
+al visitante.
+
+### 2. El peso de lo que se despliega
+`public/` pesaba **21 MB**, de los cuales 16.3 MB eran `foto_frente.png` y
+`foto_casual.png`: **sin una sola referencia en el código** desde que la sección
+Perfil pasó a los recortes. Salieron de `public/` y quedan archivadas en
+`contenido/assets/foto/`, que no se despliega. **21 MB → 5.4 MB (−74%)**.
+
+### 3. Headers: cache y seguridad
+- **Cache de /public**: Next ya marca `/_next/static` como `immutable` (esos
+  archivos llevan hash), pero los de `/public` no tienen hash y se revalidaban en
+  CADA visita. Ahora `max-age` corto para el navegador (una foto nueva se ve el
+  mismo día) + `s-maxage` largo para el CDN, que es quien absorbe el tráfico y
+  que Vercel invalida en cada deploy, + `stale-while-revalidate` para que nadie
+  espere. `immutable` a secas se descartó: cambiás una foto y el que la tenía
+  cacheada se come la vieja por un año.
+- **Seguridad**: CSP, `nosniff`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy`, HSTS, y `poweredByHeader: false`.
+- **La CSP es ESTÁTICA, no por nonce**, y es una decisión, no una omisión: el
+  nonce exige render dinámico por request, o sea que rompería justo la propiedad
+  que hace que el sitio escale. `'unsafe-inline'` en script-src es inevitable sin
+  nonce; se acepta sabiendo que acá no hay input de usuario, formularios, auth ni
+  terceros. Lo que la política sí cierra es todo lo demás. `'unsafe-eval'` quedó
+  AFUERA: se verificó que three/drei no lo necesitan en producción.
+
+Verificado contra el sitio corriendo: **0 violaciones de CSP y 0 errores**, con el
+vidrio conservando su filtro SVG (la data URI del `backdrop-filter` era lo que más
+riesgo corría) y el canvas 3D pintando.
+
+### Lo que queda pendiente y no se hizo
+No hay **observabilidad**: si algo se rompe para un visitante real, nadie se
+entera. Vercel Analytics / Speed Insights lo resolvería y es same-origin (pasa la
+CSP tal como está), pero es una decisión de producto de Felipe, no algo para
+prender por cuenta propia.
+
+`npm audit` marca postcss (moderada, XSS por `</style>` sin escapar en el
+stringify). Su "fix" propone bajar Next a la v9: es un falso positivo práctico —
+es dependencia de BUILD y el CSS lo escribe el repo, no un usuario.
 
 ---
 
