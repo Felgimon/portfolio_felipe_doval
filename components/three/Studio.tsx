@@ -52,12 +52,25 @@ const domeFragment = /* glsl */ `
   varying vec3 vDir;
   uniform vec3 uSunGlow; // dirección cámara→sol (halo cálido que sigue al sol)
 
-  /* Malla de líneas con AA sobre coords proyectadas. El grosor va en px de
-     sub-línea: mayor = líneas más gruesas (para que el vidrio tenga qué doblar). */
+  /* Malla de líneas con GROSOR CONSTANTE en pantalla. La versión anterior
+     normalizaba por fwidth (norma L1: |ddx|+|ddy|): en las líneas que se
+     alejan en diagonal las DOS derivadas contribuyen y el ancho quedaba
+     sobreestimado hasta 2x — la grilla se veía más gruesa a lo lejos (lo cazó
+     Felipe). La norma exacta del gradiente por eje da distancia REAL en
+     píxeles → mismo grosor cerca y lejos. El término de saturación apaga la
+     grilla donde la celda ya es más chica que la línea (el fondo del
+     horizonte), en vez de fundirse en una mancha. */
   float lineas(vec2 p, float grosor) {
-    vec2 g = abs(fract(p - 0.5) - 0.5) / fwidth(p);
+    vec2 w = vec2(
+      length(vec2(dFdx(p.x), dFdy(p.x))),
+      length(vec2(dFdx(p.y), dFdy(p.y)))
+    );
+    w = max(w, vec2(1e-6));
+    vec2 g = abs(fract(p - 0.5) - 0.5) / w;
     float d = min(g.x, g.y);
-    return 1.0 - smoothstep(grosor, grosor + 1.2, d);
+    float linea = 1.0 - smoothstep(grosor, grosor + 1.0, d);
+    float satur = 1.0 - smoothstep(0.12, 0.38, max(w.x, w.y));
+    return linea * satur;
   }
 
   void main() {
@@ -77,7 +90,7 @@ const domeFragment = /* glsl */ `
       vec2 p = dir.xz / -dir.y * 2.9;
       float fade = smoothstep(0.03, 0.13, -dir.y)
                  * (1.0 - smoothstep(9.0, 26.0, length(p)));
-      c = mix(c, vec3(0.40, 0.51, 0.64), lineas(p, 2.1) * fade * 0.50);
+      c = mix(c, vec3(0.40, 0.51, 0.64), lineas(p, 1.7) * fade * 0.50);
     }
 
     /* PARED: la misma grilla, más tenue (proyección al plano frontal). */
@@ -85,7 +98,7 @@ const domeFragment = /* glsl */ `
       vec2 q = vec2(dir.x, dir.y) / -dir.z * 4.6;
       float fadeW = smoothstep(0.0, 0.12, dir.y)
                   * (1.0 - smoothstep(5.5, 12.0, length(q)));
-      c = mix(c, vec3(0.58, 0.67, 0.78), lineas(q, 2.1) * fadeW * 0.26);
+      c = mix(c, vec3(0.58, 0.67, 0.78), lineas(q, 1.5) * fadeW * 0.26);
     }
 
     /* RESPLANDOR del sol: un HALO cálido que SIGUE al sol (uSunGlow = dir

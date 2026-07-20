@@ -1,7 +1,8 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { proyectos, getProyecto } from "@/content/proyectos";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Tag } from "@/components/ui/Tag";
 import { Reveal } from "@/components/motion/Reveal";
 import { ladoTexto, indiceTopico } from "@/lib/navigation";
@@ -10,35 +11,39 @@ import { TopicPanel } from "./TopicPanel";
 
 /** Nodo Trabajo — los proyectos como evidencia. Superlum lidera con su case
  * study; el resto (incluida FutbolVision, ya como proyecto anterior) va en la
- * grilla. Todo en Liquid Glass sobre el cielo, sin viñetas. */
+ * grilla. Todo en Liquid Glass, textos desde el diccionario (es/en). */
 export function Trabajo() {
+  const { t, proyectos, getProyecto } = useIdioma();
   const superlum = getProyecto("superlum");
   const resto = proyectos.filter((p) => p.slug !== "superlum");
   const cap = superlum?.capturas.find((c) => !c.falta && c.src);
+  const titulo = t.trabajo.titulo;
 
   return (
     <TopicPanel
       id="trabajo"
-      kicker="Trabajo"
+      kicker={t.nodos.trabajo.label}
       align={ladoTexto(indiceTopico("trabajo"))}
       contentClassName="max-w-6xl"
     >
       <Reveal>
         <h2 className="type-h1 max-w-3xl text-chalk">
-          La <span className="accent-grad">prueba</span>: lo que construí
+          {titulo.pre}
+          <span className="accent-grad">{titulo.accent}</span>
+          {titulo.post}
         </h2>
-        <p className="lead mt-5 max-w-2xl">
-          Cada uno resolvió un problema real. El grande, Superlum, tiene su
-          historia completa; abajo, el resto de lo que fui armando.
-        </p>
+        <p className="lead mt-5 max-w-2xl">{t.trabajo.lead}</p>
       </Reveal>
 
       {/* Superlum — caso principal */}
       {superlum && (
         <Reveal className="mt-12">
-          <article data-lente="suave" className="glass grid gap-6 overflow-hidden p-6 lg:grid-cols-2 lg:p-8">
+          <article
+            data-lente="suave"
+            className="glass grid gap-6 overflow-hidden p-6 lg:grid-cols-2 lg:p-8"
+          >
             <div className="flex flex-col justify-center gap-5">
-              <p className="eyebrow">Caso principal</p>
+              <p className="eyebrow">{t.trabajo.casoPrincipal}</p>
               <h3 className="type-h2 text-chalk">{superlum.nombre}</h3>
               <p className="max-w-md leading-relaxed text-chalk-dim">
                 {superlum.unaLinea}
@@ -54,7 +59,7 @@ export function Trabajo() {
                 href="/proyectos/superlum"
                 className="group mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-acento px-5 py-2.5 font-mono text-xs tracking-wide text-ink transition-colors hover:bg-acento-hi"
               >
-                Ver el caso
+                {t.trabajo.verCaso}
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
             </div>

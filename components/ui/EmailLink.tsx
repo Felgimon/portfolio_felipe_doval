@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Copy, Check, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 
 /**
  * Email ofuscado (anti-scraping). La dirección NO viaja en el HTML/RSC: se
@@ -32,6 +33,7 @@ export function EmailLink({
   children,
   showText = true,
 }: EmailLinkProps) {
+  const { t } = useIdioma();
   const [copiado, setCopiado] = useState(false);
   const email = armarEmail();
 
@@ -49,7 +51,7 @@ export function EmailLink({
       <button
         type="button"
         onClick={copiar}
-        aria-label={copiado ? "Email copiado" : "Copiar email"}
+        aria-label={copiado ? t.emailCopiado : t.copiarEmail}
         className={cn("group inline-flex items-center gap-2", className)}
       >
         {showText && <span className="data">{email}</span>}

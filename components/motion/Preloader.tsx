@@ -5,6 +5,7 @@ import { gsap, useGSAP } from "@/lib/gsap";
 import { useAppReady } from "./AppReady";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Logo } from "@/components/ui/Logo";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 
 const MIN_MS = 700; // tiempo mínimo visible (evita parpadeo si está cacheado)
 const MAX_MS = 2400; // techo: nunca supera los ~2.4s percibidos
@@ -16,6 +17,7 @@ const MAX_MS = 2400; // techo: nunca supera los ~2.4s percibidos
  * 100% en el chunk lazy y no entra al bundle inicial. Respeta reduced-motion.
  */
 export function Preloader() {
+  const { t } = useIdioma();
   const { marcarListo, heroCargado } = useAppReady();
   const reduced = useReducedMotion();
   const pathname = usePathname();
@@ -104,7 +106,7 @@ export function Preloader() {
       className="sky fixed inset-0 z-[100] flex flex-col items-center justify-center"
       role="status"
       aria-live="polite"
-      aria-label="Cargando el sitio"
+      aria-label={t.aria.cargando}
     >
       <div className="node-grid absolute inset-0 opacity-30" aria-hidden />
       <div className="relative flex flex-col items-center gap-8 px-6">
@@ -118,7 +120,7 @@ export function Preloader() {
             <div ref={barra} className="h-px w-full origin-left scale-x-0 bg-acento-hi" />
           </div>
           <div className="flex justify-between font-mono text-xs text-muted">
-            <span>cargando</span>
+            <span>{t.cargando}</span>
             <span className="data text-acento">{pct}%</span>
           </div>
         </div>

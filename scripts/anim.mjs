@@ -26,7 +26,7 @@ const srv = spawn(`npx next start -p ${PORT}`, { shell: true, stdio: "ignore", e
 try {
   await wait(BASE);
   const b = await chromium.launch();
-  const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+  const p = await b.newPage({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
   await p.goto(`${BASE}/?fx=full`, { waitUntil: "load", timeout: 45000 });
   await p.waitForTimeout(9000); // suspense + settle (SwiftShader es lento)
 

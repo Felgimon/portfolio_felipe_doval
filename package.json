@@ -14,7 +14,9 @@
     "anim": "node scripts/anim.mjs",
     "touch": "node scripts/touch.mjs",
     "analyze": "cross-env ANALYZE=true next build",
-    "gate": "npm run typecheck && npm run lint && npm run build"
+    "gate": "npm run typecheck && npm run lint && npm run build",
+    "idioma": "node scripts/idioma.mjs",
+    "audit": "node scripts/audit.mjs"
   },
   "dependencies": {
     "@gsap/react": "2.1.2",

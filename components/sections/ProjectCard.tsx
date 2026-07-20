@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Tag } from "@/components/ui/Tag";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import type { Proyecto } from "@/content/types";
 
 /**
@@ -22,6 +23,7 @@ export function ProjectCard({
   proyecto: Proyecto;
   href?: string;
 }) {
+  const { t } = useIdioma();
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const cap = proyecto.capturas[0];
@@ -71,7 +73,7 @@ export function ProjectCard({
             data-lente
             className="glass glass-pill absolute top-3 right-3 px-2 py-0.5 font-mono text-[0.6rem] tracking-wide text-chalk-dim"
           >
-            en progreso
+            {t.trabajo.enProgreso}
           </span>
         )}
       </div>
@@ -102,7 +104,7 @@ export function ProjectCard({
     return (
       <Link
         href={href}
-        aria-label={`${proyecto.nombre}: ver el caso`}
+        aria-label={`${proyecto.nombre}: ${t.trabajo.ariaVerCaso}`}
         className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         {contenido}
@@ -115,7 +117,7 @@ export function ProjectCard({
         href={repo.url}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={`${proyecto.nombre}: abrir ${repo.label}`}
+        aria-label={`${proyecto.nombre}: ${t.trabajo.ariaAbrirRepo} ${repo.label}`}
         className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         {contenido}

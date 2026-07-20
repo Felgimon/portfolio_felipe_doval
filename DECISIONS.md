@@ -3,8 +3,59 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.12.3** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.13** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.13 — El sitio habla inglés solo, la grilla constante y la auditoría
+
+### Idioma automático (es/en), sin selector
+Pedido de Felipe: detectar la región o el idioma configurado en Google y que el
+sitio cambie solo, priorizando la configuración de Google. Implementación:
+- Detección (lib/idioma.ts): 1º `navigator.languages` — en Chrome ES
+  literalmente la config de idioma de Google del usuario (la prioridad pedida);
+  2º la región por huso horario, solo si el navegador no informa idiomas.
+- Arquitectura hydration-safe (IdiomaProvider): el HTML estático es SIEMPRE
+  español (SEO: la búsqueda que importa es "felipe doval");
+  `useSyncExternalStore` con snapshot de servidor "es" y de cliente la
+  detección → React hidrata idéntico al HTML servido y re-renderiza en inglés
+  sin mismatch (verificado: 0 errores de consola en ambos idiomas). El sitio
+  sigue 100% estático: nada de headers() ni middleware que lo vuelvan dinámico.
+- Contenido completo traducido: perfil.en.ts y proyectos.en.ts (heredan del
+  español todo lo no-textual vía spread: si cambia un dato duro allá, acá se
+  hereda solo) y content/ui.ts con TODOS los strings de interfaz (títulos
+  partidos en pre/accent/post para que el span del degradé sirva en cualquier
+  idioma). Refactor a useIdioma(): secciones, HUD, chips de los soles, footer,
+  nav, preloader, placeholder, email, cards y el case study (partido en shell
+  servidor para metadata/rutas + cuerpo cliente).
+- Metadata / JSON-LD / sitemap quedan en español a propósito (el SEO es es).
+- Tests: TODA la batería fijada a locale es-AR (Playwright usa en-US por
+  defecto — sin esto, la batería entera hubiera pasado a probar el sitio en
+  inglés sin que nadie lo pidiera). Nuevo scripts/idioma.mjs (npm run idioma):
+  es-AR y en-US de punta a punta (html lang, CTA, HUD, detalle, hidratación).
+  HUD verificado sin desborde en EN (320/393/1440).
+
+### La grilla de grosor constante (bug de shader)
+Felipe: las líneas lejanas se ven más gruesas. Causa: la normalización por
+fwidth (norma L1 = |ddx|+|ddy|) sobreestima el ancho hasta 2x en las diagonales
+que se alejan (las DOS derivadas contribuyen). Fix: norma exacta del gradiente
+por eje (length(dFdx, dFdy)) → distancia real en píxeles → mismo grosor cerca y
+lejos, más un término de saturación que apaga la grilla donde la celda ya es
+más chica que la línea (antes se fundía en mancha hacia el horizonte). Grosor
+final un punto más fino que el cercano anterior (1.7 piso / 1.5 pared), como
+pidió.
+
+### Auditoría de riesgo (12/12 verde)
+Funcionalidades elegidas por criterio de riesgo, no al azar: poster sin WebGL
+(el fallback menos ejercitado — WebGL bloqueado por init script → poster
+visible, sin canvas, 0 errores), teclado (HUD enfocable + Enter navega),
+portapapeles del email (copia exacta verificada), 404 de slug inválido y de
+ruta inventada, OG image / robots / sitemap 200, y "Volver al grafo" desde el
+case study. Nuevo scripts/audit.mjs (npm run audit). No se encontró ningún bug
+latente.
+
+Batería completa verde + póster regenerado (la grilla cambió).
 
 ---
 

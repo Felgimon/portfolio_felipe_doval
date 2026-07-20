@@ -1,24 +1,29 @@
-import { perfil } from "@/content/perfil";
+"use client";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Reveal } from "@/components/motion/Reveal";
 import { ladoTexto, indiceTopico } from "@/lib/navigation";
 import { TopicPanel } from "./TopicPanel";
 
 /** Nodo Enfoque — cómo trabaja Felipe. Los principios como contenedores Liquid
- * Glass flotantes, sin números ni viñetas. */
+ * Glass flotantes, sin números ni viñetas. Textos desde el diccionario de
+ * idioma (es/en automático). */
 export function Enfoque() {
+  const { t, perfil } = useIdioma();
   const { resumen, principios } = perfil.enfoque;
+  const titulo = t.enfoque.titulo;
 
   return (
     <TopicPanel
       id="enfoque"
-      kicker="Enfoque"
+      kicker={t.nodos.enfoque.label}
       align={ladoTexto(indiceTopico("enfoque"))}
       contentClassName="max-w-3xl"
     >
       <Reveal>
         <h2 className="type-h1 text-chalk">
-          Los proyectos son el <span className="accent-grad">medio</span>, no
-          el fin
+          {titulo.pre}
+          <span className="accent-grad">{titulo.accent}</span>
+          {titulo.post}
         </h2>
         <p className="lead mt-6 max-w-2xl">{resumen}</p>
       </Reveal>

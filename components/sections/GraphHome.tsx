@@ -20,7 +20,7 @@ import { useAppReady } from "@/components/motion/AppReady";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import type { Banda, CamState, NodeProj } from "@/components/three/GraphCanvas";
 import { nodos, seccionIds } from "@/lib/navigation";
-import { perfil } from "@/content/perfil";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { cn } from "@/lib/utils";
 
 // El 3D se carga aparte (ssr:false): no entra en el bundle inicial.
@@ -128,6 +128,7 @@ function NodeOverlay({
   muted: boolean;
   activeIdx: number;
 }) {
+  const { t } = useIdioma();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   useEffect(() => {
     let raf = 0;
@@ -170,7 +171,7 @@ function NodeOverlay({
           key={n.id}
           type="button"
           tabIndex={-1}
-          aria-label={n.label}
+          aria-label={t.nodos[n.id].label}
           ref={(el) => {
             refs.current[i] = el;
           }}
@@ -202,7 +203,7 @@ function NodeOverlay({
               i === activeIdx && "is-on",
             )}
           >
-            {n.label}
+            {t.nodos[n.id].label}
           </span>
         </button>
       ))}
@@ -224,6 +225,7 @@ function HudRail({
   /** La barra real: la portada la mide para no meter el cúmulo abajo de ella. */
   barraRef: RefObject<HTMLDivElement | null>;
 }) {
+  const { t } = useIdioma();
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [bar, setBar] = useState({ x: 0, w: 0, on: false });
 
@@ -242,18 +244,19 @@ function HudRail({
 
   useEffect(() => {
     medir();
-    // Re-medir si cambia el layout (resize / carga de la fuente mono).
-    const t = window.setTimeout(medir, 700);
+    // Re-medir si cambia el layout (resize / carga de la fuente mono / cambio
+    // de idioma: las etiquetas cambian de ancho).
+    const timer = window.setTimeout(medir, 700);
     window.addEventListener("resize", medir);
     return () => {
-      clearTimeout(t);
+      clearTimeout(timer);
       window.removeEventListener("resize", medir);
     };
-  }, [medir]);
+  }, [medir, t]);
 
   return (
     <nav
-      aria-label="Secciones"
+      aria-label={t.aria.secciones}
       className="fixed inset-x-0 bottom-0 z-40"
     >
       {/* Abajo de 400px los 5 nombres NO entran a este tamaño: en un Android de
@@ -276,14 +279,14 @@ function HudRail({
                 btnRefs.current[i] = el;
               }}
               onClick={() => onGoto(n.id)}
-              aria-label={`${n.label}: ${n.hint}`}
+              aria-label={`${t.nodos[n.id].label}: ${t.nodos[n.id].hint}`}
               aria-current={active ? "true" : undefined}
               className={cn(
                 "relative rounded-full px-2.5 py-1.5 font-mono text-[0.7rem] tracking-wide whitespace-nowrap transition-colors max-[400px]:px-2 max-[400px]:text-[0.62rem] max-[400px]:tracking-normal sm:px-4 sm:text-xs",
                 active ? "text-acento" : "text-muted hover:text-chalk",
               )}
             >
-              {n.label}
+              {t.nodos[n.id].label}
             </button>
           );
         })}
@@ -312,6 +315,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
   const webgl = useWebGL();
   const forceGl = useForceGl();
   const { marcarHeroCargado, ready } = useAppReady();
+  const { t, perfil } = useIdioma();
   const { scrollTo } = useSmoothScroll();
 
   const camRef = useRef<CamState>({ t: 0, active: 0 });
@@ -664,7 +668,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
                   onClick={() => goto("trabajo")}
                   className="glass glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide text-chalk"
                 >
-                  Ver el trabajo
+                  {t.hero.ctaTrabajo}
                   <ArrowDown className="size-4 text-acento transition-transform group-hover:translate-y-0.5" />
                 </button>
                 {/* CTA principal en vidrio PROMINENTE (tintado de acento):
@@ -675,7 +679,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
                   onClick={() => goto("contacto")}
                   className="glass glass-prominent glass-hover glass-pill group inline-flex items-center gap-2 px-6 py-3.5 font-mono text-xs tracking-wide"
                 >
-                  Hablemos
+                  {t.hero.ctaContacto}
                   <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </button>
               </div>

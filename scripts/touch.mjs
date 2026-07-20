@@ -52,6 +52,7 @@ try {
   // — así se nos escapó que el modelo quedaba diminuto en el celular de Feli.
   console.log("— mobile 393×659 (iPhone Pro real, touch) —");
   const ctxM = await browser.newContext({
+    locale: "es-AR",
     viewport: { width: 393, height: 659 },
     hasTouch: true,
     isMobile: true,
@@ -102,7 +103,7 @@ try {
 
   // ---- DESKTOP (regresión: hover + click de mouse siguen igual) ----
   console.log("— desktop 1440×900 (mouse) —");
-  const ctxD = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctxD = await browser.newContext({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
   const errsD = [];
   const pd = await ctxD.newPage();
   pd.on("pageerror", (e) => errsD.push(String(e)));

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 
 /**
  * Nav global mínima. En la HOME no se renderiza nada: la escena 3D (con el FD
@@ -11,6 +12,7 @@ import { Logo } from "@/components/ui/Logo";
  * de detalle sí: marca + "volver" al grafo.
  */
 export function SiteNav() {
+  const { t } = useIdioma();
   const pathname = usePathname();
   const enHome = pathname === "/";
   if (enHome) return null;
@@ -36,7 +38,7 @@ export function SiteNav() {
           className="glass glass-pill inline-flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-wide text-chalk-dim transition-colors hover:text-acento"
         >
           <ArrowLeft className="size-4" />
-          Volver al grafo
+          {t.volverGrafo}
         </Link>
       </nav>
     </header>

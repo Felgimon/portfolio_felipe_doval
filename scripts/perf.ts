@@ -91,7 +91,7 @@ async function main() {
   try {
     await esperarServidor(BASE);
     browser = await chromium.launch();
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const page = await browser.newPage({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
     await page.goto(`${BASE}/?stats`, { waitUntil: "load", timeout: 45_000 });
     await page.waitForTimeout(3000); // hidratación + primer render del canvas
 

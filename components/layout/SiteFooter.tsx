@@ -1,6 +1,7 @@
+"use client";
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
-import { perfil } from "@/content/perfil";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Container } from "@/components/ui/Container";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { EmailLink } from "@/components/ui/EmailLink";
@@ -10,6 +11,7 @@ const anio = new Date().getFullYear();
 
 /** Footer mínimo: marca, contacto y créditos. */
 export function SiteFooter() {
+  const { t, perfil } = useIdioma();
   return (
     <footer className="relative z-10 border-t border-line bg-ink-2">
       <Container size="wide" className="py-16">
@@ -17,16 +19,15 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <Logo className="text-2xl text-chalk" />
             <p className="mt-4 text-sm leading-relaxed text-chalk-dim">
-              {perfil.nombre}. Desarrollador y builder: construyo productos de
-              punta a punta, del full-stack a los datos.
+              {perfil.nombre}. {t.footer.bio}
             </p>
             <p className="mt-3 font-mono text-xs text-muted">
               {perfil.ubicacion}
             </p>
           </div>
 
-          <nav aria-label="Enlaces de contacto" className="flex flex-col gap-4">
-            <p className="eyebrow">Contacto</p>
+          <nav aria-label={t.footer.ariaEnlaces} className="flex flex-col gap-4">
+            <p className="eyebrow">{t.nodos.contacto.label}</p>
             <EmailLink
               mode="link"
               className="text-sm text-chalk-dim transition-colors hover:text-acento"
@@ -54,7 +55,7 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-line-soft pt-6 sm:flex-row sm:items-center">
           <p className="font-mono text-xs text-muted">
-            © {anio} {perfil.nombre} · Hecho con Next.js + Three.js · Sol:{" "}
+            © {anio} {perfil.nombre} · {t.footer.hechoCon} Next.js + Three.js · {t.footer.solCredito}:{" "}
             <a
               href="https://www.solarsystemscope.com/textures/"
               target="_blank"
@@ -69,7 +70,7 @@ export function SiteFooter() {
             href="#inicio"
             className="inline-flex items-center gap-1.5 font-mono text-xs text-chalk-dim transition-colors hover:text-acento"
           >
-            Volver arriba
+            {t.footer.volverArriba}
             <ArrowUp className="size-3.5" />
           </Link>
         </div>

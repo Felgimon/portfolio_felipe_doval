@@ -1,6 +1,7 @@
+"use client";
 import Image from "next/image";
-import { perfil } from "@/content/perfil";
-import type { CategoriaStack } from "@/content/types";
+import { useIdioma } from "@/components/idioma/IdiomaProvider";
+import type { CategoriaStack, Perfil as PerfilTipo } from "@/content/types";
 import { Reveal } from "@/components/motion/Reveal";
 import { ladoTexto, indiceTopico } from "@/lib/navigation";
 import { TopicPanel } from "./TopicPanel";
@@ -14,7 +15,7 @@ const ORDEN_STACK: CategoriaStack[] = [
   "Automatización",
 ];
 
-function agruparStack() {
+function agruparStack(perfil: PerfilTipo) {
   const grupos = new Map<CategoriaStack, string[]>();
   for (const item of perfil.stack) {
     const arr = grupos.get(item.categoria) ?? [];
@@ -28,14 +29,17 @@ function agruparStack() {
 }
 
 /** Nodo Perfil — quién es Felipe: foto enmarcada en vidrio, bio flotante y el
- * stack en contenedores Liquid Glass (sin viñetas ni separadores de lista). */
+ * stack en contenedores Liquid Glass (sin viñetas ni separadores de lista).
+ * Textos desde el diccionario (es/en automático). */
 export function Perfil() {
-  const grupos = agruparStack();
+  const { t, perfil } = useIdioma();
+  const grupos = agruparStack(perfil);
+  const titulo = t.perfil.titulo;
 
   return (
     <TopicPanel
       id="perfil"
-      kicker="Perfil"
+      kicker={t.nodos.perfil.label}
       align={ladoTexto(indiceTopico("perfil"))}
       contentClassName="max-w-4xl"
     >
@@ -73,9 +77,11 @@ export function Perfil() {
         <div className="flex flex-col gap-8">
           <Reveal>
             <h2 className="type-h1 text-chalk">
-              Construyo de{" "}
-              <span className="stretch-y inline-block accent-grad">punta</span>{" "}
-              a punta
+              {titulo.pre}
+              <span className="stretch-y inline-block accent-grad">
+                {titulo.accent}
+              </span>
+              {titulo.post}
             </h2>
           </Reveal>
 
@@ -90,7 +96,7 @@ export function Perfil() {
           </Reveal>
 
           <Reveal>
-            <p className="eyebrow mb-4">Herramientas</p>
+            <p className="eyebrow mb-4">{t.perfil.herramientas}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {grupos.map((g) => (
                 <div
@@ -100,7 +106,7 @@ export function Perfil() {
                   className="glass glass-hover p-4"
                 >
                   <p className="font-mono text-[0.7rem] tracking-wider text-acento uppercase">
-                    {g.categoria}
+                    {t.categoriasStack[g.categoria] ?? g.categoria}
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5">
                     {g.items.map((it) => (

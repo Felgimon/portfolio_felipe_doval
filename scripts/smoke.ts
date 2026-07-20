@@ -98,6 +98,9 @@ async function main() {
     console.log("[smoke] Servidor arriba. Lanzando Chromium...");
     browser = await chromium.launch();
     const context = await browser.newContext({
+      // es-AR: sin esto Playwright usa en-US y el sitio (con detección de
+      // idioma automática) se probaría en inglés.
+      locale: "es-AR",
       viewport: { width: vw, height: vh },
     });
 
