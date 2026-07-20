@@ -95,10 +95,27 @@ export function Perfil() {
         />
       </Reveal>
 
-      <div className="mt-6 grid gap-10 md:mt-0 md:grid-cols-[17.5rem_1fr] md:items-start md:gap-0">
-        {/* Ancho: de espaldas contra el texto. El recorte mira al otro lado, así
-            que se ESPEJA (-scale-x-100) y la espalda queda del lado de la
-            columna.
+      {/* El título sale de la columna y pasa a ancho completo. No es estética:
+          la espalda tiene que apoyarse en los PÁRRAFOS, y con el título adentro
+          de la columna la figura arrancaba a la altura del título. Sacándolo, la
+          fila de abajo empieza donde empieza el párrafo y la figura se alinea
+          sola con él — sin offsets a mano, y siguiendo al título mida lo que
+          mida en cada pantalla. De regalo, el título deja de partirse en tres
+          líneas al tener los 672px enteros. */}
+      <Reveal className="mt-6 md:mt-0">
+        <h2 className="type-h1 text-chalk">
+          {titulo.pre}
+          <span className="stretch-y inline-block accent-grad">
+            {titulo.accent}
+          </span>
+          {titulo.post}
+        </h2>
+      </Reveal>
+
+      <div className="mt-8 grid gap-10 md:grid-cols-[19rem_1fr] md:items-start md:gap-0">
+        {/* Ancho: de espaldas contra el párrafo. El recorte mira al otro lado,
+            así que se ESPEJA (-scale-x-100) y la espalda queda del lado del
+            texto.
 
             El alto sale del ANCHO de la columna, no de `vh`. Esa fue la falla de
             la primera versión: con `58vh` la figura encogía en las pantallas
@@ -106,11 +123,10 @@ export function Perfil() {
             lo pedido). El bloque de contenido mide 672px fijos en todo desktop,
             así que fijando la columna el alto queda igual en cualquier monitor.
 
-            Y se ancla ARRIBA, no abajo. Anclada abajo, la cabeza quedaba a merced
-            del alto del texto, y agrandar la figura era contraproducente: le
-            robaba ancho al texto, el texto crecía a lo alto y la cabeza volvía a
-            bajar. Anclada arriba, la cabeza queda a la altura del título sin
-            depender de cuánto mida la bio, y el recorte se desvanece abajo. */}
+            Y se ancla ARRIBA de su fila. Anclada abajo, la cabeza quedaba a
+            merced del alto del texto, y agrandar la figura era contraproducente:
+            le robaba ancho al texto, el texto crecía a lo alto y la cabeza
+            volvía a bajar. */}
         <Reveal className="hidden md:block">
           <div
             className="relative"
@@ -121,26 +137,16 @@ export function Perfil() {
               alt={`${perfil.nombre}, ${perfil.rol}`}
               width={642}
               height={1600}
-              sizes="(min-width: 768px) 16rem, 1px"
+              sizes="(min-width: 768px) 19rem, 1px"
               className="h-auto w-full -scale-x-100"
             />
           </div>
         </Reveal>
 
-        {/* Título + bio: la "pared" contra la que se apoya. */}
-        {/* pl-3 y no más: el texto tiene que ARRANCAR contra la espalda para que
-            se lea apoyado. Con 2rem quedaba parado al lado, que es otra cosa. */}
+        {/* Los párrafos: la "pared" contra la que se apoya. pl-3 y no más — el
+            texto tiene que ARRANCAR contra la espalda para que se lea apoyado;
+            con 2rem quedaba parado al lado, que es otra cosa. */}
         <div className="flex flex-col gap-8 md:pl-3">
-          <Reveal>
-            <h2 className="type-h1 text-chalk">
-              {titulo.pre}
-              <span className="stretch-y inline-block accent-grad">
-                {titulo.accent}
-              </span>
-              {titulo.post}
-            </h2>
-          </Reveal>
-
           <Reveal>
             <div className="flex flex-col gap-4 text-lg leading-relaxed text-chalk-dim">
               {perfil.bioLarga.map((parrafo, i) => (

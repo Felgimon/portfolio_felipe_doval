@@ -77,6 +77,19 @@ por la misma máscara que el de angosto) y `feli-mesa.png` (mano en la cara) par
 el móvil. La figura lateral perdió la sombra de piso: ya no tiene pies, se
 desvanece — una sombra de contacto ahí sería mentira.
 
+### Ajuste final: apoyado en el PÁRRAFO, no en el título
+Felipe: un poco más grande y más abajo, apoyado sobre el párrafo. En vez de
+empujarla con un margen a mano (que no seguiría al título, que mide 115px en
+escritorio y 38px en `md`), **el título sale de la columna y pasa a ancho
+completo**: así la fila de abajo EMPIEZA donde empieza el párrafo y la figura se
+alinea sola con él en cualquier pantalla. Medido: cabeza a 0px del tope del
+párrafo en 1920, 1720x780 y 768. De regalo el título recupera los 672px enteros
+y deja de partirse en tres líneas (115px de alto contra 173px).
+
+Columna a 19rem: la figura queda en 304x758 (venía de 280x698). El precio es la
+columna de párrafo en 356px (~42 caracteres por línea) — corta pero legible; es
+el intercambio directo por el tamaño pedido.
+
 ## v5.15 — El sol no puede cambiar de color según la máquina
 
 Felipe, comparando ?perf=bajo contra la portada normal: "¿por qué el sol y los
