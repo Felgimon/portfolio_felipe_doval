@@ -66,11 +66,25 @@ Verificado contra el sitio corriendo: **0 violaciones de CSP y 0 errores**, con 
 vidrio conservando su filtro SVG (la data URI del `backdrop-filter` era lo que más
 riesgo corría) y el canvas 3D pintando.
 
-### Lo que queda pendiente y no se hizo
-No hay **observabilidad**: si algo se rompe para un visitante real, nadie se
-entera. Vercel Analytics / Speed Insights lo resolvería y es same-origin (pasa la
-CSP tal como está), pero es una decisión de producto de Felipe, no algo para
-prender por cuenta propia.
+### Observabilidad: Vercel Web Analytics (v5.17.1)
+Felipe lo aprobó, así que se instaló `@vercel/analytics` y `<Analytics />` va
+ÚLTIMO en el layout y FUERA de los providers: no envuelve a nadie, así que si su
+script no carga (adblock, red caída) no se lleva puesto nada del sitio.
+
+El punto fino era la CSP recién puesta. Verificado leyendo el paquete, no
+suponiendo: en PRODUCCIÓN se sirve desde `/_vercel/insights/script.js` y manda
+los eventos a `/_vercel/insights/event`, los dos del MISMO ORIGEN → entran con
+`'self'` sin abrirle la puerta a ningún tercero. En DESARROLLO, en cambio, carga
+un script de debug desde va.vercel-scripts.com, que la política sí bloquearía;
+ese dominio se permite SOLO cuando `NODE_ENV === "development"`, para no ensuciar
+la consola mientras se trabaja. **La política que se despliega queda cerrada.**
+
+Verificado contra el build de producción: la CSP servida no incluye el dominio de
+dev, el script se inyecta desde el mismo origen y hay **0 violaciones**.
+
+Ojo con el límite: el plan Hobby da **2.500 eventos por mes**. Si el sitio
+realmente recibe miles de visitas, se agota — y ese es justo el escenario que
+Felipe quería cubrir.
 
 `npm audit` marca postcss (moderada, XSS por `</style>` sin escapar en el
 stringify). Su "fix" propone bajar Next a la v9: es un falso positivo práctico —

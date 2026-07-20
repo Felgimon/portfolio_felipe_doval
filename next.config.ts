@@ -25,7 +25,18 @@ const withAnalyzer = bundleAnalyzer({
  *
  * `data:` no es decorativo: el Liquid Glass arma su filtro SVG como data URI y
  * lo mete en `backdrop-filter: url(...)`. Sin eso el vidrio pierde la
- * refracción. */
+ * refracción.
+ *
+ * VERCEL ANALYTICS: en producción se sirve desde `/_vercel/insights/script.js` y
+ * manda los eventos a `/_vercel/insights/event`, los dos del MISMO ORIGEN — o
+ * sea que entran con `'self'` y no hay que abrirle la puerta a ningún tercero.
+ * En desarrollo, en cambio, el paquete carga su script de debug desde
+ * va.vercel-scripts.com; ese dominio se permite SOLO en dev, para no ensuciar la
+ * consola con violaciones mientras se trabaja. La política que se despliega
+ * queda cerrada. */
+const dev = process.env.NODE_ENV === "development";
+const VA_DEV = dev ? " https://va.vercel-scripts.com" : "";
+
 const CSP = [
   "default-src 'self' data:",
   "base-uri 'self'",
@@ -35,8 +46,8 @@ const CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  `script-src 'self' 'unsafe-inline'${VA_DEV}`,
+  `connect-src 'self'${VA_DEV}`,
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",
 ].join("; ");

@@ -12,6 +12,7 @@ import { KonamiEasterEgg } from "@/components/motion/KonamiEasterEgg";
 import { DevOverlay } from "@/components/motion/DevOverlay";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const titulo = `${perfil.nombre} | ${perfil.rol}`;
@@ -131,6 +132,12 @@ export default function RootLayout({
             </SmoothScroll>
           </AppReadyProvider>
         </IdiomaProvider>
+        {/* Vercel Web Analytics. Va ÚLTIMO y fuera de los providers a propósito:
+            no envuelve a nadie, así que si su script no carga (bloqueador,
+            adblock, red caída) no se lleva puesto nada del sitio.
+            En producción se sirve desde /_vercel/insights, mismo origen: pasa la
+            CSP con `script-src 'self'` sin abrirle la puerta a terceros. */}
+        <Analytics />
       </body>
     </html>
   );
