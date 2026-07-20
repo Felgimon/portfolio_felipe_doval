@@ -3,8 +3,40 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.13** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.13.1** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.13.1 — La grilla que de verdad no engorda (la minificación era la culpable)
+
+v5.13 tituló "grilla constante", pero las líneas lejanas SEGUÍAN empastándose y
+Felipe lo volvió a cazar. La norma exacta del gradiente (v5.13) daba grosor
+constante sólo MIENTRAS la celda fuera más grande que la línea. El problema real
+era la **minificación**: hacia el horizonte entran muchas celdas por píxel; con
+`d = min(g.x, g.y)` y un grosor de ~1.7px, la línea ocupaba casi TODA la celda
+→ `d < grosor` daba verdadero en el píxel entero → la grilla se empastaba en una
+banda sólida que se lee como "más gruesa". El término de saturación (0.12→0.38)
+no la apagaba antes de que eso pasara.
+
+Fix (función `lineas`, Studio.tsx): se mide la distancia a la línea en PÍXELES
+por eje (núcleo de grosor constante en pantalla) y se atenúa por la **cobertura
+real** de la línea dentro de la celda — `cob = (2·grosor + aa)·w`, línea/celda ∈
+[0,1]. Apenas la línea empieza a comerse la celda, la grilla se DESVANECE (×`1 -
+cob`) en vez de engordar. Cada eje se evalúa por separado (no con `min`, que
+arrastraba una familia densa sobre la otra) y se unen con `max`. Grosor un punto
+más fino, como pidió: 1.7→1.2 piso, 1.5→1.0 pared. Verificado en el render de
+producción (SwiftShader): líneas finas y parejas de cerca a lejos, fundiéndose
+limpio hacia el horizonte, sin banda.
+
+Enfoque: se revisó el reporte de la card "Entender antes de tocar código"
+chocando con la de abajo. NO se reproduce — la grilla usa `align-items: stretch`
+(default), así que las cards de una fila SIEMPRE igualan altura. Medido en dev y
+en producción, 9 anchos (768–1920px): las dos de arriba siempre misma altura y 0
+solape (probablemente el reporte venía de un build cacheado). Sin cambios.
+
+Nota: el póster de fallback (sin-WebGL) no se regeneró — la diferencia es un
+pelo de grosor en la grilla, sólo visible para quien no tiene WebGL.
 
 ---
 
