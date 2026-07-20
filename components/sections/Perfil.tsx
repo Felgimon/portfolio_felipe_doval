@@ -15,6 +15,15 @@ const ORDEN_STACK: CategoriaStack[] = [
   "Automatización",
 ];
 
+/** El desvanecido del borde inferior de los recortes. Los dos PNG están cortados
+ * (uno en el muslo, el otro en el torso), así que abajo siempre queda un filo
+ * recto que delata la foto recortada. En vez de disimularlo moviéndolo, se
+ * disuelve: opaco hasta bien pasada la zona que importa y transparente al final,
+ * dejando ver el estudio casi blanco de atrás — que es el "blur blanco" que
+ * pidió Felipe. Compartido por las dos versiones para que se desvanezcan igual. */
+const DESVANECER =
+  "linear-gradient(to bottom, #000 82%, rgba(0,0,0,0.38) 93%, transparent 100%)";
+
 function agruparStack(perfil: PerfilTipo) {
   const grupos = new Map<CategoriaStack, string[]>();
   for (const item of perfil.stack) {
@@ -56,21 +65,19 @@ export function Perfil() {
           brazo y se lea "apoyado en una mesa" y no un busto flotando. */}
       <Reveal className="md:hidden">
         <div
-          className="relative mx-auto aspect-[8/7] w-full max-w-[19rem] overflow-hidden"
+          className="relative mx-auto aspect-[16/15] w-full max-w-[19rem] overflow-hidden"
           style={{
-            /* El PNG ya viene cortado a la altura del torso, así que SIEMPRE
-               hay un filo recto abajo — recortarlo más no lo arregla, sólo lo
-               mueve. Se disuelve con una máscara: los antebrazos quedan nítidos
-               y lo que sigue se desvanece, que es lo que hace leer "apoyado
-               sobre" en vez de "foto cortada". */
-            maskImage:
-              "linear-gradient(to bottom, #000 84%, rgba(0,0,0,0.35) 94%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, #000 84%, rgba(0,0,0,0.35) 94%, transparent 100%)",
+            /* El PNG ya viene cortado en el torso, así que SIEMPRE hay un filo
+               recto abajo — recortarlo más no lo arregla, sólo lo mueve. Se
+               disuelve con una máscara: los antebrazos quedan nítidos y lo que
+               sigue se desvanece, que es lo que hace leer "apoyado sobre" en vez
+               de "foto cortada". */
+            maskImage: DESVANECER,
+            WebkitMaskImage: DESVANECER,
           }}
         >
           <Image
-            src="/assets/foto/feli-apoyado.png"
+            src="/assets/foto/feli-mesa.png"
             alt={`${perfil.nombre}, ${perfil.rol}`}
             fill
             sizes="(max-width: 767px) 19rem, 1px"
@@ -88,31 +95,34 @@ export function Perfil() {
         />
       </Reveal>
 
-      <div className="mt-6 grid gap-10 md:mt-0 md:grid-cols-[auto_1fr] md:items-end md:gap-0">
-        {/* Ancho: parado, de espaldas contra el texto. El recorte mira al otro
-            lado, así que se ESPEJA (-scale-x-100) y la espalda queda del lado
-            de la columna. Alto en vh y ancho automático: se acomoda a cualquier
-            pantalla sin deformarse, y al alinearse al final de su columna la
-            espalda toca el texto sea cual sea el alto resultante. */}
+      <div className="mt-6 grid gap-10 md:mt-0 md:grid-cols-[17.5rem_1fr] md:items-start md:gap-0">
+        {/* Ancho: de espaldas contra el texto. El recorte mira al otro lado, así
+            que se ESPEJA (-scale-x-100) y la espalda queda del lado de la
+            columna.
+
+            El alto sale del ANCHO de la columna, no de `vh`. Esa fue la falla de
+            la primera versión: con `58vh` la figura encogía en las pantallas
+            bajas y anchas (en una de 773px de alto quedaba en 448px, la mitad de
+            lo pedido). El bloque de contenido mide 672px fijos en todo desktop,
+            así que fijando la columna el alto queda igual en cualquier monitor.
+
+            Y se ancla ARRIBA, no abajo. Anclada abajo, la cabeza quedaba a merced
+            del alto del texto, y agrandar la figura era contraproducente: le
+            robaba ancho al texto, el texto crecía a lo alto y la cabeza volvía a
+            bajar. Anclada arriba, la cabeza queda a la altura del título sin
+            depender de cuánto mida la bio, y el recorte se desvanece abajo. */}
         <Reveal className="hidden md:block">
-          <div className="relative flex justify-end">
+          <div
+            className="relative"
+            style={{ maskImage: DESVANECER, WebkitMaskImage: DESVANECER }}
+          >
             <Image
-              src="/assets/foto/feli-parado.png"
+              src="/assets/foto/feli-lateral.png"
               alt={`${perfil.nombre}, ${perfil.rol}`}
-              width={446}
+              width={642}
               height={1600}
-              sizes="(min-width: 768px) 20rem, 1px"
-              className="h-[clamp(22rem,58vh,38rem)] w-auto -scale-x-100 object-contain object-bottom"
-            />
-            {/* Sombra de contacto en el piso: sin esto queda pegoteado sobre el
-                estudio 3D en vez de parado en él. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute right-2 bottom-0 h-4 w-28 translate-y-1/2"
-              style={{
-                background:
-                  "radial-gradient(50% 50% at 50% 50%, rgba(23,45,66,0.28), rgba(23,45,66,0) 70%)",
-              }}
+              sizes="(min-width: 768px) 16rem, 1px"
+              className="h-auto w-full -scale-x-100"
             />
           </div>
         </Reveal>

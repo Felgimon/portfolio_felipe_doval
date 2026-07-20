@@ -57,6 +57,26 @@ texto, y las cards dejan de competir por los ~430px que les quedaban.
 Verificado a 1920, 1440, 820 y 768 (el límite de `md`): sin desborde horizontal
 en ninguno, y la figura apoyada en todos.
 
+### Ajuste: más grande, y por qué escalaba mal
+Felipe pidió la figura más grande, marcando un recuadro y una línea donde tenía
+que llegarle la cabeza. Al medir apareció la causa real de que se viera chica: el
+alto estaba en `vh`, y en su pantalla (baja y ancha, 773px de alto útil) `58vh`
+daba 448px — la mitad del cap de 608. **El alto pasa a salir del ANCHO de la
+columna**, que en desktop es siempre 672px: ahora mide 280x698 idéntico a 1920 y
+a 1720x780.
+
+Y se ancla ARRIBA, no abajo. Anclada abajo la cabeza quedaba a merced del alto
+del texto, y agrandar era contraproducente: más ancho de figura → menos ancho de
+texto → texto más alto → la cabeza volvía a bajar. Anclada arriba queda a la
+altura del título en cualquier pantalla (medido: +0px contra el tope del título
+en 1920, 1720x780 y 768). Resultado 280x698 contra el recuadro pedido de 235x585:
+lo supera en ambos ejes.
+
+Recortes finales: `feli-lateral.png` (cortado en el muslo, con el filo disuelto
+por la misma máscara que el de angosto) y `feli-mesa.png` (mano en la cara) para
+el móvil. La figura lateral perdió la sombra de piso: ya no tiene pies, se
+desvanece — una sombra de contacto ahí sería mentira.
+
 ## v5.15 — El sol no puede cambiar de color según la máquina
 
 Felipe, comparando ?perf=bajo contra la portada normal: "¿por qué el sol y los
