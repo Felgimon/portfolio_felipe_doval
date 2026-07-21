@@ -3,8 +3,43 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.2** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.2 — Reduced-motion no puede congelar la navegación
+
+Un amigo de Felipe entró desde su máquina y el modelo 3D "no se movía": el sol
+central se achicaba pero la cámara no viajaba por la grilla. Pasaba en Brave Y en
+Edge de la misma PC — la pista de que era una config del sistema, no del
+navegador.
+
+Diagnóstico, reproducido y medido (centroide del cúmulo naranja, portada vs
+#perfil): con `prefers-reduced-motion: reduce` el cúmulo se movía **0.1%** contra
+**6.5%** en modo normal. La cámara clavada en la portada. La causa, una línea del
+CameraRig: `const t = reduced ? 0 : clamp(st.t, ...)` — en reduced el progreso de
+cámara se forzaba a 0, así que el scroll no la movía. Y como la cámara ES la
+navegación de este sitio, eso no era "menos movimiento": era el sitio roto. El sol
+seguía achicándose porque su escala (easeSunCore) no dependía de `reduced`, lo que
+despistaba: parecía que algo andaba.
+
+`prefers-reduced-motion` pide sacar el movimiento GRATUITO —la inercia, el plasma
+hirviendo, la órbita autónoma—, no la posición que dirige el usuario. El fix: la
+cámara SIEMPRE sigue al scroll; en reduced se planta directo en el objetivo (sin
+damping ni planeo), así el único movimiento es el que produce quien scrollea, que
+es motion controlado y accesible. El plasma y las protuberancias siguen quietos en
+reduced, como antes.
+
+Verificado tras el fix: el cúmulo se mueve 5.1% en reduced (era 0.1%), y el
+encuadre por sección es correcto en ambas direcciones de paneo (Perfil a la
+derecha, Enfoque a la izquierda), con el sol de la sección agrandado y el HUD
+activo.
+
+Guard de regresión: `scripts/audit.mjs` suma un check en un contexto con
+reduced-motion — mide el desplazamiento de los chips del overlay (que posiciona la
+proyección de la cámara) entre portada y un tópico y exige que se muevan. No se
+veía en ningún test visual porque todos corren sin la preferencia. Auditoría 13/13.
 
 ---
 

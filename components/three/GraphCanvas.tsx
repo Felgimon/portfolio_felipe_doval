@@ -453,7 +453,16 @@ function CameraRig({
   useFrame((_, delta) => {
     const st = camRef.current;
     const N = nodos.length;
-    const t = reduced ? 0 : THREE.MathUtils.clamp(st.t, 0, N);
+    // La cámara SIEMPRE sigue al scroll, también en reduced-motion. Antes se
+    // forzaba `t = 0` cuando reduced: la cámara quedaba clavada en la portada y
+    // el scroll no la movía — o sea que la navegación entera (que ES la cámara)
+    // no funcionaba. Lo cazó Felipe: un visitante con "reducir movimiento" del
+    // sistema (Brave y Edge en la misma máquina) veía el sol achicarse pero nada
+    // se movía. `prefers-reduced-motion` pide sacar la animación GRATUITA (la
+    // inercia, el plasma, la órbita autónoma), no la posición dirigida por el
+    // usuario: acá la cámara se ata directo al scroll (sin damping, ver abajo),
+    // que es motion controlado por quien scrollea, y sí es accesible.
+    const t = THREE.MathUtils.clamp(st.t, 0, N);
 
     // El encuadre de la PORTADA sale de la banda libre, que se mide contra el
     // DOM y cambia sin re-render (resize, carga de la fuente) → se resuelve por
@@ -502,9 +511,12 @@ function CameraRig({
     _lookGoal.y -= lift * halfV;
 
     if (reduced) {
+      // La cámara se planta directo en el objetivo del scroll: sigue al usuario
+      // 1:1, sin inercia ni planeo. No hace falta pedir más frames (el scroll ya
+      // mantiene vivo el render mientras dura) y al frenar ya está en su lugar.
       camera.position.copy(_target);
       camera.lookAt(_lookGoal);
-      return; // reduced-motion: instantáneo, sin pings → pausa inmediata
+      return;
     }
 
     // Damping ADAPTATIVO: cerca del objetivo (scroll) = tracking ajustado;

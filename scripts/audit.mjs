@@ -158,6 +158,50 @@ try {
     await ctx.close();
   }
 
+  // ---- 6. Navegación con REDUCED-MOTION (regresión v5.17.2) ----
+  // Un visitante con "reducir movimiento" del sistema (lo tenía el amigo de
+  // Felipe, en Brave y Edge) debe poder navegar igual: la cámara sigue al
+  // scroll, solo que sin la inercia. Antes se congelaba en la portada y el sitio
+  // quedaba inusable. Esto no se ve en ningún test visual normal (todos corren
+  // sin la preferencia), así que va acá. Testigo: los chips del overlay los
+  // posiciona la proyección de la cámara — si la cámara se mueve, se mueven.
+  {
+    const ctx = await b.newContext({
+      locale: "es-AR",
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: "reduce",
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/`, { waitUntil: "load", timeout: 45000 });
+    await p.waitForTimeout(6000);
+    // Centro-x de cada chip VISIBLE del overlay (los ocultos se van a -9999).
+    const chips = () =>
+      p.evaluate(() => {
+        const out = {};
+        for (const btn of document.querySelectorAll(".solabels button")) {
+          const r = btn.getBoundingClientRect();
+          if (r.width > 5 && r.left > -1000 && r.left < window.innerWidth) {
+            out[btn.getAttribute("aria-label")] = r.left + r.width / 2;
+          }
+        }
+        return out;
+      });
+    const portada = await chips();
+    await p.evaluate(() => document.getElementById("enfoque")?.scrollIntoView({ block: "center" }));
+    await p.waitForTimeout(2500);
+    const enfoque = await chips();
+    // Desplazamiento medio de los chips visibles en AMBOS estados.
+    const comunes = Object.keys(portada).filter((k) => k in enfoque);
+    const desp = comunes.length
+      ? comunes.reduce((a, k) => a + Math.abs(enfoque[k] - portada[k]), 0) / comunes.length
+      : 0;
+    check(
+      comunes.length >= 2 && desp > 40,
+      `reduced-motion: la cámara sigue al scroll (${comunes.length} chips, Δx medio ${Math.round(desp)}px)`,
+    );
+    await ctx.close();
+  }
+
   await b.close();
   console.log(fallas === 0 ? "✓ AUDITORÍA OK" : `✗ ${fallas} problema(s)`);
   process.exitCode = fallas === 0 ? 0 : 1;
