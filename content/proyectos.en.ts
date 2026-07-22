@@ -136,7 +136,12 @@ export const proyectosEN: Proyecto[] = [
     resumen:
       "Shows I can deliver with a team against a real deadline. (Product details pending.)",
     rol: "Small team, delivered in under 6 months.",
-    capturas: [{ ...es.lost.capturas[0], alt: "LOST screenshot (missing)" }],
+    capturas: [
+      {
+        ...es.lost.capturas[0],
+        alt: "LOST home screen: the brand in the top bar and the two large actions, 'I lost something' and 'I found something', over a background of object icons.",
+      },
+    ],
   },
   {
     ...es.nindo,
@@ -145,7 +150,10 @@ export const proyectosEN: Proyecto[] = [
       "The most playful project in the portfolio; shows range beyond the web. (Genre, engine and role details pending.)",
     rol: "Small team, delivered in under 6 months.",
     capturas: [
-      { ...es.nindo.capturas[0], alt: "Nindo gameplay (screenshot missing)" },
+      {
+        ...es.nindo.capturas[0],
+        alt: "Nindo main menu: the PLAY / QUIT / OPTIONS bar over the ninja mask in black and yellow.",
+      },
     ],
   },
   {

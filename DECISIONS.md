@@ -3,8 +3,38 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.3** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.4** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.4 — Capturas de LOST y Nindo, y fuera el "en progreso"
+
+Felipe pasó las capturas (lost-home.png, nindo-menu.png) y pidió sacar el pill
+"en progreso" de todos los proyectos.
+
+Las dos venían como screenshot de PÁGINA ENTERA, con mucho fondo vacío: el
+contenido de LOST ocupaba el tercio superior (blanco abajo) y el de Nindo el
+cuadrante superior-izquierdo. En la card 16:10 habrían quedado medio vacías. Se
+recortaron con un script que detecta el bounding box de lo no-blanco, con dos
+criterios distintos porque las imágenes son distintas:
+- LOST: la marca (logo a la izquierda, botones de auth a la derecha) vive en TODO
+  el ancho; recortar los lados la mata. Se conserva el ancho del contenido y se
+  extiende la altura hacia el blanco de abajo hasta 16:10 → 1918x1199, con logo,
+  auth y los dos botones grandes intactos.
+- Nindo: el menú es un bloque compacto; se recorta ajustado a él y a 16:10
+  exacto → 1426x891, sin blanco.
+Verificado ojo por ojo antes de conectarlas.
+
+El pill "en progreso" lo disparaba `incompleto:true`, que sólo tenían LOST, Nindo
+y PC Builder (Superlum nunca lo tuvo). Se sacó de los tres: los secundarios son
+proyectos TERMINADOS a los que les faltaban datos, no proyectos en curso; el
+único realmente en progreso es Superlum, que ya lo dice en su texto ("en
+desarrollo con ella"). El flag y su render quedan por si algún proyecto futuro lo
+necesita.
+
+Verificado contra el sitio: las 7 cards con imagen cargada, LOST y Nindo con las
+suyas, y 0 pills "en progreso" en toda la sección.
 
 ---
 

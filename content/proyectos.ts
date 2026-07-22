@@ -3,8 +3,10 @@ import type { Proyecto } from "./types";
 /**
  * Los 7 proyectos, tal como vienen de contenido/proyectos/*.
  * - `capturas` con falta:true → la UI muestra un placeholder punteado honesto.
- * - `incompleto:true` → faltan datos reales que Felipe tiene que completar
- *   (PC Builder, Nindo, LOST). Ver TODO-FELI.md.
+ * - `incompleto:true` → muestra el pill "en progreso" en la card. Ya no lo usa
+ *   ninguno: los secundarios son proyectos TERMINADOS (les faltaban datos, no
+ *   estaban en curso), y el único en progreso de verdad es Superlum, que ya lo
+ *   dice en su texto. El flag queda por si algún proyecto futuro lo necesita.
  */
 export const proyectos: Proyecto[] = [
   // ==========================================================================
@@ -211,9 +213,13 @@ export const proyectos: Proyecto[] = [
         url: "https://github.com/3-TIC-ORT/proyecto-3-L.O.S.T.",
       },
     ],
-    capturas: [{ src: "", alt: "Captura de LOST (falta)", falta: true }],
+    capturas: [
+      {
+        src: "/assets/proyectos/lost/lost-home.png",
+        alt: "La pantalla de inicio de LOST: la marca en la barra superior y las dos acciones grandes, 'Perdí algo' y 'Encontré algo', sobre un fondo de íconos de objetos.",
+      },
+    ],
     acento: "#8fe3c6",
-    incompleto: true,
     anguloSitio: "Entrega en equipo con deadline real.",
   },
   {
@@ -232,9 +238,13 @@ export const proyectos: Proyecto[] = [
         url: "https://github.com/Mateo-Drault/Nindo-VideoJuego-Mateo-Drault-Felipe-Doval-Teo-Gonzalez-Pedro-Henriquez",
       },
     ],
-    capturas: [{ src: "", alt: "Gameplay de Nindo (falta captura)", falta: true }],
+    capturas: [
+      {
+        src: "/assets/proyectos/nindo/nindo-menu.png",
+        alt: "El menú principal de Nindo: la barra con PLAY, QUIT y OPTIONS sobre la máscara del ninja en negro y amarillo.",
+      },
+    ],
     acento: "#c77dff",
-    incompleto: true,
     anguloSitio: "El proyecto más lúdico; rango más allá de las webs.",
   },
   {
@@ -261,7 +271,6 @@ export const proyectos: Proyecto[] = [
       },
     ],
     acento: "#8fe3c6",
-    incompleto: true,
     anguloSitio: "Configurador por componentes.",
   },
 ];
