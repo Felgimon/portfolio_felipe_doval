@@ -3,8 +3,27 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.2** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.3** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.3 — El repo de LOST, clickeable
+
+Felipe quería que se pudiera entrar al repo de LOST. LOST tenía `enlaces: []`, y
+en ProjectCard eso significa card NO clickeable (sin `href` de case study ni
+enlace `repo`/`demo`, la card es sólo informativa). Se le agregó el enlace al
+repo → la card entera pasa a abrir el repo en pestaña nueva. El inglés lo hereda
+por spread (`...es.lost`).
+
+Trampa anotada: el repo se llama con el PUNTO FINAL —
+`github.com/3-TIC-ORT/proyecto-3-L.O.S.T.` — y sin ese punto GitHub tira 404.
+Verificado (200 con el punto, 404 sin él) antes de ponerlo, y de nuevo contra el
+sitio corriendo.
+
+Sigue faltando la CAPTURA de LOST (y la de Nindo): las que pasó Felipe son
+screenshots del chat, no archivos en disco. Quedan como placeholder + pill "en
+progreso" hasta que estén los PNG en /public, igual que Nindo.
 
 ---
 

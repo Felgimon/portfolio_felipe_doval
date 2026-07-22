@@ -201,7 +201,16 @@ export const proyectos: Proyecto[] = [
       "Demuestra que sé entregar en equipo con un deadline real. (Faltan detalles del producto.)",
     rol: "Equipo chico, entrega en menos de 6 meses.",
     stack: [],
-    enlaces: [],
+    enlaces: [
+      {
+        tipo: "repo",
+        label: "Repo en GitHub",
+        // El repo se llama con el punto final (proyecto-3-L.O.S.T.); sin él,
+        // GitHub devuelve 404 — verificado. Con el enlace, la card entera pasa a
+        // ser clickeable al repo (antes no lo era: enlaces vacío = informativa).
+        url: "https://github.com/3-TIC-ORT/proyecto-3-L.O.S.T.",
+      },
+    ],
     capturas: [{ src: "", alt: "Captura de LOST (falta)", falta: true }],
     acento: "#8fe3c6",
     incompleto: true,
