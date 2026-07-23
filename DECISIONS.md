@@ -3,8 +3,53 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.4** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.5** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.5 — La bio dice la verdad, y el check final
+
+### El dato falso
+La bio larga decía que a Felipe lo "foguearon competencias como NASA Space Apps y
+los Premios Sadosky". **Nunca participó de ninguna de las dos.** Se reemplazó por
+algo cierto y del mismo largo (ES +2 caracteres, EN +8, para no descolocar el
+layout de la figura apoyada en el párrafo): "me foguié llevando cada proyecto de
+la idea hasta algo que alguien usa" — que además es el hilo de todo el portfolio.
+Se actualizó el comentario del código que decía que las competencias "siguen
+mencionadas en la bio larga": ahora aclara que se sacaron por completo porque no
+son ciertas.
+
+### Auditoría de seguridad (superficie real, no checklist de adorno)
+El sitio es estático, sin backend, sin base de datos, sin auth y **sin ningún
+input de usuario** (no hay formularios ni búsqueda), así que la superficie de XSS
+es prácticamente nula. Lo que se verificó:
+
+- **`dangerouslySetInnerHTML`**: sólo dos. El JSON-LD (contenido propio) y los
+  íconos de marca (SVG generados en build desde simple-icons). Al JSON-LD se le
+  agregó escape de `<` a `<` como defensa en profundidad: cualquier
+  `</script>` futuro deja de poder cerrar la etiqueta. Verificado: sigue
+  parseando como JSON válido.
+- **Links externos**: 7 de 7 con `rel="noopener noreferrer"` (tab-nabbing).
+- **Secrets**: ningún `.env` trackeado en git, cero variables `NEXT_PUBLIC_` (o
+  sea que nada de `.env.local` se inlinea al cliente), la app no lee NINGUNA env
+  var, y se comprobó que el valor del `VERCEL_OIDC_TOKEN` no aparece en el bundle
+  cliente.
+- **Query params** (`?fx`, `?perf`, `?bloom`, `?dpr`, `?comp`): se comparan contra
+  enums o pasan por `Number()`; ninguno se refleja al DOM. Sin XSS reflejado.
+- **Sin** `eval`, `new Function`, `innerHTML`, `document.write`, ni fetch/XHR/
+  WebSocket a hosts externos.
+- **Headers en vivo**: CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy,
+  Permissions-Policy presentes; `x-powered-by` ausente. **0 violaciones de CSP.**
+- **Dependencias**: Next 16.2.10 / React 19.2.4 al día. `npm audit` marca postcss
+  (moderada) pero su "fix" propone bajar Next a la v9: es dependencia de BUILD y
+  el CSS lo escribe el repo, no un usuario. Falso positivo práctico.
+
+### Estado funcional
+`npm run audit` **13/13 verde**: rutas de servicio (OG, robots, sitemap), los dos
+404, poster sin WebGL con 0 errores, teclado (HUD enfocable + Enter navega),
+portapapeles del email, "Volver al grafo", y la cámara siguiendo al scroll con
+reduced-motion. TypeScript, ESLint y build limpios.
 
 ---
 

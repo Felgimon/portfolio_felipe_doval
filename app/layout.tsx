@@ -109,7 +109,14 @@ export default function RootLayout({
       <body className="min-h-full antialiased">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          // `jsonLd` es 100% contenido propio (nombre, rol, URLs), sin input de
+          // usuario, así que hoy no hay riesgo. El escape de `<` va igual como
+          // defensa en profundidad: convierte cualquier `</script>` que pudiera
+          // aparecer en el futuro en `<</script>`, que no cierra la etiqueta.
+          // Sigue siendo JSON válido (< es un escape legal para `<`).
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
         />
         <a
           href="#inicio"

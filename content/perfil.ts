@@ -23,7 +23,7 @@ export const perfil: Perfil = {
 
   bioLarga: [
     "Arranqué a programar en la escuela y no paré. Hoy tengo cosas que van desde un juego de terminal en C++ hasta plataformas web completas con Next.js, TypeScript y Python, pasando por modelos de machine learning. No me caso con una sola capa del stack: me gusta el ciclo entero (entender el problema, modelar los datos, diseñar la experiencia y shippear), y ese es el hilo que conecta todo lo que hago.",
-    "Hice mi pasantía en Taquion automatizando con n8n y workflows sobre su workspace, y de ahí salió Superlum: el workspace a medida que estoy construyendo para la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguearon competencias como NASA Space Apps y los Premios Sadosky. El deporte (fútbol y básquet) fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
+    "Hice mi pasantía en Taquion automatizando con n8n y workflows sobre su workspace, y de ahí salió Superlum: el workspace a medida que estoy construyendo para la operación diaria de la empresa. Trabajo bien en equipos chicos con deadlines de verdad, y me foguié llevando cada proyecto de la idea hasta algo que alguien usa. El deporte (fútbol y básquet) fue la excusa para empezar a meterle datos a todo, pero lo que me obsesiona es el problema, no la cancha. Lo que viene es más de lo mismo, pero más grande.",
   ],
 
   enfoque: {
@@ -81,9 +81,9 @@ export const perfil: Perfil = {
   ],
 
   // El orden codifica la secuencia del recorrido. TODO(FELI): confirmá orden
-  // exacto y fechas (ver TODO-FELI.md). Las cards de NASA Space Apps y
-  // Premios Sadosky se retiraron a pedido de Felipe (v4.3); las competencias
-  // siguen mencionadas en la bio larga.
+  // exacto y fechas (ver TODO-FELI.md). NASA Space Apps y Premios Sadosky se
+  // sacaron por completo (cards en v4.3, bio larga en v5.17.5): Felipe nunca
+  // participó de esas competencias.
   timeline: [
     {
       orden: 1,

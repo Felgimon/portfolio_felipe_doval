@@ -22,7 +22,7 @@ export const perfilEN: Perfil = {
 
   bioLarga: [
     "I started programming in school and never stopped. Today I have work ranging from a C++ terminal game to full web platforms with Next.js, TypeScript and Python, machine learning models included. I don't marry a single layer of the stack: I like the whole cycle (understanding the problem, modeling the data, designing the experience and shipping), and that's the thread that connects everything I do.",
-    "I did my internship at Taquion automating with n8n and workflows on their workspace, and out of that came Superlum: the custom workspace I'm building for the company's daily operations. I work well in small teams with real deadlines, and competitions like NASA Space Apps and the Sadosky Awards toughened me up. Sports (football and basketball) were my excuse to start throwing data at everything, but what obsesses me is the problem, not the pitch. What's next is more of the same, but bigger.",
+    "I did my internship at Taquion automating with n8n and workflows on their workspace, and out of that came Superlum: the custom workspace I'm building for the company's daily operations. I work well in small teams with real deadlines, and I got tempered taking each project from an idea to something people actually use. Sports (football and basketball) were my excuse to start throwing data at everything, but what obsesses me is the problem, not the pitch. What's next is more of the same, but bigger.",
   ],
 
   enfoque: {
