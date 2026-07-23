@@ -1,5 +1,5 @@
-// Genera los favicons del portfolio (v4.3): el monograma "FD·" de la marca
-// (Archivo Black + punto dorado) sobre espacio profundo con estrellas.
+// Genera los favicons del portfolio: el monograma "FD·" de la marca (Archivo
+// Black + punto) SIN caja de fondo — solo las letras y el punto, en transparente.
 // Renderizado con canvas de Chromium (tipografía real, no aproximada) y
 // exportado en los tres tamaños. Reproducible:
 //   node scripts/gen-favicons.mjs
@@ -14,12 +14,30 @@ const FONT_B64 = readFileSync(
   join(APP, "fonts", "ArchivoBlack-Regular.ttf"),
 ).toString("base64");
 
+/* EL COLOR — la decisión menos obvia de este archivo.
+ *
+ * Sin caja de fondo, el monograma se apoya directo sobre la barra de pestañas
+ * del navegador, que puede ser BLANCA o CASI NEGRA según el tema del sistema. Un
+ * solo color tiene que leerse en las dos. Medido (contraste WCAG contra
+ * #ffffff / #dee1e6 / #35363a / #202124):
+ *   --acento  #0b5385 → 8.11 en claro pero 1.49 en oscuro (desaparece)
+ *   --oro     #d99a1e → 6.59 en oscuro pero 1.86 en claro (desaparece)
+ *   --acento-hi #1d74b0 → 2.40 en oscuro, corto
+ * Por eso el punto YA NO va dorado: en una pestaña clara sería invisible.
+ *
+ * #2b86c6 es el punto MEDIO del degradado de identidad (accent-grad va
+ * #083d66 → #1370ad → #3fa0d8), corrido apenas para maximizar el contraste: da
+ * 3.01 como mínimo en los cuatro fondos. No es una elección estética libre —
+ * 3.05 es el TECHO teórico que puede alcanzar cualquier color contra #dee1e6 y
+ * #35363a a la vez, así que este tono está en el óptimo. */
+const MARCA = "#2b86c6";
+
 const b = await chromium.launch();
 const p = await b.newPage();
 
 const draw = (size) =>
   p.evaluate(
-    async ([size, fontB64]) => {
+    async ([size, fontB64, marca]) => {
       const font = new FontFace(
         "Archivo",
         Uint8Array.from(atob(fontB64), (c) => c.charCodeAt(0)).buffer,
@@ -31,56 +49,50 @@ const draw = (size) =>
       c.width = size;
       c.height = size;
       const x = c.getContext("2d");
-      const s = size / 512; // todo se define a 512 y escala
+      // Sin fillRect: el canvas queda TRANSPARENTE. Es todo el punto del cambio.
 
-      // Fondo: espacio profundo con un leve resplandor central.
-      const g = x.createRadialGradient(
-        256 * s, 236 * s, 40 * s,
-        256 * s, 256 * s, 380 * s,
-      );
-      g.addColorStop(0, "#0d1e33");
-      g.addColorStop(1, "#04080f");
-      x.fillStyle = g;
-      x.fillRect(0, 0, size, size);
-
-      // Estrellas (solo se perciben en tamaños grandes; a 32px desaparecen).
-      const stars = [
-        [64, 88, 5, 0.85],
-        [452, 72, 4, 0.7],
-        [462, 430, 5, 0.75],
-        [76, 428, 3.5, 0.6],
-        [250, 40, 3, 0.5],
-      ];
-      x.fillStyle = "#eaf4fc";
-      for (const [sx, sy, r, o] of stars) {
-        x.globalAlpha = o;
-        x.beginPath();
-        x.arc(sx * s, sy * s, r * s, 0, Math.PI * 2);
-        x.fill();
-      }
-      x.globalAlpha = 1;
-
-      // Monograma FD + punto dorado (la marca), centrado ópticamente.
-      x.font = `${228 * s}px Archivo`;
       x.textAlign = "left";
       x.textBaseline = "alphabetic";
+      x.fillStyle = marca;
+
       const texto = "FD";
-      const tw = x.measureText(texto).width;
-      const dotR = 25 * s;
-      const gap = 12 * s;
+      // Proporciones del punto respecto del cuerpo de la letra.
+      const rDot = 0.115; // radio
+      const rGap = 0.055; // aire entre la D y el punto
+
+      // El monograma ocupa el 90% del lienzo: sin caja que lo contenga, si es
+      // chico se pierde en la pestaña. Se mide de verdad y se reescala (nada de
+      // constantes a ojo, que se rompen si cambia la fuente).
+      const objetivo = size * 0.9;
+      let fs = size * 0.6;
+      for (let i = 0; i < 3; i++) {
+        x.font = `${fs}px Archivo`;
+        const w = x.measureText(texto).width + fs * rGap + fs * rDot * 2;
+        fs *= objetivo / w;
+      }
+      x.font = `${fs}px Archivo`;
+
+      const m = x.measureText(texto);
+      const tw = m.width;
+      const dotR = fs * rDot;
+      const gap = fs * rGap;
       const total = tw + gap + dotR * 2;
+
+      // Centrado ÓPTICO: se usa la caja real de los glifos (no el alto de línea,
+      // que trae aire de la fuente y deja la marca corrida hacia arriba).
       const tx = (size - total) / 2;
-      const ty = 338 * s;
-      x.fillStyle = "#eaf4fc";
+      const ty =
+        (size + m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+
       x.fillText(texto, tx, ty);
-      x.fillStyle = "#e8b34c";
+      // El punto se apoya en la línea de base, como un punto final.
       x.beginPath();
       x.arc(tx + tw + gap + dotR, ty - dotR, dotR, 0, Math.PI * 2);
       x.fill();
 
       return c.toDataURL("image/png");
     },
-    [size, FONT_B64],
+    [size, FONT_B64, MARCA],
   );
 
 const toBuf = (dataUrl) => Buffer.from(dataUrl.split(",")[1], "base64");

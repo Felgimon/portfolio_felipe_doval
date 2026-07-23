@@ -3,8 +3,57 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.5** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.6** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.6 — El favicon sin caja: solo "FD." y el problema del color
+
+Pedido de Felipe: sacar el rectángulo de fondo del favicon y dejar solo el
+monograma "FD" con el punto, en un color de la paleta que se note en modo claro y
+oscuro.
+
+Sacar la caja es lo fácil (el canvas queda transparente: se borran el degradado
+de espacio profundo y las estrellas). Lo difícil es el COLOR, y ahí el pedido
+tenía una trampa que hubo que medir: sin caja, el monograma se apoya directo
+sobre la barra de pestañas, que es BLANCA o CASI NEGRA según el tema del sistema.
+Contraste WCAG de los candidatos de la paleta contra #ffffff / #dee1e6 / #35363a
+/ #202124:
+
+| color | claro | oscuro | mínimo |
+| --- | --- | --- | --- |
+| `--acento` #0b5385 | 8.11 | 1.49 | **1.49** |
+| `--acento-hi` #1d74b0 | 5.03 | 2.40 | **2.40** |
+| celeste del grad #3fa0d8 | 2.90 | 4.16 | **2.22** |
+| `--oro` #d99a1e | 2.44 | 6.59 | **1.86** |
+
+**Ningún color existente de la paleta sirve**: los azules de marca mueren en
+oscuro y el oro desaparece en claro. Por eso el punto ya NO va dorado — en una
+pestaña clara sería invisible (1.86).
+
+El elegido es **#2b86c6**, el punto MEDIO del degradado de identidad (accent-grad
+va #083d66 → #1370ad → #3fa0d8), corrido apenas para maximizar el contraste: da
+**3.01 de mínimo en los cuatro fondos**. No es gusto: se calculó que 3.05 es el
+TECHO teórico que puede alcanzar CUALQUIER color contra #dee1e6 y #35363a a la
+vez (el óptimo está en luminancia ~0.21), así que este tono está en el máximo
+posible. Monograma y punto van del mismo color: garantiza que los dos se lean.
+
+Además el monograma pasa a ocupar el 90% del lienzo (sin caja que lo contenga, si
+es chico se pierde en la pestaña) y se centra ÓPTICAMENTE con la caja real de los
+glifos, no con el alto de línea. Las proporciones se miden y reescalan en el
+script: si cambia la fuente, no se rompe.
+
+Verificado: 82.4% del PNG transparente y alfa 0 en la esquina (o sea, sin caja de
+verdad), render legible a 16/32/64/128px sobre fondo de pestaña claro y oscuro, y
+las tres rutas sirviendo 200. De regalo, al no haber degradado ni estrellas los
+archivos se desplomaron: icon.png 254KB → 13KB, favicon.ico 1768B → 623B,
+apple-icon 35KB → 3.3KB.
+
+Pendiente menor: en la pantalla de inicio de iOS el apple-touch-icon transparente
+se compone sobre NEGRO (iOS no respeta transparencia ahí). El azul se lee bien
+igual (5.3 contra negro), pero si se quiere una teja opaca de marca, hay que
+darle fondo propio solo a ese archivo.
 
 ---
 
