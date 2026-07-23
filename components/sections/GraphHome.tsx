@@ -163,7 +163,12 @@ function NodeOverlay({
 
   return (
     <div
-      className="solabels pointer-events-none fixed inset-0 z-30 overflow-hidden"
+      /* z-[1]: ENCIMA del canvas (z-0) pero DEBAJO del contenido y el footer
+         (z-10). Antes iba en z-30 y las etiquetas de los mini-soles se dibujaban
+         por delante de las cards y del footer, tapándolos. Abajo, además, pasan
+         a formar parte del BACKDROP: el Liquid Glass de las cards las refracta y
+         desenfoca como a cualquier otro fondo, que es justo lo que se busca. */
+      className="solabels pointer-events-none fixed inset-0 z-[1] overflow-hidden"
       aria-hidden
     >
       {nodos.map((n, i) => (
@@ -634,8 +639,13 @@ export function GraphHome({ children }: { children: ReactNode }) {
         />
       )}
 
-      {/* Contenido */}
-      <div className="relative z-10">
+      {/* Contenido. `pointer-events-none` + `auto` en las columnas de adentro:
+          el wrapper cubre TODA la página, así que si capturara clicks dejaría
+          muertos a los mini-soles ahora que están en una capa de abajo (probado:
+          el click se lo comía este div y no navegaba). Con esto, el vacío al
+          costado del texto deja pasar el click al sol, y el contenido real
+          sigue siendo interactivo. */}
+      <div className="pointer-events-none relative z-10">
         {/* Portada: el nombre a la izquierda, el sol girando a la derecha (en
             mobile el sol queda arriba y este bloque abajo: lo resuelve el
             encuadre de la cámara, no un transform). */}
@@ -654,7 +664,7 @@ export function GraphHome({ children }: { children: ReactNode }) {
                 ancho (el nombre). No es cosmético — es lo que le permite a la
                 cámara saber dónde termina el texto de verdad para enmarcar el
                 cúmulo en lo que sobra. El tope lo pone max-w-2xl. */}
-            <div ref={columnaRef} className="w-fit max-w-2xl">
+            <div ref={columnaRef} className="pointer-events-auto w-fit max-w-2xl">
               <p className="eyebrow">{perfil.hero.kicker}</p>
               <div className="mt-3 md:mt-5">
                 <HeroName />

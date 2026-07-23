@@ -3,8 +3,74 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.6** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.7** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.7 — Capas, footer mínimo, y por qué el vidrio no refractaba
+
+### 1. El Liquid Glass sobre los tópicos: es la DISTANCIA, no la pared
+Felipe preguntó si el vidrio no funciona con la grilla de la pared o si es que
+está muy lejos. Medido (sd del fondo 3D exactamente bajo cada card, con el
+contenido oculto): **1.85–5.71**, o sea liso. La calibración de v5.12.3 fijó que
+sd 5.5 = refracción invisible y ~12 = visible. El vidrio nunca estuvo roto: no
+tenía nada que doblar.
+
+Diagnóstico, en tres pasos medidos:
+- Había una **banda muerta en el horizonte**: el piso arrancaba en dir.y < -0.03 y
+  la pared en dir.y > 0.0, así que entre medio no había NINGUNA grilla — y ahí
+  caen las cards. Se cerró (los dos desvanecidos ahora se solapan).
+- El **corte por distancia** mataba las líneas antes de llegar (11..26). Se
+  extendió a 26..60; era redundante, porque lineas() ya apaga por cobertura.
+- Lo que de verdad limita es **lineas() misma**: forzando `fade = 1.0` los números
+  NO cambiaron. A esa distancia la grilla se funde al promedio, que es la
+  protección anti-moiré que se construyó en v5.13.2 cuando Felipe pidió grosor
+  proporcional a la perspectiva. **Sí: es porque está lejos.**
+
+Mejora aplicada: grilla **multi-escala** (celdas 4x y 16x, atenuadas 0.70/0.45)
+que releva a la fina donde ya se promedió, más la pared subida de 0.26 a 0.40.
+Resultado +25–50% de contraste (Contacto 1.85 → 2.74, Trabajo 3.58 → 5.35) con el
+hero igual de limpio.
+
+**Queda un trade-off sin resolver, y es estructural**: llevar el fondo lejano a
+sd ~12 exige líneas gruesas y oscuras a distancia, que es EXACTAMENTE el bug que
+Felipe reportó en v5.13.2 ("parecen tener un grosor enorme"). Se probó un gate por
+LOD para meter las escalas gruesas sólo lejos: anuló la ganancia (volvió al
+baseline), porque en esa zona la grilla fina todavía resuelve — es sparse y
+pálida, no promediada. Con la perspectiva correcta como requisito, la refracción
+sobre los tópicos es sutil por física, no por bug.
+
+### 2. Capas: las etiquetas de los mini-soles iban por delante de todo
+`.solabels` estaba en `z-30`, por encima del contenido y del footer (los dos en
+`z-10`): las pastillas y los soles se dibujaban ENCIMA de las cards y del footer.
+Pasan a `z-[1]` — sobre el canvas (z-0), debajo del contenido. Además de arreglar
+el tapado, ahora forman parte del BACKDROP, así que el Liquid Glass de las cards
+las refracta y desenfoca como a cualquier fondo (que es lo que pidió Felipe).
+
+El efecto colateral había que resolverlo: el wrapper de contenido cubre TODA la
+página, así que al quedar por encima se comía los clicks y **los mini-soles
+dejaban de navegar** (verificado: el click lo recibía el Container y scrollY no
+se movía). Se arregla con `pointer-events-none` en el wrapper y `auto` en las
+columnas de contenido real (hero y TopicPanel): el vacío al costado del texto deja
+pasar el click al sol. Verificado: el chip recibe el click y navega (scrollY
+0 → 820).
+
+### 3. Footer mínimo
+Queda sólo "© 2026 Felipe Doval". El resto (marca, bio, ubicación, enlaces de
+contacto, "volver arriba", "Hecho con Next.js + Three.js") era repetición de lo
+que ya está en Contacto y en el HUD.
+
+**Atención legal**: con eso se fue también el crédito de la textura solar, que es
+**CC BY 4.0** de Solar System Scope y cuya licencia EXIGE atribución visible —
+CREDITS.md decía textualmente "crédito visible en el footer del sitio como exige
+la licencia". Se retiró a pedido expreso de Felipe. La atribución sigue en
+CREDITS.md (público en el repo), lo que es defendible porque CC BY 4.0 §3(a)(2)
+admite cumplir "por un enlace a un recurso que incluya la información", pero lo
+prolijo sería un enlace a créditos desde el sitio. Decisión de Felipe.
+
+Auditoría 13/13 verde tras los tres cambios (incluido el portapapeles, que era el
+más expuesto al cambio de pointer-events).
 
 ---
 

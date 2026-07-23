@@ -34,9 +34,13 @@ export function TopicPanel({
           align === "right" ? "justify-end" : "justify-start",
         )}
       >
+        {/* `pointer-events-auto`: el wrapper de contenido de GraphHome va en
+            `none` para que el vacío al costado deje pasar los clicks a los
+            mini-soles, que ahora viven en una capa de abajo. Esta columna, que
+            es el contenido de verdad, recupera la interacción. */}
         <div
           className={cn(
-            "w-full max-w-2xl",
+            "pointer-events-auto w-full max-w-2xl",
             align === "right" && "text-right",
           )}
         >
