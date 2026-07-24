@@ -98,58 +98,19 @@ const domeFragment = /* glsl */ `
        tenían nada que doblar (medido: desplazar un degradado liso da 0.3
        niveles de diferencia = invisible). Con paso corto, todo contenedor
        tiene varias líneas cruzándolo y la refracción se lee. */
-    if (dir.y < -0.008) {
+    if (dir.y < -0.03) {
       vec2 p = dir.xz / -dir.y * 2.9;
-      /* El corte por distancia va MUY lejos a propósito. Antes moría en 11..26 y
-         las cards de los tópicos, que caen apenas debajo del horizonte (donde la
-         proyección del piso da distancias enormes), quedaban sobre un vacío: el
-         vidrio no tenía nada que doblar. La poda temprana además era redundante,
-         porque lineas() ya apaga solo cuando la celda se achica bajo el píxel —
-         o sea que el horizonte se resuelve por cobertura, no por distancia. */
-      float fade = smoothstep(0.008, 0.07, -dir.y)
-                 * (1.0 - smoothstep(26.0, 60.0, length(p)));
-      /* DOS ESCALAS. Con una sola grilla, a media distancia las celdas se
-         comprimen bajo el píxel y lineas() las funde al promedio (la protección
-         anti-moiré de v5.13.2): queda un tono PLANO, sin contraste, y el vidrio
-         de las cards no tiene nada que doblar — medido, sd 2.7 donde hacen falta
-         ~12. La segunda grilla, de celdas 4x más grandes, todavía se resuelve
-         ahí y aporta esa estructura. Es el relevo por escalas de cualquier
-         grilla infinita: cuando una se apaga, la siguiente sostiene. */
-      /* RELEVO POR ESCALAS. Cada grilla más gruesa entra multiplicada por el lod
-         de la anterior: cerca sólo se ve la fina (el hero queda igual que
-         siempre) y lejos, donde la fina ya se fundió al promedio, toman el
-         relevo las de celdas 4x y 16x. Eso es lo que le devuelve al vidrio algo
-         que doblar sobre los tópicos, sin ensuciar el estudio de cerca. */
-      float g = lineas(p, 0.028);
-      g = max(g, 0.70 * lineas(p * 0.25, 0.022));
-      g = max(g, 0.45 * lineas(p * 0.0625, 0.018));
-      c = mix(c, vec3(0.40, 0.51, 0.64), g * fade * 0.50);
+      float fade = smoothstep(0.03, 0.13, -dir.y)
+                 * (1.0 - smoothstep(9.0, 26.0, length(p)));
+      c = mix(c, vec3(0.40, 0.51, 0.64), lineas(p, 0.028) * fade * 0.50);
     }
 
-    /* PARED: la misma grilla (proyección al plano frontal).
-     *
-     * Ya NO es "más tenue" que el piso, y no es capricho: en los tópicos la
-     * cámara se acerca al cúmulo y las cards de vidrio quedan sobre ESTA zona.
-     * Medido, el fondo bajo ellas daba sd 1.85–5.71, o sea liso — y el Liquid
-     * Glass sólo se ve si hay detalle que doblar (calibración v5.12.3: sd 5.5 =
-     * invisible). Con la pared al 0.26 el vidrio no tenía nada que refractar y
-     * parecía roto.
-     *
-     * El otro culpable era una BANDA MUERTA en el horizonte: el piso arrancaba
-     * recién en dir.y < -0.03 y la pared en dir.y > 0.0, así que entre medio no
-     * había NINGUNA grilla — y ahí es justo donde caen las cards. Ahora los dos
-     * desvanecidos se solapan cruzando el horizonte y no queda hueco. Cerrar la
-     * banda no trae aliasing: la cobertura que calcula lineas() ya apaga sola
-     * las líneas cuando la celda se achica bajo el píxel (que es lo que pasa en
-     * el horizonte). */
-    if (dir.z < -0.1 && dir.y > -0.05) {
+    /* PARED: la misma grilla, más tenue (proyección al plano frontal). */
+    if (dir.z < -0.1 && dir.y > 0.0) {
       vec2 q = vec2(dir.x, dir.y) / -dir.z * 4.6;
-      float fadeW = smoothstep(-0.05, 0.05, dir.y)
-                  * (1.0 - smoothstep(18.0, 38.0, length(q)));
-      float gw = lineas(q, 0.026);
-      gw = max(gw, 0.70 * lineas(q * 0.25, 0.020));
-      gw = max(gw, 0.45 * lineas(q * 0.0625, 0.016));
-      c = mix(c, vec3(0.44, 0.55, 0.68), gw * fadeW * 0.40);
+      float fadeW = smoothstep(0.0, 0.12, dir.y)
+                  * (1.0 - smoothstep(5.5, 12.0, length(q)));
+      c = mix(c, vec3(0.58, 0.67, 0.78), lineas(q, 0.026) * fadeW * 0.26);
     }
 
     /* RESPLANDOR del sol: un HALO cálido que SIGUE al sol (uSunGlow = dir

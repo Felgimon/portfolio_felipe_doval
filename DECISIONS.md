@@ -3,8 +3,47 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.9** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.10** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.10 — Revertida la grilla multi-escala: metía bandas grises gruesas
+
+Felipe reportó "una línea gris súper gruesa en algunas partes de la grilla". La
+introduje yo en v5.17.7 y es un error de UNIDADES, no de calibración.
+
+En `lineas(p, ancho)` el ancho es **fracción de la celda**, no una medida
+absoluta. Al pasar una escala más gruesa —`lineas(p * 0.0625, 0.018)`, celdas 16x
+más grandes— ese 0.018 equivale a **0.018 × 16 = 0.288** en unidades de p, contra
+los 0.028 de la grilla fina: **10x más gruesa**. Eso son las bandas. Lo mismo, más
+suave, con la escala 4x (0.022 × 4 = 0.088, ~3x).
+
+Y no tiene arreglo por calibración: la grilla gruesa sólo "sobrevive más lejos"
+PORQUE sus líneas son más anchas en mundo. Adelgazarlas para que no se noten de
+cerca las hace desaparecer a lo lejos, que era todo el punto. Se probó gatearlas
+por LOD para que aparecieran sólo lejos y eso anuló la ganancia (volvió al
+baseline). O sea: el enfoque entero estaba mal para este caso.
+
+**Revertido**: `git checkout` del Studio.tsx previo. Verificado que el archivo
+quedó con **hash idéntico** (266ada86…) al de la versión buena — la prueba más
+fuerte posible, porque el código que dibujaba la banda literalmente ya no existe.
+Confirmado además por captura completa (hero y Enfoque limpios) y por zoom 3x en
+el punto sospechoso: sólo líneas de 1-2px.
+
+Con esto se revierte también lo que v5.17.7 había hecho para el vidrio (banda
+muerta del horizonte, alcance extendido, pared más presente): iban en el mismo
+bloque y su ganancia era marginal (el fondo seguía muy por debajo del umbral
+útil). **La conclusión de v5.17.7 sigue en pie y es la respuesta a la pregunta
+original**: el Liquid Glass no se ve sobre los tópicos porque el fondo ahí está
+lejos y liso, y darle contraste exige líneas gruesas a distancia — exactamente el
+bug que Felipe pidió arreglar en v5.13.2. Es un trade-off real, no un bug
+pendiente.
+
+Nota metodológica: se intentó un detector de píxeles que midiera "la línea más
+gruesa" como guard automático. Da falsos positivos (marcaba 80-93px donde el zoom
+muestra líneas de 1-2px) porque confunde el sombreado suave de la pared con una
+línea. No se sumó a la auditoría: un guard que miente es peor que no tenerlo.
 
 ---
 
