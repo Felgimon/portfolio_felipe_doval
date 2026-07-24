@@ -63,8 +63,14 @@ try {
   await wait(BASE);
 
   // ---- 4. Rutas de servicio (sin navegador: puro HTTP) ----
-  const og = await status("/opengraph-image");
+  // Las previews al compartir el link. Desde v5.17.9 son una CAPTURA de la home
+  // servida como archivo estático (.jpg), no una ImageResponse: si alguien
+  // borra el .jpg o le cambia la extensión, el link queda sin preview y no se
+  // nota hasta que alguien lo comparte. De ahí que se chequeen las dos.
+  const og = await status("/opengraph-image.jpg");
   check(og.code === 200 && og.tipo.startsWith("image/"), `OG image: ${og.code} ${og.tipo}`);
+  const tw = await status("/twitter-image.jpg");
+  check(tw.code === 200 && tw.tipo.startsWith("image/"), `Twitter image: ${tw.code} ${tw.tipo}`);
   const robots = await status("/robots.txt");
   check(robots.code === 200, `robots.txt: ${robots.code}`);
   const sitemap = await status("/sitemap.xml");

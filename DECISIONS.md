@@ -3,8 +3,43 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.7** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
+> La sección **v5.17.9** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
 > la v1 como registro histórico.
+
+---
+
+## v5.17.9 — La preview del link pasa a ser la home de verdad
+
+Al compartir felipedoval.com aparecía una tarjeta azul oscuro dibujada a mano
+(nombre + punto dorado), del tema "espacio" de la v4.x: no se parecía en nada al
+sitio actual, que es un estudio blanco con un sol 3D.
+
+La causa es estructural: la imagen la generaba `app/opengraph-image.tsx` con
+`ImageResponse` (next/og), y eso corre sobre **Satori**, que pinta un subconjunto
+de CSS y **no ejecuta WebGL**. Por diseño nunca podría mostrar el sol. La única
+forma de que la preview sea el sitio de verdad es capturarlo con un navegador.
+
+Ahora es una **captura real de la home**, generada por `scripts/gen-og.mjs` (mismo
+patrón que gen-favicons): levanta el build, abre la home con `?fx=full` para forzar
+la ruta GPU completa, espera a que el sol erupcione sus protuberancias, saca del
+cuadro el preloader / cursor propio / overlay de debug, captura a 2x y baja a
+1200x630 (el downscale hace de antialias). NO se usa reduced-motion en la captura:
+ahí las protuberancias no crecen y el sol sale pelado.
+
+**JPEG y no PNG**: el mismo cuadro en PNG pesaba 621 KB. La escena es fotográfica
+(el disco del sol, degradados suaves) — el peor caso para PNG. En JPEG q0.92 son
+**115 KB (−81%)** sin artefactos visibles en el nombre, que es lo único con bordes
+duros. El peso importa: varios clientes de chat no muestran la preview si la
+imagen es pesada.
+
+Se generan las dos (`opengraph-image.jpg` y `twitter-image.jpg`) con sus
+`.alt.txt`. Verificado en el HTML servido: og:image con width 1200, height 630,
+type image/jpeg y alt; twitter:card en summary_large_image; las dos rutas
+devolviendo 200 image/jpeg y el archivo midiendo 1200x630 de verdad.
+
+La auditoría chequeaba `/opengraph-image` (la ruta vieja, sin extensión) y **falló
+al correrla** — el guard hizo su trabajo. Se actualizó a `.jpg` y se sumó el check
+de la de Twitter: 14/14.
 
 ---
 
