@@ -64,10 +64,20 @@ que ya está en Contacto y en el HUD.
 **Atención legal**: con eso se fue también el crédito de la textura solar, que es
 **CC BY 4.0** de Solar System Scope y cuya licencia EXIGE atribución visible —
 CREDITS.md decía textualmente "crédito visible en el footer del sitio como exige
-la licencia". Se retiró a pedido expreso de Felipe. La atribución sigue en
-CREDITS.md (público en el repo), lo que es defendible porque CC BY 4.0 §3(a)(2)
-admite cumplir "por un enlace a un recurso que incluya la información", pero lo
-prolijo sería un enlace a créditos desde el sitio. Decisión de Felipe.
+la licencia". Se le avisó a Felipe y **pidió reponerlo** (v5.17.8).
+
+### 3.b — El crédito vuelve, y el HUD lo tapaba
+El footer queda en "© AÑO Felipe Doval · Sol: Solar System Scope (CC BY 4.0)",
+con el nombre enlazado a la fuente (creador + licencia + URI = lo que pide CC BY
+4.0 §3(a)(1)). Es el único asset CC-BY en uso: la panorámica de la Vía Láctea de
+ESO se retiró en v4.2.
+
+Al verificarlo apareció algo que no se ve leyendo el código: el **HUD flota FIJO
+abajo** y al final de la página se le monta encima al footer — medido, tapaba el
+"(CC BY 4.0)" en 768, 1024 y 1440 (sólo en 390 zafaba). Un crédito tapado no
+cumple la licencia. Se le dio al footer `pb-28` para que el texto suba por encima
+de la zona del HUD. Verificado: sin solape y crédito completo visible en 1440,
+1024, 768 y 390.
 
 Auditoría 13/13 verde tras los tres cambios (incluido el portapapeles, que era el
 más expuesto al cambio de pointer-events).
