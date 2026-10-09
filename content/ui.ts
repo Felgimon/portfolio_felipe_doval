@@ -2,41 +2,45 @@ import type { Idioma } from "@/lib/idioma";
 
 /**
  * Los STRINGS DE INTERFAZ en los dos idiomas. Todo texto visible que no viva en
- * `perfil` o `proyectos` sale de acá. Los títulos con palabra acentuada van
- * partidos en pre/accent/post para que el span del degradé siga funcionando en
- * cualquier idioma.
+ * `perfil`, `proyectos` o `guia` (lo que dice Feli) sale de acá.
  *
  * Lo que NO se traduce, a propósito:
  *  - metadata / JSON-LD / sitemap (el SEO del sitio es "felipe doval" en
  *    español; el HTML estático servido es siempre es).
  *  - El easter egg del Konami (es un chiste rioplatense).
+ *
+ * Reglas de texto (de Felipe): voseo, cero rayas, cero viñetas.
  */
 
-type Titulo = { pre: string; accent: string; post: string };
+export type IdParada =
+  | "inicio"
+  | "perfil"
+  | "enfoque"
+  | "trabajo"
+  | "recorrido"
+  | "contacto";
 
 export type TextosUI = {
-  hero: { ctaTrabajo: string; ctaContacto: string };
-  nodos: Record<string, { label: string; hint: string }>;
-  aria: { secciones: string; cargando: string };
-  cargando: string;
-  volverGrafo: string;
-  perfil: { titulo: Titulo; herramientas: string };
-  enfoque: { titulo: Titulo };
+  paradas: Record<IdParada, string>;
+  nav: { aria: string; paradas: string; cerrar: string; volverVisita: string };
+  saltar: string;
+  hero: { empezar: string; copiarMail: string };
+  perfil: { stack: string };
   trabajo: {
-    titulo: Titulo;
-    lead: string;
-    casoPrincipal: string;
-    verCaso: string;
     enProgreso: string;
+    anterior: string;
+    verCaso: string;
+    repoPrivado: string;
+    rol: string;
+    stack: string;
+    otros: string;
     ariaVerCaso: string;
     ariaAbrirRepo: string;
   };
-  recorrido: { titulo: Titulo; tipos: Record<string, string> };
-  contacto: { titulo: Titulo; lead: string; email: string };
+  recorrido: { tipos: Record<string, string>; falta: string };
+  contacto: { lead: string; copiarMail: string; mailCopiado: string };
   categoriasStack: Record<string, string>;
   detalle: {
-    volver: string;
-    caseStudy: string;
     miRol: string;
     equipo: string;
     stack: string;
@@ -45,78 +49,61 @@ export type TextosUI = {
     decisiones: string;
     capturas: string;
     aprendizajes: string;
-    todoTrabajo: string;
     siguiente: string;
   };
+  perdida: { titulo: string; volver: string };
   falta: string;
-  copiarEmail: string;
-  emailCopiado: string;
-  footer: {
-    bio: string;
-    hechoCon: string;
-    solCredito: string;
-    volverArriba: string;
-    ariaEnlaces: string;
-  };
+  footer: { creditoFuente: string };
 };
 
 export const textosUI: Record<Idioma, TextosUI> = {
   es: {
-    hero: { ctaTrabajo: "Ver el trabajo", ctaContacto: "Hablemos" },
-    nodos: {
-      perfil: { label: "Perfil", hint: "Quién soy" },
-      enfoque: { label: "Enfoque", hint: "Cómo construyo" },
-      trabajo: { label: "Trabajo", hint: "La prueba" },
-      recorrido: { label: "Recorrido", hint: "Por dónde pasé" },
-      contacto: { label: "Contacto", hint: "Hablemos" },
+    paradas: {
+      inicio: "Inicio",
+      perfil: "Perfil",
+      enfoque: "Enfoque",
+      trabajo: "Trabajo",
+      recorrido: "Recorrido",
+      contacto: "Contacto",
     },
-    aria: { secciones: "Secciones", cargando: "Cargando el sitio" },
-    cargando: "cargando",
-    volverGrafo: "Volver al grafo",
-    perfil: {
-      titulo: { pre: "Construyo de ", accent: "punta", post: " a punta" },
-      herramientas: "Herramientas",
+    nav: {
+      aria: "Paradas de la visita",
+      paradas: "Paradas",
+      cerrar: "Cerrar",
+      volverVisita: "Volver a la visita",
     },
-    enfoque: {
-      titulo: {
-        pre: "Los proyectos son el ",
-        accent: "medio",
-        post: ", no el fin",
-      },
-    },
+    saltar: "Saltar al contenido",
+    hero: { empezar: "Empezar la visita", copiarMail: "Copiar mi mail" },
+    perfil: { stack: "Con qué construyo" },
     trabajo: {
-      titulo: { pre: "La ", accent: "prueba", post: ": lo que construí" },
-      lead: "Cada uno resolvió un problema real. El grande, Superlum, tiene su historia completa; abajo, el resto de lo que fui armando.",
-      casoPrincipal: "Caso principal",
+      enProgreso: "En progreso",
+      anterior: "Proyecto anterior",
       verCaso: "Ver el caso",
-      enProgreso: "en progreso",
+      repoPrivado: "Repo privado",
+      rol: "Rol",
+      stack: "Stack",
+      otros: "Lo que me trajo hasta acá",
       ariaVerCaso: "ver el caso",
       ariaAbrirRepo: "abrir",
     },
     recorrido: {
-      titulo: { pre: "Por dónde fui ", accent: "pasando", post: "" },
-      tipos: {
-        educacion: "Formación",
-        competencia: "Competencia",
-        trabajo: "Trabajo",
-      },
+      tipos: { educacion: "Formación", trabajo: "Trabajo", competencia: "Competencia" },
+      falta: "período",
     },
     contacto: {
-      titulo: { pre: "¿Tenés algo para ", accent: "construir", post: "?" },
       lead: "Estoy abierto a proyectos, pasantías y buenas ideas. Si algo de lo que viste te resonó, escribime; respondo.",
-      email: "Email",
+      copiarMail: "Copiar mi mail",
+      mailCopiado: "Mail copiado",
     },
     categoriasStack: {
       Frontend: "Frontend",
       Backend: "Backend",
-      "ML / Datos": "ML / Datos",
+      "ML / Datos": "ML y datos",
       Lenguajes: "Lenguajes",
-      "3D / Motion": "3D / Motion",
+      "3D / Motion": "3D y motion",
       Automatización: "Automatización",
     },
     detalle: {
-      volver: "Volver al trabajo",
-      caseStudy: "Case study",
       miRol: "Mi rol",
       equipo: "Equipo",
       stack: "Stack",
@@ -124,97 +111,76 @@ export const textosUI: Record<Idioma, TextosUI> = {
       solucion: "La solución",
       decisiones: "Decisiones y features",
       capturas: "Capturas",
-      aprendizajes: "Aprendizajes",
-      todoTrabajo: "Todo el trabajo",
+      aprendizajes: "Lo que aprendí",
       siguiente: "Siguiente caso",
     },
+    perdida: { titulo: "Parada perdida", volver: "Volver al inicio" },
     falta: "FALTA",
-    copiarEmail: "Copiar email",
-    emailCopiado: "Email copiado",
     footer: {
-      bio: "Desarrollador y builder: construyo productos de punta a punta, del full-stack a los datos.",
-      hechoCon: "Hecho con",
-      solCredito: "Sol",
-      volverArriba: "Volver arriba",
-      ariaEnlaces: "Enlaces de contacto",
+      creditoFuente: "Doval Script, derivada de Norican (SIL OFL)",
     },
   },
   en: {
-    hero: { ctaTrabajo: "See the work", ctaContacto: "Let's talk" },
-    nodos: {
-      perfil: { label: "Profile", hint: "Who I am" },
-      enfoque: { label: "Approach", hint: "How I build" },
-      trabajo: { label: "Work", hint: "The proof" },
-      recorrido: { label: "Journey", hint: "Where I've been" },
-      contacto: { label: "Contact", hint: "Let's talk" },
+    paradas: {
+      inicio: "Home",
+      perfil: "Profile",
+      enfoque: "Approach",
+      trabajo: "Work",
+      recorrido: "Journey",
+      contacto: "Contact",
     },
-    aria: { secciones: "Sections", cargando: "Loading the site" },
-    cargando: "loading",
-    volverGrafo: "Back to the graph",
-    perfil: {
-      titulo: { pre: "I build ", accent: "end", post: " to end" },
-      herramientas: "Tools",
+    nav: {
+      aria: "Tour stops",
+      paradas: "Stops",
+      cerrar: "Close",
+      volverVisita: "Back to the tour",
     },
-    enfoque: {
-      titulo: {
-        pre: "Projects are the ",
-        accent: "means",
-        post: ", not the end",
-      },
-    },
+    saltar: "Skip to content",
+    hero: { empezar: "Start the tour", copiarMail: "Copy my email" },
+    perfil: { stack: "What I build with" },
     trabajo: {
-      titulo: { pre: "The ", accent: "proof", post: ": what I've built" },
-      lead: "Each one solved a real problem. The big one, Superlum, has its full story; below, the rest of what I've been building.",
-      casoPrincipal: "Main case",
+      enProgreso: "In progress",
+      anterior: "Previous project",
       verCaso: "Read the case",
-      enProgreso: "in progress",
+      repoPrivado: "Private repo",
+      rol: "Role",
+      stack: "Stack",
+      otros: "What got me here",
       ariaVerCaso: "read the case",
       ariaAbrirRepo: "open",
     },
     recorrido: {
-      titulo: { pre: "Where I've ", accent: "been", post: "" },
-      tipos: {
-        educacion: "Education",
-        competencia: "Competition",
-        trabajo: "Work",
-      },
+      tipos: { educacion: "Education", trabajo: "Work", competencia: "Competition" },
+      falta: "dates",
     },
     contacto: {
-      titulo: { pre: "Got something to ", accent: "build", post: "?" },
       lead: "I'm open to projects, internships and good ideas. If anything you saw resonated, write me; I reply.",
-      email: "Email",
+      copiarMail: "Copy my email",
+      mailCopiado: "Email copied",
     },
     categoriasStack: {
       Frontend: "Frontend",
       Backend: "Backend",
-      "ML / Datos": "ML / Data",
+      "ML / Datos": "ML and data",
       Lenguajes: "Languages",
-      "3D / Motion": "3D / Motion",
+      "3D / Motion": "3D and motion",
       Automatización: "Automation",
     },
     detalle: {
-      volver: "Back to the work",
-      caseStudy: "Case study",
       miRol: "My role",
       equipo: "Team",
       stack: "Stack",
       problema: "The problem",
       solucion: "The solution",
-      decisiones: "Decisions & features",
+      decisiones: "Decisions and features",
       capturas: "Screenshots",
       aprendizajes: "What I learned",
-      todoTrabajo: "All the work",
       siguiente: "Next case",
     },
+    perdida: { titulo: "Lost stop", volver: "Back to the start" },
     falta: "MISSING",
-    copiarEmail: "Copy email",
-    emailCopiado: "Email copied",
     footer: {
-      bio: "Developer and builder: I make products end to end, from full-stack to data.",
-      hechoCon: "Built with",
-      solCredito: "Sun",
-      volverArriba: "Back to top",
-      ariaEnlaces: "Contact links",
+      creditoFuente: "Doval Script, derived from Norican (SIL OFL)",
     },
   },
 };

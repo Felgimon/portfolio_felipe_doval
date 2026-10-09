@@ -60,7 +60,9 @@ export const perfil: Perfil = {
     github: "https://github.com/Felgimon",
     linkedin:
       "https://www.linkedin.com/in/felipe-daniel-doval-ferrari-68977b3a5/",
-    email: "felipeferraridoval@gmail.com",
+    // El mail NO va acá: se arma en el cliente recién al copiarlo
+    // (components/ui/EmailLink.tsx), así no viaja en el HTML ni en el bundle
+    // como texto plano.
     // cv: sin CV por ahora (TODO-FELI)
   },
 

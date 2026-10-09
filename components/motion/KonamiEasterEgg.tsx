@@ -33,10 +33,8 @@ export function KonamiEasterEgg() {
       if (!cont) return;
       const cartel = document.createElement("div");
       cartel.textContent = "⚽ ¡Modo hincha! 🏀";
-      // data-lente: el MutationObserver de LiquidGlass lo agarra al aparecer.
-      cartel.setAttribute("data-lente", "");
       cartel.className =
-        "glass glass-pill absolute left-1/2 top-24 -translate-x-1/2 px-6 py-3 font-mono text-sm text-acento";
+        "papel absolute left-1/2 top-24 -translate-x-1/2 px-6 py-3 font-mono text-sm text-tinta";
       cont.appendChild(cartel);
       window.setTimeout(() => cartel.remove(), 2200);
     };
@@ -70,9 +68,12 @@ export function KonamiEasterEgg() {
       }
 
       const inicio = performance.now();
+      let previo = inicio;
       let raf = 0;
       const tick = (t: number) => {
-        const dt = 1;
+        // en cuadros de 60Hz: igual de rápido en una pantalla de 120Hz
+        const dt = Math.min(3, (t - previo) / (1000 / 60));
+        previo = t;
         for (const b of balls) {
           b.vy += 0.45 * dt;
           b.x += b.vx * dt;

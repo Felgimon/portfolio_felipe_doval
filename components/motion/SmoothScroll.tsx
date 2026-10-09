@@ -69,7 +69,11 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     lenis.on("scroll", ScrollTrigger.update);
 
     const raf = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(raf);
+    // Con PRIORIDAD: Lenis mueve el scroll antes que cualquier otro oyente del
+    // ticker. La escena (Escena.tsx) dibuja después y lee los rects ya
+    // scrolleados: si no, el vidrio del shader iba un cuadro atrasado respecto
+    // del borde del DOM mientras scrolleabas.
+    gsap.ticker.add(raf, false, true);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
@@ -83,8 +87,6 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     scrollTo: (target, opts) => {
       const lenis = lenisRef.current;
       if (lenis) {
-        // immediate: el contenido salta YA (sin recorrer las secciones
-        // intermedias); la transición visual la hace la CÁMARA del grafo.
         lenis.scrollTo(target, {
           offset: opts?.offset ?? 0,
           immediate: opts?.immediate ?? false,

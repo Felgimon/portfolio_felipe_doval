@@ -113,7 +113,6 @@ export interface Perfil {
   links: {
     github: string;
     linkedin: string;
-    email: string;
     cv?: string;
   };
   stack: ItemStack[];

@@ -1,23 +1,24 @@
-import { GraphHome } from "@/components/sections/GraphHome";
-import { Perfil } from "@/components/sections/Perfil";
-import { Enfoque } from "@/components/sections/Enfoque";
-import { Trabajo } from "@/components/sections/Trabajo";
-import { Recorrido } from "@/components/sections/Recorrido";
-import { Contacto } from "@/components/sections/Contacto";
+import { Inicio } from "@/components/secciones/Inicio";
+import { Perfil } from "@/components/secciones/Perfil";
+import { Enfoque } from "@/components/secciones/Enfoque";
+import { Trabajo } from "@/components/secciones/Trabajo";
+import { Recorrido } from "@/components/secciones/Recorrido";
+import { Contacto } from "@/components/secciones/Contacto";
 
 /**
- * Home = hub del grafo. El balón + los 5 nodos son la navegación (viven en la
- * capa fija de GraphHome); cada tópico se recorre clickeando un nodo/el HUD o
- * simplemente scrolleando en orden. Contenido real, en el DOM (SEO + a11y).
+ * La home = la visita guiada. Seis paradas, en orden; en cada una Feli sube
+ * del líquido, señala lo que importa y dice una sola frase. Todo el contenido
+ * se lee scrolleando normal: Feli agrega voz, no esconde nada.
  */
 export default function Home() {
   return (
-    <GraphHome>
+    <main id="contenido" className="capa">
+      <Inicio />
       <Perfil />
       <Enfoque />
       <Trabajo />
       <Recorrido />
       <Contacto />
-    </GraphHome>
+    </main>
   );
 }

@@ -27,12 +27,12 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="sky flex min-h-dvh flex-col items-center justify-center px-6 text-center">
-      <p className="eyebrow">Algo se rompió</p>
-      <h1 className="type-h2 mt-4 text-chalk">
+    <main id="contenido" className="capa flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+      <p className="etiqueta">Algo se rompió</p>
+      <h1 className="mt-4 text-[clamp(32px,5vw,56px)] leading-tight font-extrabold tracking-[-0.02em]">
         Esto no tendría que haber pasado
       </h1>
-      <p className="mt-4 max-w-md text-chalk-dim">
+      <p className="lead mt-4 max-w-md">
         Se cayó una parte de la página. Podés reintentar; si sigue igual, volvé
         al inicio.
       </p>
@@ -40,19 +40,19 @@ export default function Error({
         <button
           type="button"
           onClick={reset}
-          className="glass glass-hover glass-pill px-5 py-2.5 font-mono text-sm text-chalk"
+          className="boton"
         >
           Reintentar
         </button>
         <Link
           href="/"
-          className="glass glass-hover glass-pill px-5 py-2.5 font-mono text-sm text-chalk"
+          className="boton"
         >
           Volver al inicio
         </Link>
       </div>
       {error.digest && (
-        <p className="mt-8 font-mono text-xs text-muted">
+        <p className="etiqueta mt-8 text-tinta-2">
           referencia: {error.digest}
         </p>
       )}

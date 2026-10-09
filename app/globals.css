@@ -1,143 +1,48 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   DESIGN TOKENS — "Estudio" (v5)
-   Portfolio de Felipe Doval. El sol ya no flota en el espacio: flota en un
-   ESTUDIO BLANCO (ciclorama de fotografía de producto — pared + piso, con la
-   sombra del sol apoyada en el suelo). Aire limpio y profesional. La paleta
-   vuelve a la luz: fondo casi blanco, texto tinta fría, Liquid Glass claro
-   estilo iOS y ORO cálido reservado a los soles. Cero glow en la UI: la
-   profundidad la dan sombras suaves y el vidrio; el brillo real lo pone el sol.
-
-   Los tokens son por ROL (fondo / texto / acento / línea), no por color literal:
-   sus VALORES giraron para el tema estudio, sus nombres marcan la función.
-   Regla de Felipe: los atenuados son HEX SÓLIDOS; el alpha solo en vidrio,
-   scrims de degradado y sombras.
+   v6 «Visita guiada» — sistema visual
+   ----------------------------------------------------------------------------
+   Base clara; el verde es MATERIAL (el líquido), nunca acento neón. Todo en HEX
+   sólido: nada de rgba() para texto o marca (regla de Felipe: el alfa delata
+   IA). Ningún verde aguanta como texto sobre blanco (lima 1,83:1, jade 2,31:1):
+   el texto es tinta verde botella. Una sola luz para todo el sitio, de arriba a
+   la izquierda: por eso todas las sombras duras caen abajo a la derecha.
    ========================================================================== */
 
 :root {
-  /* Base — estudio blanco */
-  --ink: #eef2f6; /* fondo base — gris-blanco frío (rol: page background) */
-  --ink-2: #e3e9f0; /* banda del footer / profundidad */
-  --panel: #ffffff; /* superficie sólida clara — cards no-vidrio */
-  --panel-2: #f5f9fc; /* hover de panel */
+  --papel: #ffffff;
+  --tinta: #0f3d2e; /* 12,16:1 sobre papel · 6,65 sobre lima · 5,27 sobre jade */
+  --tinta-2: #2e5a49; /* 7,85:1 sobre papel. Nunca sobre vidrio */
+  --lima: #78d561;
+  --jade: #28c18c;
+  --verde-texto: #1c8661; /* 4,53:1: el único verde que aguanta como texto */
+  --lima-hover: #8bdd77;
+  --linea: #c9dccf; /* líneas finas sobre papel */
+  --foco: #0f3d2e;
 
-  /* Alias de cielo (ahora: ciclorama del estudio) */
-  --cielo-hi: #ffffff; /* piso luminoso */
-  --cielo: #eef2f6; /* medio */
-  --cielo-lo: #dbe2ea; /* pared, un pelín más gris */
-  --nube: #ffffff; /* el blanco puro */
+  --radio-papel: 22px;
+  --radio-vidrio: 26px;
+  --ancho: 1240px;
+  --margen: clamp(16px, 5vw, 96px);
 
-  /* Acento de TEXTO/UI — azul profundo (la señal sobre lo claro, AA).
-     El oro queda reservado para los SOLES 3D y micro-marcas (punto del logo). */
-  --acento: #0b5385; /* azul profundo: links, eyebrows, estados activos (AA) */
-  --acento-hi: #1d74b0; /* azul medio: hovers / highlights */
-  --agua: #0b5385; /* rol "señal" (alias legacy) */
-  --agua-bright: #1d74b0;
-  --jade: #0b5385;
-  --oro: #d99a1e; /* SOLO soles/micro-marcas (más profundo para leer en blanco) */
-  --oro-hi: #f0b843;
-  --oro-deep: #8a5a0f;
+  --sombra-dura: 8px 8px 0 var(--jade);
+  --sombra-dura-hover: 12px 12px 0 var(--jade);
 
-  /* Texto (sólidos, cero alpha) — tinta fría */
-  --chalk: #10293b; /* texto principal — slate-navy profundo (rol: primary text) */
-  --chalk-dim: #38566a; /* texto secundario — pizarra */
-  --muted: #566f80; /* metadatos atenuados (AA sobre claro) */
-
-  /* Líneas — hairlines sobre claro */
-  --line: #c4d3df; /* bordes / hairlines en reposo */
-  --line-soft: #dde7ee; /* bordes más sutiles */
-
-  /* Chispa cálida secundaria — uso puntual */
-  --brasa: #d9762b; /* terracota — marcador cálido ocasional */
-
-  /* Superficie invertida — momento OSCURO puntual (contra-forma del estudio) */
-  --paper: #10293b; /* slate profundo */
-  --paper-ink: #eaf4fc; /* texto claro sobre esa superficie */
-
-  /* Liquid Glass claro (iOS 26). El material es VIDRIO, no niebla: tinte casi
-     nulo (el fondo se ve DE VERDAD a través), blur moderado con saturación, y
-     toda la definición viene del CANTO — bisel especular, glints internos y la
-     refracción del borde. El v5.7 usaba 55% de blanco + brightness: eso es
-     frosted glass (leche), justo lo que Apple NO hace. */
-  --glass-bg: rgba(255, 255, 255, 0.1); /* la cara: casi nada, el fondo manda */
-  --glass-bg-2: rgba(255, 255, 255, 0.36); /* hover / activo: apenas más denso */
-  --glass-blur: 10px;
-  /* Sombras del vidrio (drop azul-oscura + hairline frío que lo recorta sobre
-     el estudio blanco, donde una sombra sola no alcanza a dibujar el borde). */
-  --glass-drop:
-    0 16px 40px -16px rgba(15, 41, 66, 0.34),
-    0 2px 8px -3px rgba(15, 41, 66, 0.16),
-    0 0 0 1px rgba(90, 120, 150, 0.09);
-  --glass-drop-hover:
-    0 24px 56px -20px rgba(15, 41, 66, 0.42),
-    0 3px 10px -3px rgba(15, 41, 66, 0.18),
-    0 0 0 1px rgba(90, 120, 150, 0.11);
-  /* Los GLINTS: la luz que el espesor del vidrio agarra por dentro. Un labio
-     brillante arriba (la luz del estudio), su eco tenue abajo (el reflejo), y
-     dos bloomos anchos en las esquinas opuestas (spread negativo: solo asoman
-     en el borde). Es la firma del vidrio real — sin esto es un rectángulo.
-     El eco y los bloomos van en AZUL FRÍO, no en blanco puro: el vidrio real
-     refleja el cielo. (Felipe lo cazó de rebote: la aberración cromática
-     pierde el canal rojo en el borde del viewport y deja un destello celeste;
-     le gustó y acá queda como parte del material, a propósito y siempre.)
-     El bloom de esquina va CEÑIDO (blur 11-12, no 18-20): con radio grande
-     inundaba de blanco el interior de los elementos chicos y borraba el fondo
-     que la lente tiene que doblar. Ceñido, el glint sigue leyéndose en el canto
-     y el centro queda limpio. */
-  --glass-glints:
-    inset 0 1.5px 1px -1px rgba(255, 255, 255, 0.98),
-    inset 0 -2px 1.5px -1px rgba(190, 228, 250, 0.75),
-    inset 3px 6px 11px -7px rgba(255, 255, 255, 0.92),
-    inset -3px -7px 12px -7px rgba(175, 220, 248, 0.78);
-
-  /* Estados */
-  --focus: #0d5c8a; /* azul cielo profundo — foco visible sobre claro */
-  --danger: #c0392b;
-  --ok: #d99a1e;
-
-  /* Radios / sombras (elevación por sombra, no glow) */
-  --radius: 0.85rem;
-  --radius-lg: 1.5rem;
-  --shadow-float: 0 22px 48px -20px rgba(15, 41, 66, 0.28); /* flotación limpia */
-  --shadow-soft: 0 10px 28px -14px rgba(15, 41, 66, 0.2);
+  --ease-salida: cubic-bezier(0.3, 0.7, 0.4, 1);
 }
 
 @theme inline {
-  /* Colores → utilidades Tailwind (bg-ink, text-agua, border-line, ...) */
-  --color-ink: var(--ink);
-  --color-ink-2: var(--ink-2);
-  --color-panel: var(--panel);
-  --color-panel-2: var(--panel-2);
-  --color-agua: var(--agua);
-  --color-agua-bright: var(--agua-bright);
+  --color-papel: var(--papel);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-lima: var(--lima);
   --color-jade: var(--jade);
-  --color-chalk: var(--chalk);
-  --color-chalk-dim: var(--chalk-dim);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-line-soft: var(--line-soft);
-  --color-brasa: var(--brasa);
-  --color-paper: var(--paper);
-  --color-paper-ink: var(--paper-ink);
-  --color-focus: var(--focus);
-  --color-danger: var(--danger);
-  --color-ok: var(--ok);
-  /* Alias nuevos */
-  --color-acento: var(--acento);
-  --color-acento-hi: var(--acento-hi);
-  --color-oro: var(--oro);
-  --color-oro-hi: var(--oro-hi);
-  --color-oro-deep: var(--oro-deep);
-  --color-nube: var(--nube);
-  --color-cielo: var(--cielo);
-  --color-cielo-hi: var(--cielo-hi);
-  --color-cielo-lo: var(--cielo-lo);
-
-  /* Familias tipográficas (desde next/font en lib/fonts.ts) */
-  --font-display: var(--font-sans);
-  --font-body: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --color-verde-texto: var(--verde-texto);
+  --color-linea: var(--linea);
+  --font-sans: var(--font-bricolage), system-ui, sans-serif;
+  --font-mono: var(--font-spline), ui-monospace, monospace;
+  --font-script: var(--font-doval-script), cursive;
 }
 
 /* ============================================================================
@@ -147,684 +52,310 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: auto; /* el scroll suave lo maneja Lenis */
+  background: var(--papel);
 }
 
 body {
-  background-color: var(--ink);
-  color: var(--chalk);
-  font-family: var(--font-body), system-ui, sans-serif;
+  overflow-x: clip;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--font-bricolage), system-ui, sans-serif;
   font-feature-settings: "kern", "liga";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background-color: var(--acento);
-  color: #f2f8fc;
+  background: var(--lima);
+  color: var(--tinta);
 }
 
-/* Foco visible y consistente en todo lo interactivo (piso de accesibilidad) */
 :focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* Utilidades tipográficas */
-.font-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-}
-
-.font-mono {
-  font-family: var(--font-mono), ui-monospace, monospace;
-}
-
-/* Wordmark / logo: Bricolage apretada */
-.type-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.92;
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
 /* ============================================================================
-   ESCALA TIPOGRÁFICA — Bricolage Grotesque
-   El "expandido/condensado" NO usa eje wdth (Bricolage no lo tiene): se logra con
-   interlineado apretado + tracking + los modificadores .stretch-* (transform).
+   ESCENA (canvas del líquido) y póster de respaldo
    ========================================================================== */
 
-.type-hero {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 800;
-  font-size: clamp(2.25rem, 10vw, 8.5rem);
-  line-height: 0.84;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-}
-
-.type-h1 {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 800;
-  font-size: clamp(1.7rem, 5.5vw, 4rem);
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-}
-
-.type-h2 {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 700;
-  font-size: clamp(1.4rem, 3.6vw, 2.75rem);
-  line-height: 0.98;
-  letter-spacing: -0.02em;
-}
-
-.type-h3 {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 600;
-  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-}
-
-.lead {
-  font-size: clamp(1rem, 1.5vw, 1.4rem);
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--chalk-dim);
-}
-
-/* Eyebrow / kicker: label de sección en mono, tracking amplio, azul profundo
-   (AA sobre cielo). SIN punto/bullet: el kicker va solo. */
-.eyebrow {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.28em;
-  color: var(--acento);
-}
-
-/* Palabra-acento de display: gradiente de azul profundo a celeste luminoso
-   (luz atravesando la letra — puro, sin color chato). */
-.accent-grad {
-  background-image: linear-gradient(118deg, #083d66 0%, #1370ad 52%, #3fa0d8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* ============================================================================
-   EL NOMBRE (portada) — ver components/sections/HeroName.tsx.
-   Se apoya en que Bricolage Grotesque es una fuente VARIABLE: cada letra entra
-   en wght 200 y engorda hasta 800 (se FORMA). Registrar --w como <number> es lo
-   que deja al navegador INTERPOLAR el eje; sin @property saltaría de 200 a 800.
-   ========================================================================== */
-@property --w {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 800;
-}
-
-.nombre {
-  font-family: var(--font-display), system-ui, sans-serif;
-  /* El tamaño no es gusto: es COMPOSICIÓN. El nombre y el cúmulo se reparten el
-     ancho, así que cuanto más chico el nombre, más grande el hueco entre los
-     dos. A 12.2rem "FELIPE" mide ~591px en 1920 y el gap con el sol queda igual
-     que el margen derecho (~11%); a 8rem medía 391px y el gap era el doble
-     (22%). El techo lo pone la columna: dos líneas entran en el alto con el
-     kicker, la bajada y los botones (la cámara mide la columna real, así que
-     el encuadre se recalibra solo). */
-  font-size: clamp(2.9rem, 10.1vw, 12.2rem);
-  /* 0.95 y no 0.86: es el interlineado ABIERTO que la entrada alcanza en su
-     pico. Antes las líneas subían escalonadas, el gap crecía hasta acá y
-     después se CERRABA de golpe al 0.86 final (pedido de Felipe: "me gusta que
-     se agrande — que se quede ahí"). Ahora el reposo ES el pico: la animación
-     crece hasta este valor y no se mueve más. Ver nombre-sube. */
-  line-height: 0.95;
-  letter-spacing: -0.045em;
-  text-transform: uppercase;
-  /* Paralaje: HeroName escribe --rx/--ry siguiendo el puntero. */
-  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 0.6s cubic-bezier(0.2, 0.6, 0.2, 1);
-}
-
-.nombre__linea {
-  display: block;
-  width: fit-content;
-  white-space: nowrap;
-  /* Desde dónde SUBE cada línea al entrar. La primera sube 0.18em y la segunda
-     solo 0.09em: la diferencia (0.09em) es exactamente lo que el interlineado
-     CRECE durante la entrada — arranca visualmente en 0.86 y termina en el
-     0.95 de reposo, monótono, sin cerrarse nunca de vuelta (el "acomodo
-     brusco" de antes era el gap volviendo a achicarse al final). */
-  --sube: calc(0.18em - var(--l, 0) * 0.09em);
-  /* La LUZ DEL SOL entra por la derecha (que es donde está el sol) sobre el
-     degradé de identidad: tinta → azul → celeste. Es luz CÁLIDA (blanco de
-     sol), no pigmento dorado: el oro sobre el celeste vira a verde y ensucia. */
-  background-image:
-    radial-gradient(
-      56% 130% at 104% 44%,
-      rgba(255, 237, 205, 0.62),
-      rgba(255, 237, 205, 0) 58%
-    ),
-    linear-gradient(100deg, #10293b 0%, #0b5385 52%, #2f97d8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  /* La sombra cae al lado OPUESTO al sol. */
-  filter: drop-shadow(-3px 4px 7px rgba(15, 41, 66, 0.16));
-  opacity: 0; /* hasta que el preloader se va (.is-in) */
-}
-
-.nombre__letra {
-  --w: 800;
-  font-variation-settings: "wght" var(--w);
-}
-
-/* Entrada: las líneas suben JUNTAS (mismo reloj, sin delay por línea) y cada
-   letra se forma en cascada. El delay de 90ms que había acá era el "tirón" que
-   reportó Felipe: la línea de arriba aterrizaba primero y la de abajo seguía
-   subiendo su resto — y subir la de abajo CIERRA el interlineado al final.
-   Con el mismo reloj y la de arriba subiendo el doble (--sube), el gap crece
-   monótono de 0.86 a 0.95 y se queda en el pico. La cascada la siguen dando
-   las letras (nombre-forma, índice global). */
-.nombre.is-in .nombre__linea {
-  opacity: 1;
-  animation: nombre-sube 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-.nombre.is-in .nombre__letra {
-  animation: nombre-forma 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(var(--i, 0) * 42ms);
-}
-@keyframes nombre-sube {
-  from {
-    transform: translateY(var(--sube, 0.18em));
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-@keyframes nombre-forma {
-  from {
-    --w: 200;
-  }
-  to {
-    --w: 800;
-  }
-}
-/* Sin movimiento: el nombre ya está formado (la regla global de reduced-motion
-   solo acorta la duración; con delay + backwards parpadearía, así que acá se
-   apaga la animación de raíz). */
-@media (prefers-reduced-motion: reduce) {
-  .nombre.is-in .nombre__linea,
-  .nombre.is-in .nombre__letra {
-    animation: none;
-  }
-}
-
-/* Dato/etiqueta numérica tipo telemetría */
-.data {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-/* ----------------------------------------------------------------------------
-   ESTIRAMIENTO DE FIRMA — jugar con la deformación horizontal/vertical.
-   -------------------------------------------------------------------------- */
-.stretch-y {
-  display: inline-block;
-  transform: scaleY(1.22);
-  transform-origin: bottom;
-}
-.stretch-x {
-  display: inline-block;
-  transform: scaleX(1.14);
-  transform-origin: left;
-}
-.squish-x {
-  display: inline-block;
-  transform: scaleX(0.86);
-  transform-origin: left;
-}
-
-/* ============================================================================
-   LIQUID GLASS — el material, no una imitación.
-
-   Apple define a Liquid Glass por una propiedad: el LENSING. El vidrio no
-   "difumina" el fondo, lo DOBLA en el borde, como la orilla de un vidrio grueso.
-   Todo lo demás (frost, brillo) sale de ahí. Las tres capas, de atrás para
-   adelante:
-
-   1. REFRACCIÓN (solo Chromium): a los elementos `data-lente`, LiquidGlass.tsx
-      les escribe INLINE la cadena completa — blur(b/2) → url(filtro data URI)
-      → blur(b) → saturate. El filtro (lib/lente.ts, porteado de
-      srdavo/liquid-glass) dobla el fondo con la forma del elemento y desfasa
-      los canales RGB (aberración cromática). Va inline y solo en Chromium
-      porque WebKit revienta si su declaración de backdrop-filter incluye un
-      url() (probado con el motor real: el fondo desaparece); Safari/Firefox
-      ni la reciben y se quedan con el frost de esta clase.
-   2. FROST (el elemento): blur BAJO + saturate sobre un tinte casi nulo. Es lo
-      que hace TODO navegador. La regla que salió de calibrarlo: la leche no la
-      hace el blur, la hace el ALPHA del tinte — 55% de blanco era una cortina;
-      al 10% el fondo se ve y el blur solo lo ablanda.
-   3. BISEL ESPECULAR (`::after`) + GLINTS (box-shadows inset del elemento): la
-      luz que agarra el filo y el espesor. El anillo fino recorre el canto con
-      luz direccional, y los glints (labio superior nítido, eco inferior tenue,
-      bloomos de esquina con spread negativo) son el "grosor" del vidrio. Es la
-      receta compartida por las recreaciones fieles de iOS 26 (kube.io,
-      liquid-glass de shuding, kevinbism): cara transparente, canto que canta.
-
-   La sombra es AZUL OSCURA, nunca negra: el negro puro ensucia y se ve muerto.
-   Sobre el estudio casi blanco lleva además un hairline frío de 1px (dentro de
-   --glass-drop): sin él, vidrio blanco sobre pared blanca no tiene silueta.
-   ========================================================================== */
-
-.glass {
-  position: relative;
-  isolation: isolate;
-  border-radius: var(--radius-lg);
-  /* La cara del vidrio: tinte MÍNIMO + un barrido diagonal de luz (la cara
-     plana refleja el estudio; entra fuerte arriba-izquierda, se apaga en el
-     medio y vuelve tenue abajo-derecha, coherente con el bisel del ::after). */
-  background-color: var(--glass-bg);
-  /* Dos capas de luz, pintadas DETRÁS de los hijos (nunca velan texto ni
-     capturas):
-     1. El BARRIDO en hover: una línea de luz diagonal que cruza el vidrio,
-        como la luz corriéndose sobre un vidrio real al inclinarlo. En reposo
-        espera fuera de cuadro (-160%); .glass-hover:hover la hace viajar.
-     2. El REFLEJO de cara (las fotos de referencia de Felipe): entrada fuerte
-        por arriba-izquierda y réplica FRÍA (el cielo) por abajo-derecha. */
-  background-image:
-    linear-gradient(
-      105deg,
-      rgba(255, 255, 255, 0) 42%,
-      rgba(255, 255, 255, 0.5) 50%,
-      rgba(210, 240, 255, 0.28) 55%,
-      rgba(255, 255, 255, 0) 62%
-    ),
-    linear-gradient(
-      115deg,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(255, 255, 255, 0.16) 18%,
-      rgba(255, 255, 255, 0) 34%,
-      rgba(255, 255, 255, 0) 58%,
-      rgba(214, 238, 252, 0.22) 78%,
-      rgba(214, 238, 252, 0.06) 100%
-    );
-  background-size:
-    240% 100%,
-    100% 100%;
-  background-position:
-    -160% 0,
-    0 0;
-  background-repeat: no-repeat;
-  /* Frost: blur bajo + saturación (lo de atrás se ablanda pero SE VE). Sin
-     brightness: aclarar el backdrop es lo que lo volvía plástico lechoso. */
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
-  backdrop-filter: blur(var(--glass-blur)) saturate(170%);
-  box-shadow: var(--glass-drop), var(--glass-glints);
-}
-
-/* La lente NO pide cara propia: el tinte al 10% de la clase es justo lo que la
-   distorsión necesita para verse (cuanto menos velo, más se lee el doblez).
-   `data-liquid` queda como marcador de estado para tests/debug. */
-
-/* 3. Bisel especular: anillo fino con luz direccional que GIRA alrededor del
-   canto (llena arriba-izquierda, casi se apaga en los flancos, vuelve
-   abajo-derecha). En vidrio real el brillo vive en el filo, no en la cara.
-   Sobre el gradiente van dos HOTSPOTS: arcos quemados de blanco en las
-   esquinas opuestas, la firma de los paneles de vidrio de las referencias de
-   Felipe (el destello puntual donde la luz pega de lleno en el canto). */
-.glass::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      36% 55% at 16% 0%,
-      rgba(255, 255, 255, 1),
-      rgba(255, 255, 255, 0) 72%
-    ),
-    radial-gradient(
-      36% 55% at 84% 100%,
-      rgba(205, 236, 255, 0.95),
-      rgba(205, 236, 255, 0) 72%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 1) 0%,
-      rgba(255, 255, 255, 0.42) 24%,
-      rgba(255, 255, 255, 0.1) 46%,
-      rgba(214, 240, 255, 0.55) 72%,
-      rgba(236, 250, 255, 1) 100%
-    );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-
-/* Canto GRUESO para los motores SIN lente (Safari/Firefox, el iPhone de Feli):
-   una banda perimetral lechosa-fría que insinúa el espesor del vidrio, que es
-   lo que la refracción hace en Chromium. Es SOLO PINTURA a propósito: un
-   backdrop-filter anidado (::before adentro de un elemento que ya filtra) no
-   se puede validar contra el Safari real desde acá (el WebKit de Playwright
-   en Windows no compone backdrop-filter), y si rompiera el blur del padre en
-   iOS el vidrio se perdería entero. Pintura no rompe nada, nunca.
-   LiquidGlass.tsx marca el <html>; en Chromium esta capa no existe (la lente
-   real ya hace el borde y esto la ensuciaría). */
-html[data-lente-motor="frost"] .glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 8px;
-  pointer-events: none;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.42) 0%,
-    rgba(244, 251, 255, 0.1) 34%,
-    rgba(224, 243, 255, 0.08) 62%,
-    rgba(205, 236, 255, 0.34) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-.glass-strong {
-  background-color: var(--glass-bg-2);
-}
-.glass-pill {
-  border-radius: 9999px;
-}
-/* Vidrio PROMINENTE (el "tinted glass" de Apple): la cara toma el azul de la
-   identidad con alpha — sigue siendo vidrio (el fondo pasa, la lente dobla, el
-   canto brilla) pero de COLOR, y por eso se lee como vidrio incluso sobre el
-   estudio blanco. Para el CTA principal. El texto va claro: 0.78 de alpha
-   sobre blanco compone ~#425f80 → contraste AA con #f2f8fc. */
-.glass-prominent {
-  background-color: rgba(11, 83, 133, 0.78);
-  color: #f2f8fc;
-}
-@media (hover: hover) {
-  .glass-hover {
-    transition:
-      background-color 0.3s ease,
-      box-shadow 0.3s ease,
-      background-position 0.9s cubic-bezier(0.25, 0.6, 0.3, 1),
-      transform 0.3s cubic-bezier(0.2, 0.6, 0.2, 1);
-  }
-  .glass-hover:hover {
-    background-color: var(--glass-bg-2);
-    box-shadow: var(--glass-drop-hover), var(--glass-glints);
-    transform: translateY(-2px);
-    /* El BARRIDO especular: la línea de luz cruza el vidrio en diagonal (la
-       primera capa de background viaja de -160% a 160%; la cara queda quieta). */
-    background-position:
-      160% 0,
-      0 0;
-  }
-  /* El tintado conserva su cara azul al hover (no la de vidrio claro). */
-  .glass-prominent.glass-hover:hover {
-    background-color: rgba(13, 92, 148, 0.85);
-  }
-}
-
-/* Flotación espacial: sombra de elevación (sin glow) */
-.float {
-  box-shadow: var(--shadow-float);
-}
-
-/* ============================================================================
-   CALLOUTS DE LOS SOLES — la etiqueta de cada sección, pegada a su sol
-
-   Vidrio real de la identidad (el mismo `.glass` del HUD) flotando sobre la
-   escena. La POSICIÓN la escribe NodeOverlay por frame desde la cámara 3D; el
-   TAMAÑO vive en px de pantalla y no depende de la distancia: por eso se lee
-   igual en un 1920 que en un celular, que era el problema de las etiquetas
-   hechas con geometría (se achicaban con la escena hasta ~5px).
-   ========================================================================== */
-
-.solnodo {
-  /* El botón es el círculo sobre el sol; el chip y el hilo cuelgan de él. */
-  transition: opacity 0.3s ease;
-}
-.solnodo__hilo {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  width: 1px;
-  height: 10px;
-  background: var(--acento);
-  opacity: 0.5;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-/* Los soles del tope llevan su callout hacia ARRIBA: siempre hacia afuera del
-   cúmulo, para que ninguna etiqueta caiga sobre el disco del sol central. */
-.solnodo.is-up .solnodo__hilo {
-  top: auto;
-  bottom: 100%;
-}
-.solnodo.is-up .solnodo__chip {
-  top: auto;
-  bottom: calc(100% + 10px);
-}
-.solnodo__chip {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  /* Pastilla compacta: el ancho lo da el texto, no una caja fija. */
-  padding: 0.3rem 0.7rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.62rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--chalk);
-  /* El chip nace del sol: se despliega hacia abajo. */
-  transition:
-    color 0.35s ease,
-    background-color 0.35s ease,
-    box-shadow 0.35s ease;
-}
-/* El sol ACTIVO canta su sección: tinta de acento y vidrio más sólido.
-   background-COLOR, no el shorthand: el gradiente de la cara no se pisa. */
-.solnodo__chip.is-on {
-  background-color: var(--glass-bg-2);
-  color: var(--acento);
-}
-@media (hover: hover) {
-  .solnodo:hover .solnodo__chip {
-    background-color: var(--glass-bg-2);
-    color: var(--acento);
-  }
-  .solnodo:hover .solnodo__hilo {
-    opacity: 1;
-  }
-}
-/* En pantallas chicas el cúmulo entero mide ~340px: los chips se acercan entre
-   sí, así que van un punto más compactos para no tocarse. */
-@media (max-width: 767px) {
-  .solnodo__chip {
-    padding: 0.26rem 0.55rem;
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-  }
-}
-
-/* ============================================================================
-   UTILIDADES DEL SISTEMA
-   ========================================================================== */
-
-/* Hairline divisor (primitiva trivial permitida) */
-.hairline {
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--line) 15%,
-    var(--line) 85%,
-    transparent
-  );
-  border: 0;
-}
-
-/* Malla de puntos de fondo — motivo firma en 2D. Radial-gradient repetido (no es
-   SVG a mano). Muy sutil sobre el cielo. */
-.node-grid {
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    var(--line) 1px,
-    transparent 0
-  );
-  background-size: 34px 34px;
-}
-
-/* Superficie invertida — el único momento OSCURO (contra-forma del estudio). */
-.surface-paper {
-  background-color: var(--paper);
-  color: var(--paper-ink);
-}
-.surface-paper .eyebrow {
-  color: #7cc4ea; /* celeste claro — AA sobre slate profundo */
-}
-.surface-paper .lead {
-  color: #b9cdd9; /* claro frío — AA sobre slate */
-}
-.surface-paper .hairline {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.18) 15%,
-    rgba(255, 255, 255, 0.18) 85%,
-    transparent
-  );
-}
-
-/* Grano de película (textura, no ícono): feTurbulence como data-uri. */
-.grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.12;
-  mix-blend-mode: overlay;
-}
-
-/* Enlace con subrayado animado (micro-interacción base) */
-.link-underline {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-position: 0 100%;
-  background-repeat: no-repeat;
-  background-size: 0% 1.5px;
-  transition: background-size 0.35s cubic-bezier(0.2, 0.6, 0.2, 1);
-}
-.link-underline:hover,
-.link-underline:focus-visible {
-  background-size: 100% 1.5px;
-}
-
-/* ============================================================================
-   ESTUDIO PROCEDURAL — ciclorama blanco generado por CSS (cero peso de carga):
-   base bajo el canvas y fallback sin-WebGL. Espejo del degradado del estudio 3D
-   (Studio.tsx): pared clara arriba → piso luminoso abajo, con un halo suave
-   central (la luz del estudio) para que se sienta 3D y no un plano chato.
-   ========================================================================== */
-.sky {
-  background:
-    radial-gradient(
-      120% 85% at 50% 72%,
-      rgba(255, 255, 255, 0.9),
-      rgba(255, 255, 255, 0) 60%
-    ),
-    linear-gradient(
-      180deg,
-      var(--cielo-lo) 0%,
-      var(--cielo) 46%,
-      var(--cielo-hi) 100%
-    );
-}
-
-/* En pantallas chicas el modelo queda DETRÁS del texto (layout de una columna).
-   Sin scrim: al entrar a un tópico se atenúa para que el texto flotante gane
-   legibilidad. En desktop va a un costado, así que queda pleno. */
-@media (max-width: 767px) {
-  .graph-layer.is-topic {
-    opacity: 0.22;
-  }
-}
-
-/* ============================================================================
-   CURSOR CUSTOM — solo desktop (pointer fino) y sin reduced-motion.
-   ========================================================================== */
-.cursor-el {
+.escena {
   position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-salida);
+}
+html[data-escena="lista"] .escena {
+  opacity: 1;
+}
+html[data-escena="poster"] .escena {
+  display: none;
+}
+
+/* Sin WebGL (o equipo que no llega): un póster del líquido renderizado. */
+.escena-poster {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
   display: none;
-  will-change: transform;
+  background: var(--papel) url("/assets/escena/poster.webp") center / cover no-repeat;
 }
-.cursor-ring {
-  width: 34px;
-  height: 34px;
-  margin: -17px 0 0 -17px;
-  border: 1.5px solid var(--acento);
-  border-radius: 9999px;
-  transition:
-    width 0.2s ease,
-    height 0.2s ease,
-    margin 0.2s ease,
-    background-color 0.2s ease;
+html[data-escena="poster"] .escena-poster {
+  display: block;
 }
-.cursor-ring.cursor-grow {
-  width: 54px;
-  height: 54px;
-  margin: -27px 0 0 -27px;
-  background-color: rgba(11, 83, 133, 0.14);
-}
-.cursor-dot {
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  background-color: var(--acento);
-  border-radius: 9999px;
+@media (max-width: 759px) {
+  .escena-poster {
+    background-image: url("/assets/escena/poster-movil.webp");
+  }
 }
 
-@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  :root.has-custom-cursor,
-  :root.has-custom-cursor * {
-    cursor: none !important;
+/* Todo el contenido va por encima del canvas. */
+.capa {
+  position: relative;
+  z-index: 1;
+}
+
+/* Agarrar una gota (desktop) */
+html[data-sobre-gota] body {
+  cursor: grab;
+}
+html[data-arrastrando],
+html[data-arrastrando] * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* ============================================================================
+   TIPOGRAFÍA
+   ========================================================================== */
+
+@layer components {
+  /* La script de cartel: 1 a 3 palabras, nunca tracking, nunca en botones ni
+     párrafos. Sombra DURA lima en la dirección de la luz. Cero glow. */
+  .script {
+    font-family: var(--font-doval-script), cursive;
+    font-weight: 400;
+    font-feature-settings: "calt" 1, "liga" 1, "kern" 1;
+    font-variant-ligatures: contextual;
+    letter-spacing: 0;
+    line-height: 0.86;
+    color: var(--tinta);
+    text-shadow: 0.045em 0.04em 0 var(--lima);
   }
-  .cursor-el {
+  .script-jade {
+    text-shadow: 0.045em 0.04em 0 var(--jade);
+  }
+
+  .nombre-hero {
+    font-size: clamp(76px, 10vw, 156px);
+    line-height: 0.82;
+  }
+
+  .titulo-parada {
+    font-size: clamp(72px, 8.4vw, 128px);
+    padding-bottom: 0.08em;
+  }
+
+  .rol {
+    font-weight: 650;
+    font-size: clamp(17px, 1.7vw, 24px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .lead {
+    font-size: clamp(15px, 1.35vw, 19px);
+    line-height: 1.5;
+    color: var(--tinta-2);
+  }
+
+  .cuerpo {
+    font-size: 16.5px;
+    line-height: 1.55;
+    color: var(--tinta-2);
+  }
+
+  /* Etiquetas en mono, siempre en minúscula de oración (nada de MAYÚSCULAS
+     ESPACIADAS de plantilla). */
+  .etiqueta {
+    font-family: var(--font-spline), ui-monospace, monospace;
+    font-size: 12.5px;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--tinta);
+  }
+
+  .link {
+    color: var(--tinta);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
+    text-decoration-color: var(--tinta);
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  }
+  .link:hover {
+    color: var(--verde-texto);
+    text-decoration-color: var(--lima);
+  }
+
+  /* ==========================================================================
+     VIDRIO
+     Con la escena lista, el panel es TRANSPARENTE: el shader pinta debajo la
+     refracción del líquido, la escarcha y el canto. Sin escena (o antes del
+     primer cuadro), vidrio sólido: papel con borde tinta.
+     ======================================================================== */
+  .vidrio {
+    border-radius: var(--radio-vidrio);
+    background: var(--papel);
+    border: 1.5px solid var(--tinta);
+    transition: transform 0.18s var(--ease-salida);
+  }
+  html[data-escena="lista"] .vidrio {
+    background: transparent;
+    border-color: transparent;
+  }
+  .vidrio-pildora {
+    border-radius: 9999px;
+  }
+  .vidrio:active {
+    transform: scale(0.965);
+  }
+
+  /* ==========================================================================
+     PAPEL (tarjetas): sólido, borde tinta y sombra dura jade. Un vidrio sobre
+     papel opaco no tendría nada que refractar, por eso las tarjetas no son
+     vidrio.
+     ======================================================================== */
+  .papel {
+    background: var(--papel);
+    border: 1.5px solid var(--tinta);
+    border-radius: var(--radio-papel);
+    box-shadow: var(--sombra-dura);
+    transition: box-shadow 0.25s var(--ease-salida), transform 0.25s var(--ease-salida);
+  }
+  a.papel:hover,
+  .papel-vivo:hover {
+    box-shadow: var(--sombra-dura-hover);
+    transform: translate(-2px, -2px);
+  }
+
+  /* Botón sólido lima, texto tinta (el blanco sobre verde no pasa contraste). */
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0 1.4rem;
+    border-radius: 9999px;
+    background: var(--lima);
+    color: var(--tinta);
+    border: 1.5px solid var(--tinta);
+    box-shadow: 4px 4px 0 var(--tinta);
+    font-weight: 650;
+    font-size: 16px;
+    transition: background 0.2s ease, transform 0.18s var(--ease-salida), box-shadow 0.18s var(--ease-salida);
+  }
+  .boton:hover {
+    background: var(--lima-hover);
+  }
+  .boton:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 var(--tinta);
+  }
+
+  .boton-vidrio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 52px;
+    padding: 0 1.5rem;
+    font-weight: 650;
+    font-size: 16.5px;
+    color: var(--tinta);
+  }
+
+  .etiqueta-estado {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--tinta);
+    background: var(--lima);
+    font-family: var(--font-spline), ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--tinta);
+  }
+
+  /* ==========================================================================
+     FELI (el guía)
+     El <img> es el respaldo: con la escena lista, Feli se pinta DENTRO del
+     shader (así el líquido puede pasarle por delante y el vidrio lo dobla) y
+     el <img> se oculta en cuanto su textura está en la GPU.
+     ======================================================================== */
+  .feli {
+    position: relative;
     display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .feli img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(11px 11px 0 var(--jade));
+    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+  }
+  html[data-escena="lista"] .feli[data-pintado] img {
+    visibility: hidden;
+  }
+
+  .cartel-vuelvo {
+    position: absolute;
+    left: 50%;
+    bottom: 22%;
+    translate: -50% 0;
+    rotate: -6deg;
+    padding: 0.2em 0.5em 0.3em;
+    background: var(--lima);
+    border: 1.5px solid var(--tinta);
+    border-radius: 14px;
+    box-shadow: 5px 5px 0 var(--tinta);
+    font-size: clamp(28px, 3vw, 40px);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .contenedor {
+    width: 100%;
+    max-width: calc(var(--ancho) + var(--margen) * 2);
+    margin-inline: auto;
+    padding-inline: var(--margen);
+  }
+
+  /* Una parada de la visita */
+  .parada {
+    position: relative;
+    padding-block: clamp(72px, 12vh, 140px);
+    scroll-margin-top: 24px;
   }
 }
 
-/* Respeto real de reduced-motion: apaga animaciones y scroll suave */
+/* Movimiento reducido: se apaga lo gratuito (las transiciones de la UI). El
+   líquido y Feli siguen al scroll igual: la navegación nunca se congela. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -833,5 +364,13 @@ html[data-lente-motor="frost"] .glass::before {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Contraste alto / colores forzados: sin vidrio transparente. */
+@media (prefers-contrast: more), (forced-colors: active), (prefers-reduced-transparency: reduce) {
+  html[data-escena="lista"] .vidrio {
+    background: var(--papel);
+    border-color: var(--tinta);
   }
 }

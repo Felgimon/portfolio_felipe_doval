@@ -1,18 +1,33 @@
 import localFont from "next/font/local";
 
 /**
- * Sistema tipográfico (v2.1) — 100% self-hosted (cero dependencia de red en
- * build; la fuente nunca "desaparece" por un fetch fallido a Google Fonts).
+ * Sistema tipográfico (v6), 100% self-hosted (la CSP no deja cargar fuentes
+ * de terceros, y así la fuente nunca "desaparece" por un fetch fallido).
  *
- * - sans (display + body): Bricolage Grotesque variable (eje wght), woff2.
- * - mono: Spline Sans Mono variable (eje wght), woff2 — labels de nodo y datos.
+ * - script (display): Doval Script, la script de cartel propia derivada de
+ *   Norican (SIL OFL). Sólo para 1 a 3 palabras: el nombre y los títulos de
+ *   parada. `display: block` porque el nombre en una fuente de reemplazo
+ *   cursiva genérica se vería peor que un instante en blanco.
+ * - sans (cuerpo): Bricolage Grotesque variable.
+ * - mono (etiquetas): Spline Sans Mono variable.
  *
- * globals.css mapea `--font-sans`/`--font-mono` a los tokens de Tailwind.
+ * Cada una expone su propia variable CSS; globals.css las mapea a los tokens
+ * de Tailwind (font-script / font-sans / font-mono).
  */
+
+export const fontScript = localFont({
+  src: "../app/fonts/DovalScript.woff2",
+  variable: "--font-doval-script",
+  display: "block",
+  weight: "400",
+  style: "normal",
+  fallback: ["cursive"],
+  adjustFontFallback: false,
+});
 
 export const fontSans = localFont({
   src: "../app/fonts/Bricolage-wght.woff2",
-  variable: "--font-sans",
+  variable: "--font-bricolage",
   display: "swap",
   weight: "200 800",
   fallback: ["system-ui", "sans-serif"],
@@ -20,10 +35,10 @@ export const fontSans = localFont({
 
 export const fontMono = localFont({
   src: "../app/fonts/SplineSansMono-wght.woff2",
-  variable: "--font-mono",
+  variable: "--font-spline",
   display: "swap",
   weight: "300 700",
   fallback: ["ui-monospace", "monospace"],
 });
 
-export const fontClassNames = `${fontSans.variable} ${fontMono.variable}`;
+export const fontClassNames = `${fontScript.variable} ${fontSans.variable} ${fontMono.variable}`;

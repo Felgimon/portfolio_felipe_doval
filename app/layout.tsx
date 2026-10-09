@@ -3,15 +3,13 @@ import { fontClassNames } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
 import { siteUrl } from "@/lib/site";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
-import { AppReadyProvider } from "@/components/motion/AppReady";
-import { Preloader } from "@/components/motion/Preloader";
-import { CustomCursor } from "@/components/motion/CustomCursor";
-import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { IdiomaProvider } from "@/components/idioma/IdiomaProvider";
 import { KonamiEasterEgg } from "@/components/motion/KonamiEasterEgg";
 import { DevOverlay } from "@/components/motion/DevOverlay";
-import { SiteNav } from "@/components/layout/SiteNav";
+import { Escena } from "@/components/escena/Escena";
+import { Nav } from "@/components/layout/Nav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SaltarAlContenido } from "@/components/layout/SaltarAlContenido";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -43,8 +41,8 @@ const jsonLd = {
         "TypeScript",
         "Python",
         "Machine Learning",
-        "Three.js",
         "FastAPI",
+        "WebGL",
       ],
     },
     {
@@ -77,10 +75,9 @@ export const metadata: Metadata = {
     "portfolio",
     "desarrollador",
     "machine learning",
-    "fútbol",
+    "full stack",
     "Next.js",
     "React",
-    "Three.js",
     "Buenos Aires",
     "ORT",
   ],
@@ -105,8 +102,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-AR" className={`${fontClassNames} h-full`}>
-      <body className="min-h-full antialiased">
+    <html lang="es-AR" className={fontClassNames}>
+      <body className="min-h-dvh antialiased">
         <script
           type="application/ld+json"
           // `jsonLd` es 100% contenido propio (nombre, rol, URLs), sin input de
@@ -118,27 +115,18 @@ export default function RootLayout({
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        <a
-          href="#inicio"
-          className="sr-only rounded-full bg-acento px-4 py-2 font-mono text-xs text-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
-        >
-          Saltar al contenido
-        </a>
-        <CustomCursor />
+        <IdiomaProvider>
+          <SaltarAlContenido />
+          {/* El líquido, Feli y el vidrio: un canvas fijo detrás de todo. */}
+          <Escena />
+          <SmoothScroll>
+            <Nav />
+            {children}
+            <SiteFooter />
+          </SmoothScroll>
+        </IdiomaProvider>
         <KonamiEasterEgg />
         <DevOverlay />
-        {/* La refracción del vidrio: le da su lente a cada `data-lente`. */}
-        <LiquidGlass />
-        <IdiomaProvider>
-          <AppReadyProvider>
-            <Preloader />
-            <SmoothScroll>
-              <SiteNav />
-              {children}
-              <SiteFooter />
-            </SmoothScroll>
-          </AppReadyProvider>
-        </IdiomaProvider>
         {/* Vercel Web Analytics. Va ÚLTIMO y fuera de los providers a propósito:
             no envuelve a nadie, así que si su script no carga (bloqueador,
             adblock, red caída) no se lleva puesto nada del sitio.
