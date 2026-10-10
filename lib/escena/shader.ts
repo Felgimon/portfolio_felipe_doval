@@ -35,15 +35,17 @@ uniform float uTime;
 uniform float uU;       // unidad de escala (≈ lado corto / 1000)
 uniform float uQ;       // calidad: 1 alto, 0 bajo
 uniform float uK;       // suavidad de la unión (smin)
-uniform vec4 uB[${MAX_GOTAS}];   // x, y, radio, tono (0 lima .. 1 jade)
-uniform float uBL[${MAX_GOTAS}]; // capa: 0 fondo, 1 pileta (delante de Feli)
+// x, y, radio, tono + 2·capa (tono 0 lima .. 1 jade; capa 0 fondo, 1 pileta
+// delante de Feli). La capa va empaquetada en w para ahorrar uniforms: WebGL 1
+// garantiza muy pocos y los iPhone viejos dan 64 vectores en total.
+uniform vec4 uB[${MAX_GOTAS}];
 uniform int uNB;
 uniform vec4 uNav;      // cápsula bajo el link activo: cx, cy, medio largo, radio
 uniform vec4 uR[${MAX_VIDRIOS}];  // vidrio: x, y, w, h
 uniform vec4 uRX[${MAX_VIDRIOS}]; // radio, presión, barrido, 0
 uniform int uNR;
 uniform vec4 uF[2];     // Feli: x, y, w, h (w = 0 → apagado)
-uniform float uFS[2];   // cuánto está hundido (px)
+uniform vec2 uFS;       // cuánto está hundido cada uno (px)
 uniform sampler2D uT0;
 uniform sampler2D uT1;
 
@@ -64,9 +66,10 @@ vec2 campo(vec2 p, float capa){
   vec2 r = vec2(1e5, 0.);
   for (int i = 0; i < ${MAX_GOTAS}; i++){
     if (i >= uNB) break;
-    if (abs(uBL[i] - capa) > .5) continue;
     vec4 b = uB[i];
-    r = sminC(r, length(p - b.xy) - b.z, b.w, uK);
+    float c = floor(b.w * .5);
+    if (abs(c - capa) > .5) continue;
+    r = sminC(r, length(p - b.xy) - b.z, b.w - 2. * c, uK);
   }
   if (capa < .5 && uNav.w > 0.){
     float d = length(vec2(max(abs(p.x - uNav.x) - uNav.z, 0.), p.y - uNav.y)) - uNav.w;
@@ -134,7 +137,7 @@ vec4 muestraT(int i, vec2 q){
 
 void feli(vec2 p, int i, inout vec3 col){
   vec4 r = i == 0 ? uF[0] : uF[1];
-  float hundido = i == 0 ? uFS[0] : uFS[1];
+  float hundido = i == 0 ? uFS.x : uFS.y;
   if (r.z < 1. || p.y > r.y + r.w || p.y < r.y - 20.) return;
   vec2 q = (p - r.xy - vec2(0., hundido)) / r.zw;
   // la foto no puede asomar por debajo de su base (la tapa la pileta)

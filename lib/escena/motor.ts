@@ -14,8 +14,7 @@ export type Cuadro = {
   tiempo: number;
   u: number;
   calidad: 0 | 1;
-  gotas: Float32Array; // MAX_GOTAS * 4
-  capas: Float32Array; // MAX_GOTAS
+  gotas: Float32Array; // MAX_GOTAS * 4 (w = tono + 2·capa)
   nGotas: number;
   nav: [number, number, number, number];
   vidrios: Float32Array; // MAX_VIDRIOS * 4
@@ -27,10 +26,10 @@ export type Cuadro = {
 };
 
 const NOMBRES = [
-  "uRes", "uScale", "uTime", "uU", "uQ", "uK", "uB", "uBL", "uNB", "uNav",
+  "uRes", "uScale", "uTime", "uU", "uQ", "uK", "uB", "uNB", "uNav",
   "uR", "uRX", "uNR", "uF", "uFS", "uT0", "uT1",
 ] as const;
-const ARRAYS = new Set(["uB", "uBL", "uR", "uRX", "uF", "uFS"]);
+const ARRAYS = new Set(["uB", "uR", "uRX", "uF"]);
 
 export class Motor {
   private gl: WebGLRenderingContext;
@@ -150,14 +149,13 @@ export class Motor {
     gl.uniform1f(u.uQ, c.calidad);
     gl.uniform1f(u.uK, 34 * c.u);
     gl.uniform4fv(u.uB, c.gotas);
-    gl.uniform1fv(u.uBL, c.capas);
     gl.uniform1i(u.uNB, Math.min(c.nGotas, MAX_GOTAS));
     gl.uniform4f(u.uNav, ...c.nav);
     gl.uniform4fv(u.uR, c.vidrios);
     gl.uniform4fv(u.uRX, c.vidriosX);
     gl.uniform1i(u.uNR, Math.min(c.nVidrios, MAX_VIDRIOS));
     gl.uniform4fv(u.uF, c.feli);
-    gl.uniform1fv(u.uFS, c.hundido);
+    gl.uniform2f(u.uFS, c.hundido[0], c.hundido[1]);
     for (let i = 0; i < 2; i++) {
       const src = c.texturas[i];
       const e = src ? this.texturas.get(src) : undefined;

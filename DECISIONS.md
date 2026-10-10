@@ -3,8 +3,105 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v5.17.10** es la vigente. Debajo quedan v3.2, v3.1, v3.0, v2.x y
-> la v1 como registro histórico.
+> La sección **v6.0** es la vigente (rediseño completo «Visita guiada»). Debajo
+> queda toda la historia: v5.x (el sol en el estudio blanco), v4, v3, v2 y v1.
+> Las notas de la v6 también están en `obsidian/Portfolio/`.
+
+---
+
+## v6.0 — «Visita guiada»: el líquido, el vidrio en el shader y Feli de guía
+
+### El pedido
+Felipe pidió **cambiar por completo** el portfolio a partir de su mood board de
+Figma (*Mood Board Portfolio*): "3D Objects de fondo o burbujas", "fotos mías
+guiando al usuario a través del portfolio", los colores **`#78D561` · blanco ·
+`#28C18C`** y "que fuese como liquid glass, que los objetos de fondo sean como
+burbujas o líquido espeso que se mueve flotando". Más una script retro de
+cartel (la del screenshot "Artisan Script"). Innovador, dinámico, divertido, y
+que **no parezca hecho con IA**.
+
+### Cómo se decidió
+1. **Análisis** del repo, de las 17 versiones de este archivo (las reglas de
+   gusto de Felipe siguen valiendo: sin glow, sin rgba en texto, sin rayas,
+   sin viñetas, nada inventado) y de referencias.
+2. **Cuatro conceptos prototipados** de verdad (WebGL crudo, vidrio real, la
+   script y los recortes): *Lima-limón* (gaseosa de barrio), *Pecera* (el
+   líquido como juguete), *Visita guiada* y *Filete y vidrio* (fileteado
+   porteño). **Ganó Visita guiada** por claridad (un recruiter entiende en 10 s
+   quién es, qué hace y cómo escribirle) y porque el guía es lo único que un
+   template no puede copiar. Injertos: la sombra dura y el filete bajo el
+   nombre (Lima-limón) y el líquido que se empuja y se estira (Pecera). Se
+   sacó el selector de idioma del prototipo: el idioma sigue siendo automático.
+
+### La tipografía: Doval Script (no un calco)
+Artisan Script es de **HRDR, comercial** (~USD 19 desktop). No se calcó del
+screenshot (es el trabajo vendido de un diseñador, y en un JPG hay ~10 letras).
+Se hizo una propia: **derivada de Norican** (Vernon Adams, SIL OFL 1.1, sin
+RFN), elegida entre 21 familias libres; engrosada 32/18 u., enderezada 4°,
+finales de palabra por `calt` y 53 finales acentuadas para el español. OTF/TTF
+para la Mac y Figma en `brand/tipografia/`, WOFF2 para la web.
+
+### La escena
+Un solo `<canvas>` fijo, **WebGL 1 crudo** (fuera three.js, react-three,
+drei, postprocessing y motion), una pasada de pantalla completa:
+papel → líquido → **Feli** → pileta → **vidrio**.
+- **Líquido "pintado", no plástico:** metaballs 2D con `smin` cuadrático de k
+  bajo (se separan con cuello), normal de hemisferio continua, dos bandas
+  lima/jade con terminador corto, especular blanco duro, filete tinta del lado
+  en sombra y burbujas de gas. Una sola luz, arriba a la izquierda.
+- **Las gotas se declaran en el DOM** (`data-gotas="fx fy r tono [capa]"`,
+  ancladas a la caja del elemento; `data-gotas-m` para celular).
+- **El vidrio se pinta en el shader:** dentro de cada `data-vidrio` se muestrea
+  la escena desplazada (bisel + leve magnificación + aberración cromática en el
+  canto). Reemplaza al filtro SVG de la v5, que sólo andaba en Chromium y era
+  el 78 % del costo del cuadro. Se conservaron el canto cian, el vidrio que se
+  hunde y el barrido especular.
+- **Feli adentro del shader:** así la pileta tapa el corte de la foto y él
+  sube del líquido al llegar a su parada. En el DOM, un botón con la caja exacta.
+- Interacción: el cursor **empuja** las gotas; en desktop se pueden **agarrar,
+  estirar y partir**. Huevo de pascua: tocar a Feli cinco veces ("Ahora vuelvo").
+- Lectura de rects con getBoundingClientRect en cada cuadro, corriendo en el
+  ticker de GSAP **después de Lenis** (que ahora se agrega con prioridad): si
+  no, el vidrio del shader iba un cuadro atrás del borde del DOM al scrollear.
+- **Uniforms empaquetados** (la capa va en `w` junto con el tono): WebGL 1 en
+  iPhones viejos da 64 vectores; quedó en ~48.
+
+### Robustez
+- Sin WebGL o equipo que no llega (`lib/rendimiento.ts` → mínimo): `data-escena
+  ="poster"` → póster renderizado del propio shader, Feli como `<img>` con la
+  sombra por CSS y **vidrio sólido** (nunca un blur que finja ser vidrio).
+- Software rendering → escalón bajo de entrada (escala 0,6, sin extras).
+- **Reducir movimiento:** las gotas no flotan solas, pero todo lo que sigue al
+  scroll sigue igual (lección v5.17.2). Si no pasa nada en 1,5 s, ni se
+  redibuja. En reposo normal, mitad de cuadros.
+- Contraste alto / colores forzados / transparencia reducida: vidrio sólido.
+
+### Bugs de la v5 arreglados de paso (todos verificados antes)
+Preloader trabado al volver de un caso (se eliminó el preloader) · el mail
+estaba en el HTML estático (ahora se arma en el clic) · sin `<main>` · "Saltar
+al contenido" apuntaba a un id que no existía en los casos · el foco no pasaba
+al contenido al navegar con teclado · la nav eran botones (ahora anclas:
+`/#trabajo` se comparte) · los casos se compartían con la tarjeta de la home ·
+404 con el nombre dos veces · año del footer horneado · Konami más rápido a
+120 Hz · scripts de test colgados fuera de Windows (`taskkill`).
+
+### Números
+- `public/`: 5,9 MB → **1,6 MB**. Seis dependencias menos.
+- Imagen al compartir: 114 KB, captura real del inicio.
+
+### Verificación
+`gate` 0 errores · `smoke` 3/3 rutas sin errores de consola (escritorio y
+393×659) · `audit` **33/33** (sin WebGL, teclado y foco, mail fuera del HTML,
+palabra prohibida, rayas, huevo de pascua, reduced-motion) · `idioma` 12/12 ·
+`touch` 9/9 · `anim` 2/2. Revisión visual de las seis paradas, los casos y el
+404 en 1440×900 y 393×659. El frame time bajo SwiftShader no es representativo
+(misma parada entre 17 y 99 ms según la carga): **falta medir en hardware
+real** (TODO-FELI).
+
+### Pendiente de Felipe
+La **sesión de fotos** (guion completo en
+`obsidian/Portfolio/la-sesion-de-fotos-es-un-guion-no-un-book.md`): hoy el guía
+usa los 4 recortes viejos como interinos.
 
 ---
 

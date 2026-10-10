@@ -63,7 +63,11 @@ export function Feli({
     <button
       type="button"
       onClick={tocar}
-      aria-label={g.ariaTocar}
+      // Es un juego para mouse y dedo (el huevo de pascua), no navegación:
+      // fuera del orden de Tab y del árbol de accesibilidad. Lo que dice Feli
+      // al tocarlo igual se anuncia por la región aria-live del globo.
+      tabIndex={-1}
+      aria-hidden
       data-feli
       data-pose-src={p.src}
       data-intro={intro ? "" : undefined}

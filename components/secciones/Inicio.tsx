@@ -49,7 +49,7 @@ export function Inicio() {
                 if (destino) scrollTo(destino);
               }}
               data-vidrio
-              data-gotas="1.02 0.78 34 1"
+              data-gotas="0.1 0.95 32 1"
               className="vidrio vidrio-pildora boton-vidrio"
             >
               {t.hero.empezar}

@@ -215,7 +215,6 @@ export function Escena() {
     const estados = new Map<string, EstadoGota>();
     const hundEgg = new WeakMap<HTMLElement, number>();
     const gotas = new Float32Array(MAX_GOTAS * 4);
-    const capas = new Float32Array(MAX_GOTAS);
     const vr = new Float32Array(MAX_VIDRIOS * 4);
     const vx = new Float32Array(MAX_VIDRIOS * 4);
     const fe = new Float32Array(8);
@@ -253,8 +252,7 @@ export function Escena() {
         gotas[n * 4] = x;
         gotas[n * 4 + 1] = y;
         gotas[n * 4 + 2] = r;
-        gotas[n * 4 + 3] = tono;
-        capas[n] = capa;
+        gotas[n * 4 + 3] = tono + 2 * capa;
         n++;
       };
 
@@ -397,7 +395,6 @@ export function Escena() {
         u,
         calidad: nivel === "alto" ? 1 : 0,
         gotas,
-        capas,
         nGotas: n,
         nav,
         vidrios: vr,

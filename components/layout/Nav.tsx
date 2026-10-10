@@ -30,10 +30,15 @@ export function Nav() {
   const { scrollTo } = useSmoothScroll();
   const [abierta, setAbierta] = useState(false);
   const hoja = useRef<HTMLDivElement>(null);
+  const boton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!abierta) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setAbierta(false);
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setAbierta(false);
+      boton.current?.focus();
+    };
     window.addEventListener("keydown", esc);
     hoja.current?.querySelector<HTMLElement>("a")?.focus();
     return () => window.removeEventListener("keydown", esc);
@@ -104,6 +109,7 @@ export function Nav() {
           </span>
           <button
             type="button"
+            ref={boton}
             onClick={() => setAbierta((v) => !v)}
             aria-expanded={abierta}
             aria-controls="hoja-paradas"
