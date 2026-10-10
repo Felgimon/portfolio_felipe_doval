@@ -127,13 +127,23 @@ export function Escena() {
       actividad = performance.now();
     };
     window.addEventListener("resize", ensuciar);
+    motor.alCargar = ensuciar;
     document.fonts?.ready.then(ensuciar);
     const mo = new MutationObserver(ensuciar);
     mo.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-gotas", "data-gotas-m", "data-vidrio", "data-feli", "class"],
+      attributeFilter: [
+        "data-gotas",
+        "data-gotas-m",
+        "data-vidrio",
+        "data-feli",
+        "data-pose-src",
+        "data-hundir",
+        "data-nav-activo",
+        "class",
+      ],
     });
 
     // --- puntero: empuja el líquido, y en desktop se puede agarrar una gota ---
@@ -225,9 +235,12 @@ export function Escena() {
       if (sucio) medir();
       const quieto = rm.matches;
       // En reposo (4s sin scroll ni puntero) se dibuja a la mitad de cuadros.
+      // Con movimiento reducido nada flota solo: si no pasó nada en 1,5s
+      // (lo que tarda en asentarse la cápsula de la nav), ni se redibuja.
       const ocioso = ahora - actividad > 4000;
       par = !par;
       if (!primero && ocioso && par) return;
+      if (!primero && quieto && ahora - actividad > 1500) return;
       const t = quieto ? 0 : (ahora - t0) / 1000;
       const u = Math.max(Math.min(vw, vh * 1.4) / 1000, 0.6);
       const angosto = vw < 760;

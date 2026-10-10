@@ -2,8 +2,10 @@
 
 Tipografía script de cartel retro (pintor de letras de los 50/60) para la marca de
 Felipe Doval: trazo pesado, terminaciones redondeadas, inclinación moderada (~10–12°)
-y letras que se conectan entre sí. Pensada para títulos y piezas de marca en azul
-cobalto sobre crema; no para texto corrido.
+y letras que se conectan entre sí. Pensada para títulos y piezas de marca (en el
+sitio: tinta verde botella `#0F3D2E` con sombra dura lima `#78D561`); de 1 a 3
+palabras, no para texto corrido. El espécimen está en el azul del screenshot de
+referencia.
 
 ![Espécimen](especimen.png)
 

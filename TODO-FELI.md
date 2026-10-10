@@ -1,141 +1,104 @@
-# TODO-FELI — lo que falta que completes vos
+# TODO-FELI: lo que falta que completes vos
 
-Todo lo que sigue está resuelto en el sitio con un **placeholder honesto**
-(bloque punteado con "FALTA: ...") y anotado acá. El sitio funciona igual sin
-esto; completarlo lo hace pasar de "muy bueno" a "tuyo de verdad".
+Todo lo que sigue está resuelto en el sitio con algo honesto mientras tanto
+(fotos interinas, "FALTA: ..."). El sitio funciona igual; completarlo lo hace
+pasar de "muy bueno" a "tuyo de verdad".
 
 Formato: `[ ]` pendiente · `[x]` hecho.
 
-## 🆕 v2 — rediseño «verde agua» + navegación por grafo
+## 🔴 v6: la sesión de fotos (lo más importante)
 
-El sitio se rediseñó: la home ahora ES el balón-grafo (cada nodo = un tópico;
-entrás clickeando un nodo o scrolleando), paleta verde agua, tipografía Bricolage,
-sin bullets. Lo que tenés que completar sigue siendo lo de abajo (contenido de
-proyectos, capturas, confirmaciones, dominio). Novedades a tener en cuenta:
+El rediseño v6 «Visita guiada» te pone de **guía**: en cada parada subís del
+líquido, señalás lo que importa y decís una frase. Hoy usa los 4 recortes
+viejos como interinos (y por eso hay poses repetidas y nadie señala nada).
 
-- **Navegación (v2.1):** clickeás un nodo (o el HUD, o scrolleás) y la **cámara
-  se mete al nodo**; el scroll maneja esa animación frame por frame. El balón ya
-  se ve animado en cualquier navegador con WebGL (se arregló el bug de Chrome).
-  `/?gl=1` sigue existiendo por si querés forzar el canvas.
-- **Foto:** ahora se usa `foto_frente.png` en el nodo Perfil con un tratamiento
-  verde agua (duotono + grano). Si querés otra, reemplazala en
-  `public/assets/foto/` (ver punto "Tu foto" más abajo).
-- **La sección "Obras" ahora es el nodo "Trabajo".** Superlum quedó como caso
-  principal; FutbolVision pasó a la grilla, presentado como proyecto anterior.
-- **Mobile:** validado sin overflow horizontal (360/390/768). El HUD colapsa a
-  índices.
-- **OG:** la imagen social usa Archivo Black (grotesca bold). Si querés que use
-  Bricolage como el resto, avisá (hay que bundlear un TTF estático).
+- [ ] **Hacer la sesión de fotos** siguiendo el guion completo:
+  `obsidian/Portfolio/la-sesion-de-fotos-es-un-guion-no-un-book.md`
+  (ropa, luz, cámara, orden de la sesión y las 10 poses con su trabajo).
+  Resumen:
+  1. **Luz desde la izquierda de la foto** (la luz de todo el sitio).
+  2. **Ropa:** buzo liso gris grafito o azul marino + pantalón claro. Nada
+     verde, nada blanco, nada negro puro, sin logos ni rayas.
+  3. **Pared lisa clara**, a 1,5–2 m. **No** pantalla verde.
+  4. Celular en **2x o 3x** desde 3–4 m, **sin modo retrato**.
+  5. Las 10 imprescindibles: `saludo`, `apoyado`, `sentado`, `sostiene`,
+     `senala`, `camina`, `celular`, `pulgar`, `mira`, `encoge`.
+- [ ] **Mandame los originales** nombrados con su id (o recortalos vos con
+  "Copiar sujeto" de la Mac y dejalos como PNG en `contenido/guia/<id>.png`).
+  Después: `node scripts/gen-guia.mjs` y en `content/guia.ts` cada id apunta a
+  su foto.
+
+## 🟡 Ver las notas en Obsidian
+
+- [ ] En la Mac, desde la carpeta del repo (después de `git pull`):
+  `bash scripts/obsidian-enlazar.sh`. Crea `Proyectos/Portfolio` en tu vault
+  (enlazado al repo: se actualiza solo con cada pull) y agrega
+  `- [[Portfolio]]` a tu Índice. Si el vault está en iCloud y lo querés ver en
+  el celular: `bash scripts/obsidian-enlazar.sh --copiar`.
+
+## 🟡 La tipografía en Figma
+
+- [ ] Doble clic en `brand/tipografia/DovalScript-Regular.otf` → **Instalar**.
+  Reiniciá Figma. Detalle en `brand/tipografia/LEEME.md`.
+- La original del screenshot es **Artisan Script de HRDR** (comercial, ~USD 19
+  desktop, la web pide otra licencia). Doval Script es propia (derivada de
+  Norican, OFL). Si algún día querés la original, comprala y es una línea en
+  `lib/fonts.ts`.
 
 ## 🔴 Contenido faltante (genera placeholders visibles)
 
-- [ ] **PC Builder** — falta TODO: descripción de una línea, qué hace, stack y
-  features. Es el único proyecto sin descripción. Editá
-  `content/proyectos.ts` (slug `pcbuilder`). Repo: `github.com/Felgimon/TP2-ivo`.
-- [ ] **Nindo** — falta: género, engine (¿Unity? ¿Godot?), de qué va el juego,
-  tu rol específico y el stack. Editá `content/proyectos.ts` (slug `nindo`).
-- [ ] **LOST** — falta: qué hace exactamente (¿objetos perdidos? ¿inventario?),
-  stack, tu rol y quiénes eran el equipo. Editá `content/proyectos.ts`
-  (slug `lost`). ¿El repo es público? Si sí, pegá la URL.
+- [ ] **PC Builder:** falta descripción, qué hace, stack y features
+  (`content/proyectos.ts`, slug `pcbuilder`). Repo: `github.com/Felgimon/TP2-ivo`.
+- [ ] **Nindo:** falta género, engine, de qué va, tu rol y el stack
+  (`content/proyectos.ts`, slug `nindo`).
+- [ ] **LOST:** falta qué hace exactamente, stack, tu rol y el equipo
+  (`content/proyectos.ts`, slug `lost`).
 
-## 🟡 Capturas de proyectos (recomendado, mejoran mucho el sitio)
+## 🟡 Capturas de proyectos
 
-Tirá 2–4 PNG (1600px+ de ancho) por proyecto en `public/assets/proyectos/<slug>/`
-y agregá la ruta en `content/proyectos.ts` (campo `capturas`, sacando
-`falta: true`).
+En `public/assets/proyectos/<slug>/` y la ruta en `content/proyectos.ts`
+(`capturas`).
 
-- [x] Superlum — 3 capturas: la interfaz, la base de Clientes en galería y el
-  panel de administración con el registro de actividad.
-- [x] FutbolVision — 2 capturas: una predicción abierta (Arsenal vs Sporting CP)
-  y la lista de predicciones guardadas.
-- [x] CourtSide — 1 captura (la home con el jugador destacado). Su card muestra
-  solo una: los secundarios no tienen página de detalle.
-- [x] Buscaminas — 1 captura del tablero en la terminal (los colores ANSI
-  quedan muy bien).
-- [ ] Nindo — 2–3 de gameplay (o un GIF/video corto, mejor todavía).
-- [x] PC Builder — 1 captura (el armador con la PC en 3D y el resumen del build).
-- [ ] LOST — 1–2 si tenés.
-
-## 🟡 Tu foto
-
-- [ ] En `contenido/assets/foto/` hay dos: `foto_frente.png` (headshot) y
-  `foto_casual.png` (con la camiseta de la Selección). El sitio va a usar la
-  frontal con un tratamiento (máscara + grain). **Recomendación del leeme:**
-  cropeá para tomar solo tu cuerpo/cara sobre fondo limpio y que quede más
-  inmersivo. Si preferís otra foto (mejor luz, fondo simple), reemplazala en
-  `public/assets/foto/`. La casual (Selección) encaja tanto con el tema fútbol
-  que podríamos usarla — decime.
-
-## 🔴 Notion: queda en el HISTORIAL de git (decisión tuya)
-
-Sacamos la palabra de **todo el sitio y de todos los archivos del repo** (fue por
-tu pedido legal). Pero el repo es público y **cada commit viejo sigue teniendo el
-texto anterior**: `git log -p` o la vista de historial de GitHub lo muestran.
-Limpiar eso implica **reescribir la historia y hacer force-push** (cambia todos
-los hashes; si alguien clonó el repo, su copia queda desincronizada). No lo hice
-sin tu OK. Alternativa más simple si te preocupa: hacer el repo privado.
-
-- [ ] Decidime: ¿lo dejamos así (el sitio ya está limpio), reescribimos la
-  historia, o pasamos el repo a privado?
+- [x] Superlum, FutbolVision, CourtSide, Buscaminas, PC Builder, LOST, Nindo
+  (una cada uno).
+- [ ] Nindo: 2–3 de gameplay (o un GIF/video corto).
+- [ ] Revisá las capturas de Superlum: `superlum-clientes.png` muestra marcas
+  de clientes reales y `superlum-admin-actividad.png` tiene datos de prueba con
+  nombres de empresas. ¿Las dejamos?
 
 ## 🟡 Confirmaciones
 
-- [ ] **API de FutbolVision:** el sitio dice **Sportmonks** (según tu
-  `descripcion.md`). Una nota vieja del repo mencionaba API-Football. ¿Cuál es la
-  correcta? (Ver DECISIONS.md.)
-- [ ] **Recorrido / timeline:** confirmá el **orden real** y agregá **fechas** de:
-  ORT TIC (¿año de egreso?), NASA Space Apps (año), Premios Sadosky (año),
-  pasantía en Taquion (período). Editá `content/perfil.ts` (`timeline`).
-- [ ] **Hitos de Superlum:** ¿cómo querés contar lo de "presentado en TIC
-  Experience" y la "entrevista en TN"? ¿Tenés link o foto de la nota? Editá
-  `content/proyectos.ts` (slug `superlum`, `destacados`).
-- [ ] **Bios:** leé las dos bios en voz alta (`content/perfil.ts`). Si algo no
-  suena a vos, cambialo. Podés sumar edad, año de egreso o adónde apuntás.
+- [ ] **API de FutbolVision:** el sitio dice **Sportmonks**. Una nota vieja
+  mencionaba API-Football. ¿Cuál es?
+- [ ] **Recorrido:** el sitio muestra "FALTA: período" en la pasantía. Pasame
+  fechas reales (ORT: ¿año de egreso?; Taquion: ¿de cuándo a cuándo?).
+  `content/perfil.ts` → `timeline`.
+- [ ] **Hitos de Superlum:** "presentado en TIC Experience" y la "entrevista en
+  TN". ¿Tenés link o foto? Si no se puede respaldar, lo saco.
+- [ ] **Las frases de Feli:** leelas en voz alta (`content/guia.ts`). Si alguna
+  no suena a vos, cambiala; es una sola frase por parada.
+- [ ] **El lima:** en la v2 habías descartado el "lima fluo". En la v6 el lima
+  `#78D561` del mood board va como **material** (el líquido iluminado sobre
+  blanco), nunca como neón sobre oscuro. Si igual te molesta, se baja.
+
+## 🟡 La palabra que no se nombra, en el historial de git
+
+La palabra de la herramienta de workspace que pediste sacar no aparece en el
+sitio ni en ningún archivo del repo (la auditoría lo chequea en cada página).
+Pero **los commits viejos la siguen teniendo**. El repo hoy es **privado**, así
+que sólo la ve quien tenga acceso. Limpiarla del todo implica reescribir la
+historia y hacer force-push (cambian todos los hashes).
+
+- [ ] Decidime: ¿alcanza con el repo privado, o reescribimos la historia?
 
 ## 🟢 Opcionales
 
-- [ ] **Email:** el sitio lo muestra **ofuscado** (anti-scraping), como pediste.
-- [ ] **CV en PDF:** no tenés uno. Si armás uno, ponelo en `public/` y avisá para
-  linkearlo.
-- [ ] **Form de contacto:** no hay form (no configuraste Formspree/Resend). El
-  contacto es email (con "copiar") + GitHub + LinkedIn. Si querés un form real,
-  configurá Formspree o Resend y avisá.
-- [x] **Deploy:** ✅ DEPLOYEADO en tu Vercel (cuenta `felgimon`, proyecto
-  `felipe.doval.portfolio`): **https://felipedovalportfolio.vercel.app** (alias:
-  https://felipe-doval-portfolio.vercel.app). Vercel no permite puntos en la URL
-  (romperían el certificado HTTPS de *.vercel.app). Para deploys futuros:
-  `npx vercel --prod` desde la carpeta del proyecto, o conectá el repo de GitHub
-  en el dashboard para deploy automático en cada push.
-- [x] **Dominio propio:** ✅ **https://felipedoval.com** — comprado en Vercel
-  el 12/07/2026 (USD 11,25/año, auto-renovación; expira 12/07/2027) y asignado
-  al proyecto: apex + `www` redirigiendo 308. `lib/site.ts` (`siteUrl`) ya
-  apunta acá (metadata, OG, sitemap y robots incluidos). Los dominios
-  `*.vercel.app` del proyecto siguen funcionando como secundarios.
-- [ ] **SEO para que "felipe doval" te encuentre PRIMERO (sin pagar):** el
-  sitio ya tiene todo lo técnico (dominio exacto felipedoval.com, JSON-LD de
-  Person+WebSite, canonical, sitemap, robots, metadata, H1 con tu nombre).
-  Lo que falta lo tenés que hacer VOS porque requiere tus cuentas:
-  1. **Google Search Console** (el paso más importante): entrá a
-     https://search.google.com/search-console → "Añadir propiedad" →
-     "Dominio" → `felipedoval.com`. Te va a dar un registro TXT para
-     verificar: agregalo en Vercel (dashboard → Domains → felipedoval.com →
-     DNS → Add record, tipo TXT) o pasámelo y lo agrego yo por API. Una vez
-     verificado: Sitemaps → enviar `https://felipedoval.com/sitemap.xml`, y
-     en "Inspección de URLs" pegá `https://felipedoval.com` → "Solicitar
-     indexación". Google suele indexar en horas/días.
-  2. **Bing Webmaster Tools** (https://www.bing.com/webmasters): "Importar
-     desde Google Search Console" y listo (cubre Bing + DuckDuckGo).
-  3. **Backlinks propios** (señal fuerte para la búsqueda del nombre):
-     poné `https://felipedoval.com` como sitio web en tu perfil de GitHub
-     (Settings → Profile → Website), en LinkedIn (sección Contacto →
-     sitio web) y en cualquier bio que tengas (Instagram, X, etc.).
-  4. Paciencia: para un nombre propio + dominio exacto + estas señales,
-     rankear primero suele tomar de días a un par de semanas.
-- [ ] **Lighthouse mobile:** validalo sobre el preview de Vercel (ver
-  DECISIONS.md, Fase 9). En local con Chromium por software da bajo el
-  Performance mobile, pero desktop da 94 y A11y/BP/SEO 100.
-- [ ] **Figma de Superlum:** dejaste acceso a los diseños/logos en Figma. Si
-  querés que use algún asset específico de ahí (un logo, una captura), pasame el
-  nodo puntual y lo integro.
-- [ ] **Easter egg (Konami → pelota con física):** opcional, se evalúa según el
-  presupuesto de performance (Fase 7/9). ¿Lo querés?
+- [ ] **Medir en tu Mac y en tu celular:** el líquido está calibrado para
+  bajar de calidad solo si un equipo no llega (`?stats` en la URL muestra los
+  FPS). Si en algún equipo se siente pesado, avisame en cuál.
+- [ ] **CV en PDF:** si armás uno, ponelo en `public/` y lo linkeo.
+- [ ] **Google Search Console / Bing:** sigue pendiente de la v5 (verificar
+  `felipedoval.com`, mandar el sitemap). Ver el historial de este archivo.
+- [ ] **Deploy de la v6:** el push a `main` dispara el deploy de Vercel a
+  https://felipedoval.com. Si el webhook no lo toma (ya pasó en la v5.10),
+  `npx vercel --prod` desde la carpeta del repo. Mirá el sitio en tu celular.

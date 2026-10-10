@@ -1,127 +1,105 @@
-# Portfolio — Felipe Doval
+# Portfolio: Felipe Doval
 
-Sitio personal de **Felipe "Feli" Doval** — desarrollador y builder de Buenos
-Aires. **La navegación ES el balón-grafo**: cada nodo del modelo 3D es un tópico
-(Perfil · Enfoque · Trabajo · Recorrido · Contacto). Se entra clickeando un nodo
-o simplemente scrolleando (orden por defecto), y el balón rota para encarar el
-nodo activo. Un HUD de consola marca el progreso y es el fallback accesible
-(teclado / mobile / sin-WebGL), más páginas de detalle por proyecto.
+Sitio personal de **Felipe "Feli" Doval**, desarrollador full stack y datos de
+Buenos Aires: **https://felipedoval.com**.
 
-**Dirección de diseño (v3.1 — "cielo"):** escena 3D real: **skybox fotorealista**
-(Poly Haven CC0, celeste con nubes) como fondo de la escena, el balón **blanco
-nacarado** (environment map del cielo) flota en él, y los nodos son **mini-soles**
-(shader + corona + luz puntual que baña el balón). La **cámara** hace todo el
-encuadre: orbita y panea por sección (se ve otra parte del cielo). Texto **tinta**,
-acento **azul celeste profundo** (gradiente `.accent-grad`); el **oro** queda solo
-en los soles. Contenedores **Liquid Glass** estilo iOS (translúcidos de verdad).
-Tipografía Bricolage Grotesque con estiramientos de firma. Detalle e historial
-(v3.0, v2 "verde agua", v1) en [`DECISIONS.md`](./DECISIONS.md).
+## v6 «Visita guiada»
+
+Feli te hace la visita: cada sección es una **parada** (Inicio, Perfil,
+Enfoque, Trabajo, Recorrido, Contacto) y en cada una él sube desde el líquido,
+señala lo que importa y dice una sola frase. De fondo, **burbujas de líquido
+espeso** lima y jade que flotan, se funden y se pueden empujar y estirar con el
+mouse; arriba, **vidrio líquido** que las refracta de verdad. El nombre y los
+títulos van en **Doval Script**, una script de cartel propia.
+
+Todo el porqué (versiones, decisiones, bugs) está en [`DECISIONS.md`](./DECISIONS.md)
+y en las notas de [`obsidian/Portfolio/`](./obsidian/Portfolio/Portfolio.md).
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
-Three.js + React Three Fiber v9 + drei (Bloom) · GSAP (ScrollTrigger) · Lenis ·
-Bricolage Grotesque + Spline Sans Mono (`next/font`) · lucide-react.
+Next.js 16 (App Router, 100% estático) · React 19 · TypeScript strict ·
+Tailwind CSS v4 · **WebGL 1 crudo** (un fragment shader, sin three.js) · GSAP +
+Lenis · next/font local (Doval Script, Bricolage Grotesque, Spline Sans Mono) ·
+lucide-react · Vercel Analytics.
 
-> **Preview del 3D:** en una máquina sin GPU capaz se ve el poster estático. Para
-> forzar el canvas 3D en cualquier equipo, agregá `?gl=1` a la URL
-> (`/?gl=1`).
+## Cómo funciona la escena
 
-Las versiones exactas y el porqué de cada una están en
-[`DECISIONS.md`](./DECISIONS.md).
+Un solo `<canvas>` fijo detrás de todo (`components/escena/Escena.tsx`) pinta,
+en una pasada, el líquido, las fotos de Feli y el vidrio. El DOM declara qué
+pintar con atributos y la escena los lee en cada cuadro:
 
-## Requisitos
+| Atributo | Qué hace |
+|---|---|
+| `data-gotas="fx fy r tono [capa]; ..."` | gotas ancladas a la caja del elemento (`data-gotas-m` para < 760px) |
+| `data-vidrio` | el elemento es vidrio: el shader pinta su refracción |
+| `data-feli` + `data-pose-src` | una foto del guía (con su pileta de líquido) |
+| `data-nav-activo` | la cápsula de líquido bajo el link activo de la nav |
 
-- Node.js ≥ 20 (desarrollado con Node 26).
-- npm.
+`<html data-escena>` vale `cargando`, `lista` o `poster` (sin WebGL o equipo
+que no llega: póster estático, fotos como `<img>` y vidrio sólido). La calidad
+baja sola si el equipo no llega (`lib/rendimiento.ts`).
 
-## Setup
+Debug: `?fx=full` (fuerza GPU completa), `?perf=alto|bajo|minimo`, `?stats` (FPS).
+
+## Requisitos y setup
+
+Node.js ≥ 22.18 (los scripts `.ts` corren directo con node) y npm.
 
 ```bash
 npm install
-npx playwright install chromium   # solo la primera vez (para el smoke test)
-npm run dev                       # http://localhost:3000
+npm run dev        # http://localhost:3000
 ```
 
 ## Comandos
 
 | Comando | Qué hace |
 |---|---|
-| `npm run dev` | Servidor de desarrollo (Turbopack). |
-| `npm run build` | Build de producción. |
-| `npm run start` | Sirve el build de producción. |
-| `npm run typecheck` | `tsc --noEmit` — chequeo de tipos. |
-| `npm run lint` | ESLint. |
-| `npm run gate` | typecheck + lint + build (el gate mínimo de cada fase). |
-| `npm run smoke` | Smoke test con Playwright (requiere `build` previo). Abre el sitio, saca screenshots y falla si hay errores de consola. |
-| `npm run analyze` | Build con el analizador de bundle (`@next/bundle-analyzer`). |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` / `npm run start` | Build de producción / servirlo |
+| `npm run gate` | typecheck + lint + build |
+| `npm run smoke` | Abre las páginas y falla si hay errores de consola (`SMOKE_ROUTES`, `SMOKE_VIEWPORT`) |
+| `npm run audit` | Auditoría de riesgo: sin WebGL, teclado, mail, idioma del texto, reducir movimiento |
+| `npm run idioma` | Español/inglés automático, sin errores de hidratación |
+| `npm run touch` | El celular de verdad (393×659) |
+| `npm run anim` | El líquido se mueve (y no, con reducir movimiento) |
+| `npm run perf` | Frame time por parada (comparativo) |
 
-### Verificación completa (lo que se corre al cerrar cada fase)
+Sin GPU (contenedores, CI): `GL_SOFT=1`; con un Chromium propio:
+`PW_CHROMIUM=/ruta/al/chrome`. Ver `scripts/lib/servidor.mjs`.
 
-```bash
-npm run gate && npm run smoke
-```
-
-El smoke test acepta variables de entorno:
-`SMOKE_ROUTES="/,/proyectos/superlum"` y `SMOKE_VIEWPORT="390,844"` (mobile).
-
-Probar en el celular (misma red): `npm run dev -- -H 0.0.0.0` y entrar desde tu
-IP local.
+Generadores (correr cuando cambia lo visual): `scripts/gen-guia.mjs` (fotos del
+guía), `gen-poster.mjs` (póster sin WebGL), `gen-og.mjs` (imagen al compartir),
+`gen-favicons.mjs`.
 
 ## Estructura
 
 ```
-app/              Rutas (App Router): layout, page (single-page), globals.css,
-                  proyectos/[slug], fonts/ (TTF de Archivo)
-components/       ui/ · sections/ · three/ · motion/
-content/          ⭐ ÚNICA fuente de verdad, tipada:
-                    perfil.ts     → bio, links, stack, timeline
-                    proyectos.ts  → los 7 proyectos
-                    types.ts      → tipos
-hooks/            useWebGL, useReducedMotion, useActiveSection, ...
-lib/              fonts.ts (next/font), gpu.ts (sonda GPU), gsap.ts, utils.ts
-public/assets/    logo, foto, modelos-3d, capturas
-scripts/          smoke.ts (Playwright) · perf.ts (medidor de FPS)
-contenido/        material original que pasó Felipe (fuente, no se sirve)
+app/                rutas: layout, home, proyectos/[slug], 404, error, fonts/
+components/
+  escena/           el canvas: líquido + Feli + vidrio
+  guia/             Feli (la foto) y su Globo (la frase), la "voz"
+  secciones/        las seis paradas, el caso de proyecto y la parada perdida
+  layout/           nav, footer, saltar al contenido
+lib/escena/         motor WebGL, shader, parser de gotas
+content/            ⭐ la fuente de verdad: perfil, proyectos, ui, guia (lo que dice Feli)
+contenido/guia/     los recortes originales de Feli (fuente de las poses)
+brand/tipografia/   Doval Script (OTF/TTF para la Mac y Figma) y cómo se construye
+obsidian/Portfolio/ las notas del proyecto (se enlazan al vault con scripts/obsidian-enlazar.sh)
+scripts/            tests (Playwright) y generadores
 ```
 
-## Cómo editar el contenido
+## Editar el contenido
 
-Todo el texto y los datos del sitio salen de **`content/`** (TypeScript tipado):
+- Bio, links, stack, recorrido: `content/perfil.ts` (+ `perfil.en.ts`).
+- Proyectos: `content/proyectos.ts` (+ `proyectos.en.ts`).
+- Lo que dice Feli en cada parada y qué pose usa: `content/guia.ts`.
+- Textos de la interfaz: `content/ui.ts`.
 
-- **Tu bio, links, stack y recorrido:** `content/perfil.ts`.
-- **Proyectos** (títulos, descripciones, stack, links, capturas):
-  `content/proyectos.ts`. Para agregar una captura real, ponela en
-  `public/assets/proyectos/<slug>/` y cargá su ruta en `capturas`, sacando
-  `falta: true`.
+Pendientes de Felipe: [`TODO-FELI.md`](./TODO-FELI.md). Créditos y licencias:
+[`CREDITS.md`](./CREDITS.md).
 
-Lo que falta completar está listado en [`TODO-FELI.md`](./TODO-FELI.md).
+## Deploy
 
-## Deploy (Vercel)
-
-1. Subí el repo a GitHub.
-2. En [vercel.com](https://vercel.com) → *New Project* → importá el repo.
-   Vercel detecta Next.js solo (build `next build`, sin config extra).
-3. **Cambiá el dominio** en un solo lugar: [`lib/site.ts`](./lib/site.ts)
-   (`siteUrl`). De ahí lo toman metadata, OG, `sitemap.xml` y `robots.txt`.
-4. Deploy.
-5. **Validá el Lighthouse mobile** sobre el preview de Vercel (condiciones reales
-   con GPU). Las métricas ya verificadas: CLS 0, JS inicial 225 KB, Accesibilidad
-   / Best Practices / SEO 100, y Performance desktop 94. Ver `DECISIONS.md` (Fase
-   9) para el detalle del entorno.
-
-### SEO / metadata
-
-- Metadata completa (title template, OG/Twitter) en `app/layout.tsx`.
-- Imagen OG generada dinámicamente desde los tokens en
-  [`app/opengraph-image.tsx`](./app/opengraph-image.tsx) (Archivo + celeste,
-  sin ilustración).
-- `sitemap.xml` y `robots.txt` en `app/sitemap.ts` / `app/robots.ts`.
-- Favicons (derivados del logo de Felipe): `app/favicon.ico`, `app/icon.png`,
-  `app/apple-icon.png`.
-
-## Documentos
-
-- [`DECISIONS.md`](./DECISIONS.md) — decisiones de diseño, versiones y bugs.
-- [`TODO-FELI.md`](./TODO-FELI.md) — lo que falta que complete Felipe.
-- [`CREDITS.md`](./CREDITS.md) — assets y licencias.
+Vercel (proyecto `felipe.doval.portfolio`, cuenta `felgimon`). El push a `main`
+deploya; si el webhook falla, `npx vercel --prod`. El dominio se cambia en un
+solo lugar: `lib/site.ts`.

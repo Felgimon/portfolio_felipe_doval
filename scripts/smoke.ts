@@ -23,7 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, "__smoke__");
 
 const PORT = Number(process.env.SMOKE_PORT ?? 3210);
-const BASE = `http://127.0.0.1:${PORT}`;
+const BASE = `http://localhost:${PORT}`;
 const ROUTES = (process.env.SMOKE_ROUTES ?? "/")
   .split(",")
   .map((r) => r.trim())
@@ -37,6 +37,8 @@ const IGNORAR = [
   /favicon/i,
   /downloadable font/i,
   /Failed to load resource: the server responded with a status of 404/i,
+  // Vercel Analytics sólo existe en Vercel: en `next start` local da 404.
+  /_vercel\/insights/i,
 ];
 
 function esRuido(texto: string): boolean {
@@ -96,7 +98,15 @@ async function main() {
   try {
     await esperarServidor(BASE);
     console.log("[smoke] Servidor arriba. Lanzando Chromium...");
-    browser = await chromium.launch();
+    // PW_CHROMIUM: ruta a un Chromium propio (contenedores con otra revisión).
+    // GL_SOFT=1: WebGL por software (SwiftShader) en máquinas sin GPU.
+    browser = await chromium.launch({
+      ...(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {}),
+      args:
+        process.env.GL_SOFT === "1"
+          ? ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]
+          : [],
+    });
     const context = await browser.newContext({
       // es-AR: sin esto Playwright usa en-US y el sitio (con detección de
       // idioma automática) se probaría en inglés.

@@ -38,6 +38,8 @@ export class Motor {
   private texturas = new Map<string, { tex: WebGLTexture; lista: boolean }>();
   private vacia: WebGLTexture;
   readonly canvas: HTMLCanvasElement;
+  /** se llama cuando una foto termina de subir a la GPU (hay que redibujar) */
+  alCargar: () => void = () => {};
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -124,6 +126,7 @@ export class Motor {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
       entrada.lista = true;
+      this.alCargar();
     };
     img.src = src;
     return false;
