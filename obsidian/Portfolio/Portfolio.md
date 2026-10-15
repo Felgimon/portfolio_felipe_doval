@@ -1,6 +1,6 @@
 ---
 tipo: proyecto
-estado: v6 en producción, faltan las fotos nuevas
+estado: v7 en producción, faltan las fotos nuevas
 repo: https://github.com/Felgimon/portfolio_felipe_doval
 sitio: https://felipedoval.com
 ---
@@ -8,21 +8,33 @@ sitio: https://felipedoval.com
 
 Mi sitio personal: **felipedoval.com**. Next.js 16 estático en Vercel.
 
-## v6 «Visita guiada» (octubre 2026)
+## v7 «Vidrio y cobalto» (octubre 2026)
 
-Rediseño completo a partir del [[el-mood-board-pide-burbujas-vidrio-y-a-feli-de-guia|mood board]]:
-burbujas de líquido espeso lima y jade flotando de fondo, vidrio líquido que las
-refracta de verdad, y yo de **guía**: en cada parada subo del líquido, señalo lo
-que importa y digo una frase. El nombre y los títulos van en **Doval Script**,
-una script de cartel propia.
+La v6 [[la-v6-parecia-plasticola|parecía plasticola]]. La v7: un estudio
+cobalto, los títulos impresos en el fondo y una **gota de vidrio** que va de
+título en título y los aumenta ([[la-gota-lee-los-titulos]]). Una sola fuente,
+**Doval Grotesk** ([[doval-grotesk-una-sola-letra]]). Mis fotos acompañan la
+visita, sin globos. Títulos directos: Trabajo, Proyectos. Diseño final en
+Figma, página *Diseño v7* ([[el-figma-son-capas-no-una-captura]]).
 
-## Dirección
+## v7
+- [[la-v6-parecia-plasticola]]
+- [[la-gota-lee-los-titulos]]
+- [[doval-grotesk-una-sola-letra]]
+- [[el-figma-son-capas-no-una-captura]]
+
+## v6 «Visita guiada» (historia)
+
+Burbujas de líquido lima y jade, vidrio líquido y yo de guía con frases.
+Reemplazada por la v7; las notas quedan como historia.
+
+### Dirección (v6)
 - [[el-mood-board-pide-burbujas-vidrio-y-a-feli-de-guia]]
 - [[la-visita-guiada-gano-el-panel]]
 - [[el-lima-tiene-que-ser-material-no-neon]]
 - [[las-reglas-de-gusto-que-ya-estaban]]
 
-## Decisiones
+### Decisiones (v6)
 - [[la-script-es-propia-no-un-calco]]
 - [[el-vidrio-se-pinta-en-el-shader]]
 - [[feli-vive-dentro-del-shader]]

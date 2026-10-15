@@ -7,8 +7,8 @@
    luz: un estudio cobalto que cae a azul noche. Un solo acento: ámbar, y sólo
    para el estado "ahora". Una sola fuente: Doval Grotesk (lib/fonts.ts).
    Todo en HEX sólido: nada de rgba() para texto o marca (regla de Felipe).
-   Contrastes sobre Noche: crema 16,9:1 · crema-2 12,0:1 · ámbar 11,4:1.
-   Sobre el cobalto más claro del estudio (#1736BD): crema 7,9:1 · crema-2 5,6:1.
+   Contrastes sobre Noche: crema 15,1:1 · crema-2 11,0:1 · ámbar 10,2:1.
+   Sobre el cobalto más claro del estudio (#1736BD): crema 7,9:1 · crema-2 5,8:1.
    ========================================================================== */
 
 :root {

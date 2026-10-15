@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: decisión
 fecha: 2026-10-09
 ---
+> **v6 (historia).** El verde se fue en la v7: ver [[la-v6-parecia-plasticola]].
+
 # El lima tiene que ser material, no neón
 
 En el historial del portfolio (DECISIONS.md, v2) hay un rechazo explícito:

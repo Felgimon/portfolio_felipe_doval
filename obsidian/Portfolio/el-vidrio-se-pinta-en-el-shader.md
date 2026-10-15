@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: decisión técnica
 fecha: 2026-10-09
 ---
+> **v6 (historia).** En la v7 el vidrio se sigue pintando en el shader, ahora ahumado sobre cobalto: ver [[la-gota-lee-los-titulos]].
+
 # El vidrio se pinta en el shader
 
 En la v5 el liquid glass era un filtro SVG (`feDisplacementMap`) dentro de

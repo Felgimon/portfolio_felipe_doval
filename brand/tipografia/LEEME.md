@@ -1,107 +1,108 @@
-# Doval Script
+# Tipografía: Doval Grotesk
 
-Tipografía script de cartel retro (pintor de letras de los 50/60) para la marca de
-Felipe Doval: trazo pesado, terminaciones redondeadas, inclinación moderada (~10–12°)
-y letras que se conectan entre sí. Pensada para títulos y piezas de marca (en el
-sitio: tinta verde botella `#0F3D2E` con sombra dura lima `#78D561`); de 1 a 3
-palabras, no para texto corrido. El espécimen está en el azul del screenshot de
-referencia.
+**La única fuente del sitio** (desde la v7). Una grotesca variable en dos
+ejes: **peso** (100 a 900) y **ancho** (62% a 125%). Extendida y negra hace de
+logo y de títulos; en ancho normal hace de texto de lectura. Una sola familia,
+cero fuentes de reemplazo.
 
-![Espécimen](especimen.png)
+![Espécimen](doval-grotesk/especimen.png)
 
 ## Archivos
 
 | Archivo | Para qué |
 |---|---|
-| `DovalScript-Regular.otf` | Instalar en la Mac (Figma, Illustrator, Keynote…). Contornos CFF. |
-| `DovalScript-Regular.ttf` | Lo mismo en TrueType, por si alguna app prefiere TTF. |
-| `../../app/fonts/DovalScript.woff2` | Versión web (comprimida) para el sitio. |
-| `LICENSE-Norican.txt` | Licencia de la fuente original (SIL OFL 1.1). Viaja siempre con la fuente. |
-| `especimen.png` | Muestra con alfabeto, cifras y caracteres del español. |
+| `doval-grotesk/DovalGrotesk.ttf` | **Instalar en la Mac** (doble clic → Instalar). Figma la toma sola: aparece como *Doval Grotesk* con 54 estilos (de *ExtraCondensed Thin* a *Expanded Black*) y el ancho también se puede mover en el panel de ejes variables. |
+| `doval-grotesk/DovalGrotesk.woff2` | La misma, comprimida para la web (copia en `app/fonts/`). |
+| `doval-grotesk/LICENSE-Archivo-OFL.txt` | Licencia de la fuente base (SIL OFL 1.1). Viaja siempre con la fuente. |
+| `doval-grotesk/construir.py` | Cómo se arma (ver abajo). |
+| `doval-grotesk/especimen.png` | Muestra: anchos, pesos, texto y flechas. |
+| `doval-script/` | La script de cartel de la v6 (derivada de Norican). **Ya no se usa en el sitio.** |
 
-Cobertura: latín básico completo, todo lo del español (á é í ó ú Á É Í Ó Ú ñ Ñ ü Ü
-¿ ¡ « » – — “ ” ‘ ’ €) y el resto de Latin-1/Latin Extended-A que ya traía la base.
+## Por qué esta y no otra: el análisis
 
-## De dónde sale
+Felipe pasó cinco referencias: **Tahoe**, **Inner** (la del afiche "URGENT"),
+**Reatro Retro** (Pandeka), **Viltrum** (Super Bold Condensed, Pekotype) y
+**Drupadi**. La consigna: elegir la mejor para el sitio (o mezclar e inventar
+una), replicarla y que sea **la única fuente**. Eso último decide casi todo,
+porque la misma letra tiene que funcionar a 150 px en un título y a 12,5 px en
+una etiqueta.
 
-Es una **versión modificada de [Norican](https://github.com/googlefonts/NoricanFont)**,
-de Vernon Adams, publicada bajo la **SIL Open Font License 1.1**
-(Copyright 2011 The Norican Project Authors). La licencia de Norican **no tiene
-"Reserved Font Name"**, así que el derivado podría usar cualquier nombre; igual se
-le puso uno nuevo (Doval Script) para no confundirla con la original.
+### Los criterios, en orden de peso
 
-Se eligió Norican después de comparar 21 familias script libres de Google Fonts (Yellowtail,
-Damion, Oleo Script, Leckerli One, Playball, Grand Hotel, Kaushan, Lily Script One,
-Pacifico, Lobster, Yesteryear, Cookie, Style Script, etc.) contra la referencia:
-es la que tiene el esqueleto más parecido (r de panza, s y c con remate de bola,
-mayúsculas con lazo, uniones bajas) y no es un cliché tan gastado como Pacifico o
-Lobster.
+1. **Que aguante texto corrido.** Si es la única fuente, la bio, los casos y
+   los botones van en ella. Una fuente sólo-display queda descartada.
+2. **Que conviva con la gota de vidrio.** La gota refracta las letras que
+   tiene detrás, las aumenta y las dobla. Eso se lee bien en formas grandes,
+   macizas y de contraformas abiertas; en letras finas, con cortes o ya
+   deformadas, la refracción y el dibujo se pelean y queda ruido.
+3. **Profesional, no infantil.** Es el feedback que mató a la v6.
+4. **Que no parezca IA.** Ni la grotesca neutra de siempre (la que tiene
+   cualquier template) ni el "futurista tech" que hoy grita cripto y gaming.
+5. **Español completo:** tildes, ñ, ü, ¿ y ¡.
+6. **Licencia limpia.** Las cinco son comerciales: no se puede copiar el
+   archivo ni calcar los contornos. "Replicarla" es reproducir el género y el
+   carácter, no el dibujo exacto.
 
-## Qué se le cambió a Norican
+### Las cinco, una por una
 
-Medidas en unidades de fuente (2048 por eme):
+| Fuente | Qué es | Contra el sitio |
+|---|---|---|
+| **Tahoe** | Grotesca **extendida** y negra: letras anchas, terminales rectos, contraformas horizontales y apretadas, la O como un óvalo ancho, la A de ápice casi plano. Tono de afiche suizo o de marca deportiva: seguro, institucional, adulto. | La única que suma en todos los criterios. Sola es display, pero el género tiene familias con eje de ancho (la misma letra, angosta, sirve para leer). Con el vidrio es ideal: trazos gruesos y anchos que la gota aumenta sin romper. |
+| **Inner** | Unicase geométrica tipo stencil, con cortes en casi todas las letras. | El propio afiche lo muestra: el párrafo en esa letra cuesta. Mayúscula y minúscula iguales (se pierden los nombres propios). Los cortes compiten con la refracción: dos efectos peleando en el mismo lugar. |
+| **Reatro Retro** | Display ondulada de los 70, lúdica. | Es exactamente lo que el feedback llamó infantil. Y una letra que ya viene deformada no deja ver la deformación de la gota. Ilegible como texto. |
+| **Viltrum** | Condensada súper negra, muy alta. | Potente en afiche, imposible en párrafo. En 1440 px un título condensado ocupa media pantalla y deja aire muerto; la gota sobre trazos verticales apretados se ve como rayas. |
+| **Drupadi** | "Futuristic font": geométrica fina con cortes. | El género que más delata IA y crypto. El trazo fino, aumentado por la gota, se vuelve hilos. Baja legibilidad en chico. |
 
-1. **Más peso.** Se engordó el contorno 32 u. en horizontal y 18 u. en vertical por
-   lado (offset redondo sobre el contorno, en forma anisotrópica para engordar más
-   las astas que los trazos finos y conservar el contraste). Las astas pasan de
-   ~200 a ~265 u. (+32 %). Las contraformas de a, e, o, s, g siguen abiertas.
-2. **Más derecha.** Se enderezó 4° (de ~15° a ~10–12° de inclinación), pivotando a la
-   altura de las uniones para que las letras sigan conectando en el mismo lugar.
-3. **Espaciado y kerning intactos.** Cada glifo ganó 64 u. de avance y se corrió
-   32 u., así los márgenes laterales y el kerning original siguen valiendo y las
-   uniones entre minúsculas quedan sin cortes. El espacio entre palabras pasó de
-   389 a 469 u. porque con el trazo más pesado quedaba apretado.
-4. **Acentos.** Los acentos superiores se subieron 27 u. para que no se peguen a la
-   letra más gruesa; se ajustaron las anclas de posicionamiento (`mark`/`mkmk`) y
-   los carets de ligaduras.
-5. **Remates de palabra activados por defecto.** Norican trae formas finales
-   (`a e n o s t u y…`) que casi ninguna app usa. Ahora una regla `calt`
-   (alternativas contextuales, activas por defecto en Figma, macOS y navegadores)
-   las pone solas al final de cada palabra, y las U V W con entrada larga al
-   comienzo. Se agregaron **53 finales acentuadas** (á é ó ú ñ ü…) para que
-   "está", "café" o "diseñó" también terminen con remate.
-6. **Sin hinting** (el original ya no servía con los contornos nuevos); queda solo
-   la instrucción mínima de control de *dropout* que se recomienda para fuentes
-   sin hinting.
-7. **Nombres nuevos:** familia "Doval Script", estilo "Regular", PostScript
-   `DovalScript-Regular`. Copyright: se mantiene el original y se agrega
-   "Modifications © 2026 Felipe Doval".
+### La decisión: Tahoe, con un poco de Viltrum adentro
 
-## Instalar en macOS (para Figma)
+**Tahoe** marca la dirección. Para que sea la única fuente hacía falta una
+grotesca del mismo género **con eje de ancho**: así el extremo extendido y
+negro es el "Tahoe" de los títulos, el ancho normal es el texto, y el extremo
+condensado (62%) es el "Viltrum" de la misma familia, disponible sin sumar
+otra fuente. En el sitio el ancho se usa como recurso responsive: los títulos
+van al 125% en desktop y bajan al 100% en el celular, **mismo tamaño, menos
+ancho**, y "Recorrido" entra entero sin achicarse.
 
-1. Doble clic en `DovalScript-Regular.otf` → se abre **Catálogo Tipográfico**
-   (Font Book) → **Instalar**. Instalá **solo uno** de los dos archivos (OTF o TTF),
-   no los dos, para no tener la familia duplicada.
-2. **Figma de escritorio:** cerrala del todo (⌘Q) y volvé a abrirla. Aparece como
-   "Doval Script".
-3. **Figma en el navegador:** necesita el instalador de fuentes de Figma
-   (*Figma font installer*, se baja desde figma.com/downloads). Con eso instalado,
-   recargá la pestaña.
+La base es **Archivo**, de **Omnibus-Type** (fundidora argentina), bajo SIL
+OFL 1.1 y sin Reserved Font Name. A 900/125 coincide con Tahoe rasgo por
+rasgo: ancho de caja, terminales horizontales, O ovalada ancha, contraformas
+apretadas y peso. No es un calco de Tahoe: es la misma familia de ideas, en una
+fuente que se puede modificar y distribuir.
 
-Para usarla en el sitio, la versión web es `app/fonts/DovalScript.woff2`; se carga
-igual que las otras locales de `lib/fonts.ts` (`next/font/local`), por ejemplo:
+### Qué tiene de propio Doval Grotesk
 
-```ts
-export const fontScript = localFont({
-  src: "../app/fonts/DovalScript.woff2",
-  variable: "--font-script",
-  display: "swap",
-  fallback: ["cursive"],
-});
+- **Flechas dibujadas para ella** (↗ → ← ↓ ↑ ↘), que el sitio usa en botones y
+  listas. Archivo no las trae, y sin ellas el navegador las sacaba de otra
+  fuente (rompía la regla de una sola letra). Son variables: engordan con el
+  peso y se ensanchan con el ancho, como el resto de los glifos.
+- **54 estilos con nombre** para Figma y la Mac (seis anchos por nueve pesos).
+- Renombrada (*Doval Grotesk*), recortada a latín (español completo) y con los
+  metadatos de licencia y autoría en orden.
+
+### El sistema de uso (sitio y Figma)
+
+| Rol | Peso / ancho | Tamaño |
+|---|---|---|
+| Nombre (hero) | 900 / 125, mayúsculas, −2,5% | min(11,6vw, 21vh) |
+| Título de sección | 850 / 125, mayúsculas | clamp(56, 9,4vw, 150); en el celular 14,4vw al 100% |
+| Nombre de un caso | 850 / 125 | clamp(48, 7vw, 112) |
+| Subtítulo (H3) | 700 / 112 | 22 a 40 |
+| Lead | 430 / 100 | 21 / 29 |
+| Cuerpo | 400 / 100 | 17 / 27 |
+| Etiqueta | 560 / 112, mayúsculas, +8% | 12,5 |
+
+En los frames de Figma (página *Diseño v7*) el texto editable usa **Archivo**,
+que Figma ya tiene y tiene los mismos contornos; los títulos extendidos van en
+contornos vectoriales para conservar el ancho. Con Doval Grotesk instalada se
+pueden pasar a texto con la fuente propia.
+
+## Cómo se arma
+
+```bash
+# la base: Archivo variable (peso + ancho), subset latín, de Fontsource
+npm pack @fontsource-variable/archivo && tar xzf fontsource-variable-archivo-*.tgz
+python3 construir.py package/files/archivo-latin-wdth-normal.woff2 DovalGrotesk
+cp DovalGrotesk.woff2 ../../../app/fonts/
 ```
 
-## Licencia (resumen, no reemplaza al texto)
-
-SIL OFL 1.1: se puede usar gratis en cualquier proyecto (personal o comercial),
-incrustar en PDFs y webs, modificar y redistribuir, siempre que la fuente se
-distribuya con `LICENSE-Norican.txt` y los derivados sigan bajo OFL. Lo único que
-no se puede es **vender la fuente sola**.
-
-## Sobre "Artisan Script" (la referencia)
-
-El look de referencia es **Artisan Script**, de **HRDR** (Creative Market). Es una
-fuente **comercial**: la licencia desktop ronda los **USD 19** y el uso en web
-necesita su propia licencia aparte. Doval Script **no es una copia ni un calco**
-de ella: no usa ningún dibujo de Artisan Script, es un derivado de Norican llevado
-hacia un aire parecido. Si algún día se quiere la original exacta, hay que
-comprarla con la licencia que corresponda al uso (desktop y/o web).
+Requiere `fonttools` y `brotli` (`pip install fonttools brotli`).

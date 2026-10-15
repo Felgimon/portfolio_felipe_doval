@@ -3,9 +3,118 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v6.0** es la vigente (rediseño completo «Visita guiada»). Debajo
-> queda toda la historia: v5.x (el sol en el estudio blanco), v4, v3, v2 y v1.
-> Las notas de la v6 también están en `obsidian/Portfolio/`.
+> La sección **v7.0** es la vigente (rediseño completo «Vidrio y cobalto»).
+> Debajo queda toda la historia: v6 (la visita guiada en líquido verde), v5.x
+> (el sol en el estudio blanco), v4, v3, v2 y v1. Las notas también están en
+> `obsidian/Portfolio/`.
+
+---
+
+## v7.0 — «Vidrio y cobalto»: Doval Grotesk, la gota de vidrio y Feli sin globos
+
+### El pedido
+La v6 no gustó: "demasiado infantil", "no parece glass verdoso como me lo
+imaginaba, parece plasticola de moco", "no es profesional". Felipe pidió el
+diseño completo **primero en Figma, con colores nuevos**, después en el repo,
+con autocrítica y capturas de diseño y navegación. En la misma tanda:
+- **Una sola fuente** en todo el sitio, elegida entre cinco referencias
+  (Tahoe, Inner, Reatro Retro, Viltrum, Drupadi) o una mezcla, con análisis.
+- **Feli no comenta.** "Guiar" era que haya fotos suyas que te acompañen
+  mientras navegás, no frases.
+- **Títulos directos:** "Trabajo", "Proyectos", nada de "Lo que construí".
+
+### Por qué falló la v6 (autocrítica)
+El verde lima y jade saturado, en metaballs 2D con sombra dura y una script de
+cartel, leía como juguete: el "material" verde no era vidrio, era plástico.
+Sumado a Feli hablando en globos, el tono quedaba de mascota. El problema no
+era un ajuste de color: era el material y la voz.
+
+### Cómo se decidió
+1. Prototipo en `scratchpad` con varios héroes (burbuja, cinta, gota oscura,
+   lente sobre el nombre) hasta llegar a la **gota-lente**: una gota de vidrio
+   claro apoyada sobre una letra del nombre, que se ve aumentada y doblada a
+   través del vidrio. Es lo único del sitio que un template no trae, y
+   funciona igual con cualquier título.
+2. Color: un **estudio fotográfico cobalto** que cae a azul noche (#1736BD a
+   #071447), crema para el texto (#F2EEE6) y un solo acento ámbar (#FFB861)
+   para el estado "Ahora". Se bajó la saturación del primer cobalto, que con
+   la foto recortada encima leía a miniatura de YouTube.
+3. **Figma primero** (página *Diseño v7* del archivo *Mood Board Portfolio*):
+   sistema visual + 7 secciones en 1440 + 7 en 393. En capas editables: el
+   fondo WebGL capturado sin títulos, los títulos como contornos vectoriales
+   de la fuente real, la gota como PNG con alfa y la UI como texto (Archivo,
+   mismos contornos que la fuente propia). Se probó primero importar la
+   captura entera y se descartó: era una imagen con texto encima, no un
+   diseño.
+4. Recién con el Figma revisado, el repo.
+
+### La tipografía: Doval Grotesk
+Análisis completo en `brand/tipografia/LEEME.md`. En corto: si es la **única**
+fuente tiene que aguantar texto corrido, y tiene que convivir con la gota (que
+aumenta y dobla lo que tiene detrás). Inner, Reatro y Drupadi rompen con la
+refracción o son ilegibles en párrafo (y Reatro es justo lo "infantil");
+Viltrum es sólo afiche. Ganó **Tahoe** (grotesca extendida y negra, tono
+adulto y editorial), resuelta con una familia libre del mismo género **con eje
+de ancho**: **Archivo** (Omnibus-Type, SIL OFL). Extendida y negra es el
+"Tahoe" de los títulos; en ancho normal es el texto; el extremo condensado es
+el "Viltrum" de la misma familia. En el celular los títulos bajan el ancho, no
+el tamaño. Doval Grotesk = Archivo renombrada, latín, **flechas propias
+variables** (sin ellas ↗ caía en otra fuente) y 54 estilos con nombre.
+
+### La escena (WebGL 2)
+- **Estudio:** gradiente radial cobalto a noche con grano.
+- **Placas:** cada título (`data-placa`) se dibuja una vez en una textura con
+  su misma fuente, caja y línea base; el texto del DOM queda transparente
+  (sigue para leer, copiar y para lectores de pantalla). Hasta 3 a la vez.
+- **La gota:** raymarching de una SDF (huevo con ondulación lenta + gotita
+  satélite unida con `smin`), refracción de entrada y salida con dispersión
+  por canal (IOR 1,47 a 1,515), Fresnel, un estudio con softbox y dos tiras de
+  luz para el reflejo, brillo duro y una sombra suave. El plano refractado está
+  cerca (0,55 radios) para que la letra se lea aumentada y no lechosa.
+- **Viaja:** cada sección declara `data-gota="fx fy r"` en fracciones de SU
+  título; la gota va a la sección activa con un suavizado de 260 ms. En el
+  inicio sigue al mouse de lejos. Con reducir movimiento salta y no ondula.
+- **Vidrio ahumado:** los paneles `data-vidrio` refractan con bisel, se ahuman
+  42% hacia noche y llevan un canto de luz arriba a la izquierda.
+- **Feli** se pinta en el shader con el pie fundido (así la gota lo puede
+  refractar); el `<img>` es el respaldo.
+- Sin WebGL 2: el estudio en gradiente CSS, títulos como texto, Feli como
+  `<img>`, vidrio sólido. El póster PNG de la v6 se borró.
+
+### La estructura
+Inicio, Perfil, Enfoque, **Trabajo** (Superlum, lo que está construyendo para
+una empresa real), **Proyectos** (FutbolVision en grande y el resto en lista),
+Recorrido y Contacto. La nav: el nombre (vuelve al inicio), una píldora de
+vidrio con las secciones y "Hablemos" sólido; en el celular, "Menú" abre la
+lista. Fuera de la home, "Volver" lleva a la sección de origen.
+
+### Bugs encontrados por el camino
+- En mobile, la grilla de Enfoque tenía el `grid-template-columns` en línea y
+  el media query no la pisaba: dos columnas de 150 px. Ahora es una clase.
+- Las capturas para Figma escalaban la gota con el alto de la sección (en vivo
+  es la pantalla): se topó el radio a 960 px.
+- La gota se apoyaba fuera del título porque el h2 ocupaba todo el ancho: las
+  placas son `width: fit-content`.
+- El conversor HTML→Figma ignora el origen del `viewBox`: los contornos se
+  generan desde 0,0.
+
+### Números
+- `public/`: −2 pósters (el estudio sin WebGL es CSS). Una sola fuente de 90 KB
+  en lugar de tres.
+- Imagen al compartir: 131 KB, captura real del inicio nuevo.
+
+### Verificación
+`gate` 0 errores · `audit` **36/36** (suma: una sola fuente en todo el DOM,
+Feli sin globos, el nombre pintado por la escena, sin WebGL el nombre como
+texto) · `idioma` 12/12 · `touch` 9/9 (7 secciones, Menú ≥ 44 px) · `anim` 2/2
+(la gota ondula; con reducir movimiento, no) · `smoke` sin errores. Capturas
+de las 7 secciones, los dos casos y el 404 en 1440×900 y 393×852.
+
+### Pendiente de Felipe
+La **sesión de fotos** sigue siendo lo que más suma (el brief se actualizó para
+el cobalto: nada de ropa azul). Medir en hardware real (la gota es raymarching:
+SwiftShader no sirve para juzgar). Instalar `DovalGrotesk.ttf` para editar en
+Figma con la fuente propia.
 
 ---
 

@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: decisión
 fecha: 2026-10-09
 ---
+> **v6 (historia).** En la v7 el sitio usa una sola fuente: ver [[doval-grotesk-una-sola-letra]]. La Doval Script queda en brand/tipografia/doval-script/.
+
 # La script es propia, no un calco
 
 La font del screenshot ("Introducing Artisan Script") existe: es **Artisan

@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: bugs arreglados
 fecha: 2026-10-09
 ---
+> **v6 (historia).** Historia de la v6.
+
 # Lo que la v6 arregló de paso
 
 Antes de rediseñar se auditó la v5 entera. Además de cambiar todo el look, la

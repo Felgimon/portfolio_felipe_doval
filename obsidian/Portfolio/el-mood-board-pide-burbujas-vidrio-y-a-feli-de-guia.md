@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: dirección
 fecha: 2026-10-09
 ---
+> **v6 (historia).** La v7 reinterpretó el mood board: ver [[la-gota-lee-los-titulos]].
+
 # El mood board pide burbujas, vidrio y a Feli de guía
 
 El tablero de Figma **Mood Board Portfolio** (página *Inspiration*) es corto, y

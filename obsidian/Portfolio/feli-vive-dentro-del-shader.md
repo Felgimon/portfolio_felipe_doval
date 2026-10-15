@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: decisión técnica
 fecha: 2026-10-09
 ---
+> **v6 (historia).** En la v7 Feli sigue pintado en el shader, pero sin globos ni pileta: ver [[la-gota-lee-los-titulos]].
+
 # Feli vive dentro del shader
 
 La foto de Feli no es un `<img>` encima del fondo: **se pinta dentro del mismo

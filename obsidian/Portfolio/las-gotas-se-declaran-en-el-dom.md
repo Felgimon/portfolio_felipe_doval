@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: decisión técnica
 fecha: 2026-10-09
 ---
+> **v6 (historia).** En la v7 hay una sola gota y cada sección declara dónde se apoya (data-gota): ver [[la-gota-lee-los-titulos]].
+
 # Las gotas se declaran en el DOM
 
 Nada de coreografiar el líquido con posiciones a mano en el JS. Cada elemento

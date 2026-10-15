@@ -5,6 +5,32 @@ fecha: 2026-10-09
 ---
 # La sesión de fotos es un guion, no un book
 
+> **Actualizado para la v7.** Lo que dice esta sección manda sobre el resto de
+> la nota donde choquen.
+>
+> - **Ya no hablás:** tus fotos acompañan la visita, una por sección. Lo de
+>   "señalar" y "decir una frase" de abajo es de la v6.
+> - **El fondo ahora es cobalto** (`#1736BD` a azul noche `#071447`), sin
+>   papel blanco ni verde, y **sin borde de sticker**: el recorte va limpio y
+>   el pie se funde.
+> - **Ropa:** buzo o remera lisa **gris grafito, crema o tostado** + pantalón
+>   claro (beige, piedra). **Nada azul ni cobalto** (desaparecés contra el
+>   fondo), nada blanco ni negro puros, sin logos ni rayas. El azul marino que
+>   recomendaba la v6 ya no va.
+> - **Las 5 imprescindibles** (los nombres son los de `content/guia.ts`):
+>   1. `inicio`: de frente, apoyado en los antebrazos sobre una mesa o baranda,
+>      sonrisa leve, mirando a cámara. Va enorme a la derecha del nombre.
+>   2. `perfil`: sentado, mano en el mentón, mirando a cámara. Va a la
+>      izquierda de la bio.
+>   3. `recorrido`: de perfil, cuerpo entero, caminando hacia la izquierda de
+>      la foto (hacia el texto).
+>   4. `contacto`: tres cuartos, brazos cruzados, mirando a cámara.
+>   5. `perdida` (el 404): encogido de hombros, palmas arriba.
+> - La luz sigue igual: **desde la izquierda de la foto**, que es de donde
+>   viene el brillo de la gota y del vidrio.
+> - Las otras poses de la lista de abajo sirven como extra (por si se suma una
+>   foto a Enfoque o a los casos), no son obligatorias.
+
 En la v6 sos el **guía** de la visita: en cada parada subís desde el líquido,
 señalás lo que importa y decís una frase. Cada foto tiene un trabajo concreto
 (a dónde mira, qué señala, de qué lado queda el contenido), así que no sirven

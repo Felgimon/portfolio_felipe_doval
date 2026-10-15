@@ -3,6 +3,8 @@ proyecto: "[[Portfolio]]"
 tipo: decisión
 fecha: 2026-10-09
 ---
+> **v6 (historia).** Reemplazada por la v7: ver [[la-v6-parecia-plasticola]].
+
 # La visita guiada ganó el panel
 
 Antes de tocar el repo se prototiparon **cuatro conceptos** distintos, cada uno

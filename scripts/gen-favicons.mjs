@@ -5,8 +5,8 @@
 //   node scripts/gen-favicons.mjs
 //
 // Por qué un cuadrado y no la letra sola: la barra de pestañas puede ser
-// blanca o casi negra. El cobalto se recorta sobre blanco (7,9:1) y sobre
-// oscuro manda la F crema (16,9:1 sobre noche).
+// blanca o casi negra. El cobalto se recorta sobre blanco (9,1:1) y sobre
+// oscuro manda la F crema (15,1:1 sobre noche).
 //
 // El ícono de iOS (apple-icon) es OPACO: iOS rellena la transparencia con negro.
 import { readFileSync, writeFileSync } from "node:fs";
