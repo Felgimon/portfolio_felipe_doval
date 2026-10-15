@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { paradas } from "@/lib/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
@@ -11,17 +10,18 @@ import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import type { IdParada } from "@/content/ui";
 
 /**
- * La NAV: una píldora de vidrio fija arriba. En la home, las seis paradas de
- * la visita; la activa lleva debajo una cápsula de líquido (la pinta la
- * escena leyendo `data-nav-activo`) que se desliza al cambiar de parada.
+ * La NAV: el nombre a la izquierda (vuelve al inicio), una píldora de vidrio
+ * con las secciones en el centro y "Hablemos" sólido a la derecha. La sección
+ * activa se marca con un fondo más claro dentro de la píldora.
  *
  * Los links son anclas de verdad (#trabajo se puede compartir y el botón Atrás
- * funciona). Al ir a una parada el foco pasa al título de la sección: en la v5
- * el foco se quedaba en la nav y Tab volvía a la nav en vez de al contenido.
+ * funciona). Al ir a una sección el foco pasa a su título.
  *
- * En el celular la píldora muestra la parada actual en script y un botón
- * "Paradas" que abre la lista. Fuera de la home: "Volver a la visita".
+ * En el celular la píldora no entra: queda el nombre, "Menú" (abre la lista)
+ * y "Hablemos". Fuera de la home, "Volver" lleva a la sección de donde vino.
  */
+const enNav = paradas.filter((id) => id !== "inicio" && id !== "contacto");
+
 export function Nav() {
   const pathname = usePathname();
   const { t } = useIdioma();
@@ -45,6 +45,7 @@ export function Nav() {
   }, [abierta]);
 
   const ir = (e: React.MouseEvent, id: IdParada) => {
+    if (!enHome) return;
     e.preventDefault();
     setAbierta(false);
     const destino = document.getElementById(id);
@@ -56,85 +57,90 @@ export function Nav() {
     titulo?.focus({ preventScroll: true });
   };
 
-  if (!enHome) {
-    return (
-      <header className="fixed inset-x-0 top-3 z-40 flex justify-center px-4 sm:top-5">
-        <nav aria-label={t.nav.aria}>
-          <Link
-            href="/#trabajo"
-            data-vidrio
-            className="vidrio vidrio-pildora boton-vidrio min-h-[46px] text-[15px]"
-          >
-            <ArrowLeft className="size-4" aria-hidden strokeWidth={2.4} />
-            {t.nav.volverVisita}
-          </Link>
-        </nav>
-      </header>
-    );
-  }
+  const href = (id: IdParada) => (id === "inicio" ? "/" : `/#${id}`);
+  const volverA = pathname.startsWith("/proyectos/superlum") ? "/#trabajo" : "/#proyectos";
 
   return (
-    <header className="fixed inset-x-0 top-3 z-40 flex justify-center px-4 sm:top-5">
-      <nav aria-label={t.nav.aria} className="w-full max-w-max">
-        {/* desktop */}
-        <ul
-          data-vidrio
-          className="vidrio vidrio-pildora hidden items-center gap-0.5 px-2 py-1.5 lg:flex"
-        >
-          {paradas.map((id) => (
-            <li key={id}>
-              <a
-                href={id === "inicio" ? "/" : `#${id}`}
-                onClick={(e) => ir(e, id)}
-                aria-current={activa === id ? "location" : undefined}
-                data-nav-activo={activa === id ? "" : undefined}
-                className={cn(
-                  "relative block rounded-full px-3.5 py-2 text-[15px] transition-[font-weight] xl:px-4",
-                  activa === id ? "font-bold" : "font-medium",
-                )}
-              >
-                {t.paradas[id]}
-              </a>
-            </li>
-          ))}
-        </ul>
+    <header className="fixed inset-x-0 top-0 z-40 px-4 py-4 md:px-[var(--margen)] md:py-[22px]">
+      <nav aria-label={t.nav.aria} className="grid grid-cols-[1fr_auto] items-center gap-3 lg:grid-cols-[1fr_auto_1fr]">
+      <Link
+        href="/"
+        onClick={(e) => ir(e, "inicio")}
+        aria-label={t.nav.inicio}
+        className="justify-self-start text-[14px] font-[800] tracking-[0.01em] uppercase [font-stretch:125%]"
+      >
+        Felipe Doval
+      </Link>
 
-        {/* celular y tablet */}
-        <div
-          data-vidrio
-          className="vidrio vidrio-pildora flex w-[min(92vw,420px)] items-center justify-between py-1 pr-1.5 pl-5 lg:hidden"
-        >
-          <span className="script translate-y-[2px] text-[30px] [text-shadow:none]" aria-live="off">
-            {t.paradas[activa]}
-          </span>
-          <button
-            type="button"
-            ref={boton}
-            onClick={() => setAbierta((v) => !v)}
-            aria-expanded={abierta}
-            aria-controls="hoja-paradas"
-            className="min-h-[44px] rounded-full px-4 text-[15px] font-semibold"
+        {enHome ? (
+          <ul data-vidrio className="vidrio vidrio-pildora hidden items-center gap-0.5 p-[5px] lg:flex">
+            {enNav.map((id) => (
+              <li key={id}>
+                <a
+                  href={href(id)}
+                  onClick={(e) => ir(e, id)}
+                  aria-current={activa === id ? "location" : undefined}
+                  className={cn(
+                    "block rounded-full px-[15px] py-[9px] text-[14px] font-medium transition-colors",
+                    activa === id ? "bg-[var(--activo)] text-crema" : "text-crema-2 hover:text-crema",
+                  )}
+                >
+                  {t.paradas[id]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Link href={volverA} data-vidrio className="boton vidrio vidrio-pildora boton-vidrio hidden min-h-[42px] text-[14px] lg:inline-flex">
+            <span aria-hidden>←</span> {t.nav.volver}
+          </Link>
+        )}
+
+        <div className="flex items-center gap-2 justify-self-end">
+          {!enHome && (
+            <Link href={volverA} data-vidrio className="boton vidrio vidrio-pildora boton-vidrio min-h-[44px] px-[18px] text-[14px] lg:hidden">
+              <span aria-hidden>←</span> {t.nav.volver}
+            </Link>
+          )}
+          {enHome && (
+            <button
+              type="button"
+              ref={boton}
+              onClick={() => setAbierta((v) => !v)}
+              aria-expanded={abierta}
+              aria-controls="hoja-secciones"
+              data-vidrio
+              className="boton vidrio vidrio-pildora boton-vidrio min-h-[44px] px-[18px] text-[14px] lg:hidden"
+            >
+              {abierta ? t.nav.cerrar : t.nav.menu}
+            </button>
+          )}
+          <a
+            href={href("contacto")}
+            onClick={(e) => ir(e, "contacto")}
+            className="boton boton-solido min-h-[44px] px-[18px] text-[14px]"
           >
-            {abierta ? t.nav.cerrar : t.nav.paradas}
-          </button>
+            {t.nav.hablemos}
+          </a>
         </div>
+
         {abierta && (
           <div
             ref={hoja}
-            id="hoja-paradas"
+            id="hoja-secciones"
             data-vidrio
-            className="vidrio mt-2 w-[min(92vw,420px)] p-2 lg:hidden"
+            className="vidrio absolute top-[68px] right-4 left-4 p-2 lg:hidden"
           >
             <ul>
               {paradas.map((id) => (
                 <li key={id}>
                   <a
-                    href={id === "inicio" ? "/" : `#${id}`}
+                    href={href(id)}
                     onClick={(e) => ir(e, id)}
                     aria-current={activa === id ? "location" : undefined}
                     className={cn(
                       "flex min-h-[48px] items-center rounded-2xl px-4 text-[17px]",
-                      activa === id ? "font-bold" : "font-medium",
+                      activa === id ? "bg-[var(--activo)] font-semibold" : "font-medium",
                     )}
                   >
                     {t.paradas[id]}

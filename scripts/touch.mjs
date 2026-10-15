@@ -1,9 +1,9 @@
 /**
  * EL CELULAR DE VERDAD — 393x659 (un iPhone con las barras del navegador; el
  * emulador de 390x844 inventaba 185px de alto, ver DECISIONS v5.6).
- *  - Sin scroll horizontal en ninguna parada.
- *  - La nav: la píldora muestra la parada actual, "Paradas" abre la lista, y
- *    tocar una parada lleva ahí y la cierra.
+ *  - Sin scroll horizontal en ninguna ruta.
+ *  - La nav: "Menú" abre la lista de secciones, y tocar una lleva ahí y la
+ *    cierra.
  *  - Todos los objetivos táctiles de la nav miden ≥ 44px de alto.
  *
  * Uso: npm run build && node scripts/touch.mjs
@@ -36,20 +36,20 @@ try {
 
   await p.goto(`${BASE}/`, { waitUntil: "load" });
   await p.waitForTimeout(1500);
-  const boton = p.locator("header button[aria-controls='hoja-paradas']");
-  check((await boton.count()) === 1, "nav: botón Paradas");
+  const boton = p.locator("header button[aria-controls='hoja-secciones']");
+  check((await boton.count()) === 1, "nav: botón Menú");
   const alto = (await boton.boundingBox())?.height ?? 0;
-  check(alto >= 44, `nav: Paradas mide ${Math.round(alto)}px de alto`);
+  check(alto >= 44, `nav: Menú mide ${Math.round(alto)}px de alto`);
   await boton.tap();
   await p.waitForTimeout(400);
-  const items = p.locator("#hoja-paradas a");
-  check((await items.count()) === 6, `nav: la lista tiene las 6 paradas (${await items.count()})`);
+  const items = p.locator("#hoja-secciones a");
+  check((await items.count()) === 7, `nav: la lista tiene las 7 secciones (${await items.count()})`);
   const altos = await items.evaluateAll((xs) => xs.map((x) => x.getBoundingClientRect().height));
-  check(altos.every((h) => h >= 44), `nav: cada parada ≥ 44px (${altos.map(Math.round).join(", ")})`);
+  check(altos.every((h) => h >= 44), `nav: cada sección ≥ 44px (${altos.map(Math.round).join(", ")})`);
   await items.filter({ hasText: "Contacto" }).tap();
   await p.waitForTimeout(2000);
   const r = await p.evaluate(() => ({
-    abierta: Boolean(document.getElementById("hoja-paradas")),
+    abierta: Boolean(document.getElementById("hoja-secciones")),
     top: document.getElementById("contacto")?.getBoundingClientRect().top ?? 9999,
   }));
   check(!r.abierta, "nav: la lista se cierra al elegir");

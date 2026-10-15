@@ -10,14 +10,11 @@
  *  1. Recorta el aire transparente (bbox del alfa).
  *  2. La lleva a ALTO px de alto (nunca agranda).
  *  3. Limpia el halo claro del recorte: erosiona el alfa ~2px (los recortes
- *     automáticos dejan un borde del fondo original que sobre verde se ve).
- *  4. Hornea el borde blanco de STICKER (troquel): dilata el alfa BORDE px y
- *     lo rellena de blanco. El borde NO baja por debajo del corte inferior: la
- *     base de la foto queda recta, para que la tape la pileta de líquido.
+ *     automáticos dejan un borde del fondo original que sobre el cobalto se ve).
+ *  4. Opcional (GUIA_BORDE > 0, era el estilo v6): hornea un borde blanco de
+ *     sticker. En la v7 va en 0: recorte limpio, y el pie de la foto lo funde
+ *     el shader (o la máscara CSS sin WebGL).
  *  5. WebP con alfa.
- *
- * La sombra dura jade NO va horneada: la pinta el shader (y el CSS cuando no
- * hay WebGL), así puede moverse con la luz del sitio.
  *
  * Para la sesión de fotos nueva: recortá cada foto (fondo transparente), poné
  * el PNG en contenido/guia/ con el nombre de la pose (ver content/guia.ts) y
@@ -28,9 +25,11 @@ import { readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, basename } from "node:path";
 
 const ENTRADA = "contenido/guia";
-const SALIDA = "public/assets/guia";
+const SALIDA = process.env.GUIA_SALIDA ?? "public/assets/guia";
 const ALTO = 1400;
-const BORDE = 22; // px del troquel blanco a ALTO px de alto
+// px del troquel blanco a ALTO px de alto. v7: 0 (recorte limpio, sin borde
+// de sticker: Feli va sobre el estudio cobalto como en una foto de estudio).
+const BORDE = Number(process.env.GUIA_BORDE ?? 0);
 const EROSION = 2; // px que se comen del borde para matar el halo
 
 mkdirSync(SALIDA, { recursive: true });
@@ -95,13 +94,20 @@ for (const archivo of readdirSync(ENTRADA).filter((f) => f.endsWith(".png"))) {
   // 3. erosión (mata el halo): desenfoque y umbral ALTO
   const limpio = await umbral(alfa, W, H, EROSION * 0.6, 235);
   // 4. troquel: desenfoque y umbral BAJO sobre el alfa limpio
-  const troquel = await umbral(limpio, W, H, BORDE * 0.55, 18);
+  const troquel = BORDE > 0 ? await umbral(limpio, W, H, BORDE * 0.55, 18) : null;
 
   const rgba = Buffer.alloc(W * H * 4);
   for (let i = 0; i < W * H; i++) {
     const a = Math.min(limpio[i], alfa[i]) / 255; // foto
-    const t = troquel[i] / 255; // blanco
     const r = foto[i * 4], g = foto[i * 4 + 1], b = foto[i * 4 + 2];
+    if (!troquel) {
+      rgba[i * 4] = r;
+      rgba[i * 4 + 1] = g;
+      rgba[i * 4 + 2] = b;
+      rgba[i * 4 + 3] = Math.round(255 * a);
+      continue;
+    }
+    const t = troquel[i] / 255; // blanco
     rgba[i * 4] = Math.round(r * a + 255 * (1 - a));
     rgba[i * 4 + 1] = Math.round(g * a + 255 * (1 - a));
     rgba[i * 4 + 2] = Math.round(b * a + 255 * (1 - a));
@@ -115,7 +121,7 @@ for (const archivo of readdirSync(ENTRADA).filter((f) => f.endsWith(".png"))) {
   console.log(`${pose}: ${W}x${H}`);
 }
 
-writeFileSync(
+if (!process.env.GUIA_SALIDA) writeFileSync(
   "content/poses.generado.json",
   JSON.stringify(medidas, null, 2) + "\n",
 );

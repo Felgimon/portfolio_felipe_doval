@@ -12,12 +12,12 @@ export function Placeholder({ label, className }: { label: string; className?: s
   return (
     <div
       className={cn(
-        "flex h-full w-full flex-col items-center justify-center gap-2 border-2 border-dashed border-linea bg-papel p-6 text-center",
+        "flex h-full w-full flex-col items-center justify-center gap-2 border border-dashed border-linea bg-noche p-6 text-center",
         className,
       )}
     >
-      <ImageOff className="size-5 text-tinta-2" strokeWidth={1.8} aria-hidden />
-      <p className="etiqueta text-tinta-2">
+      <ImageOff className="size-5 text-crema-2" strokeWidth={1.8} aria-hidden />
+      <p className="etiqueta">
         {t.falta}: {label}
       </p>
     </div>

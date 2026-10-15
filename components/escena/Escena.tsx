@@ -1,51 +1,79 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { gsap } from "@/lib/gsap";
-import { Motor, type Cuadro } from "@/lib/escena/motor";
-import { MAX_GOTAS, MAX_VIDRIOS } from "@/lib/escena/shader";
-import { leerGotas, type DefGota } from "@/lib/escena/gotas";
+import { MAX_PLACAS, Motor, type Cuadro, type PlacaGPU } from "@/lib/escena/motor";
+import { MAX_VIDRIOS } from "@/lib/escena/shader";
 import { isSoftwareRenderer } from "@/lib/gpu";
-import {
-  alCambiarRendimiento,
-  nivelRendimiento,
-  vigilarRendimiento,
-} from "@/lib/rendimiento";
+import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/lib/rendimiento";
 
 /**
- * LA ESCENA: el líquido de fondo, Feli adentro y el vidrio que lo dobla.
+ * LA ESCENA: el estudio cobalto, los títulos impresos en el fondo, Feli y la
+ * gota de vidrio que los refracta.
  *
- * Un solo <canvas> fijo detrás de todo el contenido, en todas las páginas. El
- * DOM declara qué hay que pintar con atributos, y la escena lo lee en cada
- * cuadro con getBoundingClientRect (son pocos elementos, y el scroll no ensucia
- * el layout, así que la lectura sale casi gratis y queda EXACTA aunque haya
- * transforms o fuentes que cargan tarde):
+ * Un solo <canvas> fijo detrás de todo el contenido. El DOM declara qué hay
+ * que pintar y la escena lo lee en cada cuadro con getBoundingClientRect (son
+ * pocos elementos y el scroll no ensucia el layout):
  *
- *   data-vidrio            un panel de vidrio (el shader pinta su refracción)
- *   data-gotas="fx fy r t [capa]; ..."   gotas ancladas a la caja del elemento
- *   data-gotas-m="..."     las mismas, para pantallas angostas (< 760px)
- *   data-feli              una foto del guía (data-pose-src = la foto)
- *   data-nav-activo        el link activo de la nav (una cápsula de líquido)
+ *   data-placa          un título "impreso": se dibuja una vez en una textura
+ *                       con su misma fuente; el texto del DOM queda transparente
+ *                       (data-placa-lista) pero sigue ahí para leer y copiar
+ *   data-feli           una foto de Feli (data-pose-src = la foto)
+ *   data-vidrio         un panel de vidrio ahumado
+ *   data-gota="fx fy r" en una sección: dónde se apoya la gota cuando esa
+ *                       sección está activa, en fracciones de SU título
+ *                       (data-placa) y r en fracción de la pantalla
+ *   data-gota-m         lo mismo para pantallas angostas (< 768px)
  *
- * Estado en <html data-escena>: "poster" (sin WebGL o equipo que no llega:
- * el CSS muestra el póster, las fotos como <img> y el vidrio sólido),
- * "cargando" y "lista" (el canvas ya dibujó).
+ * Estado en <html data-escena>: "poster" (sin WebGL 2 o equipo que no llega:
+ * el CSS muestra el estudio en gradiente, los títulos como texto, Feli como
+ * <img> y el vidrio sólido), "cargando" y "lista".
  *
- * Orden de cuadro: corre en el ticker de GSAP DESPUÉS de Lenis (que se agrega
- * con prioridad en SmoothScroll), así los rects que lee ya tienen el scroll de
- * este cuadro y el vidrio del shader no se despega del borde del DOM.
+ * Corre en el ticker de GSAP DESPUÉS de Lenis, así los rects que lee ya tienen
+ * el scroll de este cuadro y nada se despega del DOM.
  */
 
-type EstadoGota = { ox: number; oy: number; vx: number; vy: number };
-type Vidrio = { el: HTMLElement; radio: number; barrido: number; presion: number };
+type Placa = { el: HTMLElement; tex: WebGLTexture; firma: string };
+type Vidrio = { el: HTMLElement; radio: number };
+type Seccion = { el: HTMLElement; d: number[]; dm: number[]; placa: HTMLElement | null };
 
-const ease = (t: number) => t * t * (3 - 2 * t);
-const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+const leer = (s: string | undefined) => (s ?? "").trim().split(/\s+/).map(Number).filter((n) => !Number.isNaN(n));
 
-function interactivo(el: EventTarget | null): boolean {
-  return (
-    el instanceof Element &&
-    !!el.closest("a,button,input,textarea,select,label,[data-vidrio],[data-feli],[role=button]")
-  );
+/** El ancho del eje (font-stretch) en la palabra que entiende el canvas 2D. */
+function anchoCanvas(stretch: string): CanvasFontStretch {
+  const v = parseFloat(stretch);
+  if (v >= 124) return "expanded";
+  if (v >= 112) return "semi-expanded";
+  if (v <= 76) return "condensed";
+  return "normal";
+}
+
+/** Dibuja el título en un canvas 2D con la misma caja, fuente y línea base que el DOM. */
+function dibujarPlaca(el: HTMLElement, escala: number): HTMLCanvasElement {
+  const r = el.getBoundingClientRect();
+  const cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.ceil(r.width * escala));
+  cv.height = Math.max(1, Math.ceil(r.height * escala));
+  const x = cv.getContext("2d");
+  if (!x) return cv;
+  x.scale(escala, escala);
+  x.fillStyle = "#fff";
+  const cs = getComputedStyle(el);
+  x.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  x.fontStretch = anchoCanvas(cs.fontStretch);
+  x.letterSpacing = cs.letterSpacing === "normal" ? "0px" : cs.letterSpacing;
+  x.textBaseline = "alphabetic";
+  const mayus = cs.textTransform === "uppercase";
+  const lh = parseFloat(cs.lineHeight);
+  const lineas = el.children.length ? [...el.children] : [el];
+  for (const sp of lineas) {
+    const sr = sp.getBoundingClientRect();
+    const txt = mayus ? (sp.textContent ?? "").toUpperCase() : (sp.textContent ?? "");
+    const m = x.measureText(txt);
+    const alto = Number.isFinite(lh) ? lh : sr.height;
+    const base = sr.top - r.top + (alto - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2 + m.fontBoundingBoxAscent;
+    x.fillText(txt, sr.left - r.left, base);
+  }
+  return cv;
 }
 
 export function Escena() {
@@ -55,7 +83,6 @@ export function Escena() {
     const canvas = canvasRef.current;
     const html = document.documentElement;
     if (!canvas) return;
-
     const poster = () => {
       html.dataset.escena = "poster";
     };
@@ -80,6 +107,7 @@ export function Escena() {
     const apagar = () => {
       apagada = true;
       gsap.ticker.remove(cuadro);
+      for (const p of placas.values()) delete p.el.dataset.placaLista;
       poster();
     };
     const bajaNivel = alCambiarRendimiento((n) => {
@@ -93,7 +121,9 @@ export function Escena() {
     let vw = 0, vh = 0, escala = 1;
     let vidrios: Vidrio[] = [];
     let felis: HTMLElement[] = [];
-    let anclas: { el: HTMLElement; d: DefGota[]; dm: DefGota[] }[] = [];
+    let secciones: Seccion[] = [];
+    const placas = new Map<HTMLElement, Placa>();
+
     const medir = () => {
       const r = canvas.getBoundingClientRect();
       vw = r.width;
@@ -101,25 +131,42 @@ export function Escena() {
       const dpr = window.devicePixelRatio || 1;
       escala = nivel === "alto" ? Math.min(dpr, 1.5) : 0.6;
       motor.tamaño(Math.max(1, Math.round(vw * escala)), Math.max(1, Math.round(vh * escala)));
-      const previos = new Map(vidrios.map((v) => [v.el, v]));
-      vidrios = [...document.querySelectorAll<HTMLElement>("[data-vidrio]")].map(
-        (el) =>
-          previos.get(el) ?? {
-            el,
-            radio: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0,
-            barrido: 0,
-            presion: 0,
-          },
-      );
-      for (const v of vidrios) {
-        v.radio = parseFloat(getComputedStyle(v.el).borderTopLeftRadius) || 0;
-      }
-      felis = [...document.querySelectorAll<HTMLElement>("[data-feli]")];
-      anclas = [...document.querySelectorAll<HTMLElement>("[data-gotas]")].map((el) => ({
+      vidrios = [...document.querySelectorAll<HTMLElement>("[data-vidrio]")].map((el) => ({
         el,
-        d: leerGotas(el.dataset.gotas),
-        dm: leerGotas(el.dataset.gotasM ?? el.dataset.gotas),
+        radio: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0,
       }));
+      felis = [...document.querySelectorAll<HTMLElement>("[data-feli]")];
+      secciones = [...document.querySelectorAll<HTMLElement>("[data-gota]")].map((el) => ({
+        el,
+        d: leer(el.dataset.gota),
+        dm: leer(el.dataset.gotaM ?? el.dataset.gota),
+        placa: el.querySelector<HTMLElement>("[data-placa]"),
+      }));
+      // placas: se redibujan sólo si cambió la caja o la fuente
+      const vivas = new Set<HTMLElement>();
+      const texEscala = Math.min(window.devicePixelRatio || 1, 2);
+      for (const el of document.querySelectorAll<HTMLElement>("[data-placa]")) {
+        vivas.add(el);
+        const b = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        const firma = `${Math.round(b.width)}x${Math.round(b.height)}:${cs.fontSize}:${cs.fontStretch}:${el.textContent}:${texEscala}`;
+        let p = placas.get(el);
+        if (!p) {
+          p = { el, tex: motor.nuevaTextura(), firma: "" };
+          placas.set(el, p);
+        }
+        if (p.firma !== firma && b.width > 0) {
+          motor.subir(p.tex, dibujarPlaca(el, texEscala));
+          p.firma = firma;
+          el.dataset.placaLista = "";
+        }
+      }
+      for (const [el, p] of placas) {
+        if (!vivas.has(el)) {
+          motor.borrar(p.tex);
+          placas.delete(el);
+        }
+      }
       sucio = false;
     };
     const ensuciar = () => {
@@ -128,81 +175,33 @@ export function Escena() {
     };
     window.addEventListener("resize", ensuciar);
     motor.alCargar = ensuciar;
-    document.fonts?.ready.then(ensuciar);
+    // la fuente es display:block, pero igual: si las placas se dibujaron antes
+    // de que cargara, se vuelven a dibujar
+    document.fonts?.ready.then(() => {
+      for (const p of placas.values()) p.firma = "";
+      ensuciar();
+    });
     const mo = new MutationObserver(ensuciar);
     mo.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: [
-        "data-gotas",
-        "data-gotas-m",
-        "data-vidrio",
-        "data-feli",
-        "data-pose-src",
-        "data-hundir",
-        "data-nav-activo",
-        "class",
-      ],
+      attributeFilter: ["data-gota", "data-gota-m", "data-vidrio", "data-feli", "data-pose-src", "data-placa", "class"],
     });
 
-    // --- puntero: empuja el líquido, y en desktop se puede agarrar una gota ---
-    let px = -9999, py = -9999;
+    // --- puntero: en el inicio, la gota lo sigue de lejos ---
+    let px = -1, py = -1;
     let actividad = performance.now();
-    let agarrada: string | null = null;
-    let sobreGota: string | null = null;
-    let presionado: HTMLElement | null = null;
-    const posGotas = new Map<string, { x: number; y: number; r: number }>();
-
     const mover = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
       px = e.clientX;
       py = e.clientY;
       actividad = performance.now();
-      if (agarrada || !fino.matches || nivel !== "alto") return;
-      let encima: string | null = null;
-      if (!interactivo(e.target)) {
-        for (const [k, g] of posGotas) {
-          if (Math.hypot(px - g.x, py - g.y) < g.r * 0.9) {
-            encima = k;
-            break;
-          }
-        }
-      }
-      if (encima !== sobreGota) {
-        sobreGota = encima;
-        if (encima) html.dataset.sobreGota = "";
-        else delete html.dataset.sobreGota;
-      }
-    };
-    const bajar = (e: PointerEvent) => {
-      const v = e.target instanceof Element ? e.target.closest<HTMLElement>("[data-vidrio]") : null;
-      if (v) presionado = v;
-      if (sobreGota && e.pointerType === "mouse" && !interactivo(e.target)) {
-        agarrada = sobreGota;
-        html.dataset.arrastrando = "";
-        e.preventDefault();
-      }
-    };
-    const soltar = () => {
-      presionado = null;
-      if (agarrada) {
-        agarrada = null;
-        delete html.dataset.arrastrando;
-      }
-    };
-    const entrar = (e: PointerEvent) => {
-      const el = e.target instanceof Element ? e.target.closest<HTMLElement>("[data-vidrio]") : null;
-      const v = el && vidrios.find((x) => x.el === el);
-      if (v && v.barrido <= 0 && !rm.matches) v.barrido = 0.001;
     };
     const salir = () => {
-      px = py = -9999;
+      px = py = -1;
     };
     window.addEventListener("pointermove", mover, { passive: true });
-    window.addEventListener("pointerdown", bajar);
-    window.addEventListener("pointerup", soltar);
-    window.addEventListener("pointercancel", soltar);
-    document.addEventListener("pointerover", entrar);
     document.documentElement.addEventListener("pointerleave", salir);
 
     const perdido = (e: Event) => {
@@ -212,14 +211,9 @@ export function Escena() {
     canvas.addEventListener("webglcontextlost", perdido);
 
     // --- el cuadro ---
-    const estados = new Map<string, EstadoGota>();
-    const hundEgg = new WeakMap<HTMLElement, number>();
-    const gotas = new Float32Array(MAX_GOTAS * 4);
     const vr = new Float32Array(MAX_VIDRIOS * 4);
     const vx = new Float32Array(MAX_VIDRIOS * 4);
-    const fe = new Float32Array(8);
-    const hu = new Float32Array(2);
-    let navX: number | null = null, navW = 0;
+    const gp = { x: 0, y: 0, r: 0, lista: false };
     const t0 = performance.now();
     let ultimo = t0;
     let primero = true;
@@ -233,178 +227,88 @@ export function Escena() {
       if (motor.perdido()) return apagar();
       if (sucio) medir();
       const quieto = rm.matches;
-      // En reposo (4s sin scroll ni puntero) se dibuja a la mitad de cuadros.
-      // Con movimiento reducido nada flota solo: si no pasó nada en 1,5s
-      // (lo que tarda en asentarse la cápsula de la nav), ni se redibuja.
+      // En reposo (4s sin scroll ni puntero) se dibuja a la mitad de cuadros;
+      // con movimiento reducido, si no pasó nada en 1s, ni se redibuja.
       const ocioso = ahora - actividad > 4000;
       par = !par;
       if (!primero && ocioso && par) return;
-      if (!primero && quieto && ahora - actividad > 1500) return;
+      if (!primero && quieto && ahora - actividad > 1000) return;
       const t = quieto ? 0 : (ahora - t0) / 1000;
-      const u = Math.max(Math.min(vw, vh * 1.4) / 1000, 0.6);
-      const angosto = vw < 760;
-      const sa = 1 - Math.exp(-dt / 260);
-      let n = 0;
-      posGotas.clear();
+      const angosto = vw < 768;
 
-      const agregar = (x: number, y: number, r: number, tono: number, capa: number) => {
-        if (n >= MAX_GOTAS) return;
-        gotas[n * 4] = x;
-        gotas[n * 4 + 1] = y;
-        gotas[n * 4 + 2] = r;
-        gotas[n * 4 + 3] = tono + 2 * capa;
-        n++;
-      };
+      // 1. Placas: las 3 más visibles
+      const placasGPU: PlacaGPU[] = [];
+      for (const p of placas.values()) {
+        if (placasGPU.length >= MAX_PLACAS) break;
+        const r = p.el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh || r.width < 1) continue;
+        placasGPU.push({ rect: [r.left, r.top, r.width, r.height], tex: p.tex });
+      }
 
-      // 1. Feli (hasta 2: los más visibles) y sus piletas
+      // 2. Feli: las 2 fotos más grandes en pantalla
       const visibles = felis
         .map((el) => ({ el, r: el.getBoundingClientRect() }))
-        .filter(({ r }) => r.bottom > -100 && r.top < vh + 100 && r.width > 0)
+        .filter(({ r }) => r.bottom > 0 && r.top < vh && r.width > 0)
         .sort((a, b) => b.r.height - a.r.height)
         .slice(0, 2);
-      fe.fill(0);
-      hu.fill(0);
-      const texturas: [string | null, string | null] = [null, null];
-      visibles.forEach(({ el, r }, i) => {
-        const src = el.dataset.poseSrc ?? null;
-        const lista = src ? motor.textura(src) : false;
-        texturas[i] = src;
-        // sube del líquido a medida que entra en pantalla
-        let hundido = 1 - ease(clamp((vh * 0.95 - r.top) / (r.height * 0.5), 0, 1));
-        if (el.dataset.intro !== undefined && !quieto) {
-          hundido = Math.max(hundido, 1 - ease(clamp((ahora - t0 - 250) / 1100, 0, 1)));
-        }
-        const egg = hundEgg.get(el) ?? 0;
-        const objetivo = el.dataset.hundir !== undefined ? 1 : 0;
-        const e2 = egg + (objetivo - egg) * (1 - Math.exp(-dt / (objetivo ? 160 : 260)));
-        hundEgg.set(el, e2);
-        hundido = Math.max(hundido, e2);
-        if (lista) {
-          fe.set([r.left, r.top, r.width, r.height], i * 4);
-          hu[i] = hundido * r.height * 0.82;
-          if (el.dataset.pintado === undefined) el.dataset.pintado = "";
-        }
-        // la pileta: tapa el corte recto de la foto
-        const pr = (angosto ? 46 : 64) * Math.max(u, 0.9);
-        const xs = [0.06, 0.38, 0.72, 1.0];
-        xs.forEach((fx, k) => {
-          const ola = quieto ? 0 : Math.sin(t * 0.6 + k * 2 + i) * 7 * u;
-          agregar(
-            r.left + r.width * fx,
-            r.bottom - (k % 2 ? 14 : 2) * u + ola,
-            pr * (k % 2 ? 1.18 : 0.98) * (r.width < 260 ? 0.8 : 1),
-            (k + i) % 2,
-            1,
-          );
-        });
-      });
+      const feli: Cuadro["feli"] = [];
+      for (const { el, r } of visibles) {
+        const src = el.dataset.poseSrc;
+        if (!src) continue;
+        if (motor.foto(src) && el.dataset.pintado === undefined) el.dataset.pintado = "";
+        feli.push({ rect: [r.left, r.top, r.width, r.height], src });
+      }
 
-      // 2. Gotas ancladas al contenido
-      anclas.forEach(({ el, d, dm }, ai) => {
-        const defs = angosto ? dm : d;
-        if (!defs.length) return;
-        const r = el.getBoundingClientRect();
-        if (r.bottom < -400 || r.top > vh + 400 || r.width === 0) return;
-        defs.forEach((g, gi) => {
-          const clave = `${ai}:${gi}`;
-          const rad = g.r * u;
-          let x = r.left + g.fx * r.width;
-          let y = r.top + g.fy * r.height;
-          if (y + rad < -40 || y - rad > vh + 40) return;
-          const ph = ai * 1.7 + gi * 2.3;
-          if (!quieto) {
-            x += Math.sin(t * 0.21 + ph) * 12 * u;
-            y += Math.cos(t * 0.17 + ph * 1.3) * 16 * u;
-          }
-          const radio = rad * (quieto ? 1 : 1 + 0.035 * Math.sin(t * 0.5 + ph));
-          let est = estados.get(clave);
-          if (!est) {
-            est = { ox: 0, oy: 0, vx: 0, vy: 0 };
-            estados.set(clave, est);
-          }
-          // objetivo del desplazamiento: arrastre o empuje del puntero
-          let tx = 0, ty = 0;
-          if (agarrada === clave) {
-            tx = px - x;
-            ty = py - y;
-          } else {
-            const dx = x + est.ox - px, dy = y + est.oy - py;
-            const dd = Math.hypot(dx, dy), alcance = radio + 120;
-            if (dd < alcance && dd > 1) {
-              const f = (1 - dd / alcance) * 90;
-              tx = (dx / dd) * f;
-              ty = (dy / dd) * f;
-            }
-          }
-          const k = agarrada === clave ? 1 - Math.exp(-dt / 70) : sa;
-          est.ox += (tx - est.ox) * k;
-          est.oy += (ty - est.oy) * k;
-          const gx = x + est.ox, gy = y + est.oy;
-          if (agarrada === clave) {
-            // lo que queda en el lugar: con el cuello que arma el smin se ve
-            // cómo se estira y, si la llevás lejos, cómo se parte
-            agregar(x, y, radio * 0.55, g.tono, g.capa);
-            agregar(gx, gy, radio * 0.82, g.tono, g.capa);
-          } else {
-            agregar(gx, gy, radio, g.tono, g.capa);
-          }
-          posGotas.set(clave, { x: gx, y: gy, r: radio });
-        });
-      });
+      // 3. La gota: va a la sección activa y se apoya en una letra de su título
+      let activa: Seccion | undefined = secciones[0];
+      for (const s of secciones) if (s.el.getBoundingClientRect().top < vh * 0.5) activa = s;
+      if (activa?.placa) {
+        const [fx = 0.5, fy = 0.5, fr = 0.09] = angosto ? activa.dm : activa.d;
+        const pa = activa.placa.getBoundingClientRect();
+        let tx = pa.left + pa.width * fx;
+        let ty = pa.top + pa.height * fy;
+        const tr = fr * Math.min(vw, vh, 960) * (angosto ? 1.25 : 1);
+        if (activa === secciones[0] && px >= 0 && fino.matches && !quieto) {
+          tx += (px - tx) * 0.18;
+          ty += (py - ty) * 0.12;
+        }
+        if (!gp.lista || quieto) {
+          gp.x = tx;
+          gp.y = ty;
+          gp.r = tr;
+          gp.lista = true;
+        } else {
+          const k = 1 - Math.exp(-dt / 260);
+          gp.x += (tx - gp.x) * k;
+          gp.y += (ty - gp.y) * k;
+          gp.r += (tr - gp.r) * k;
+        }
+      }
 
-      // 3. Vidrio
+      // 4. Vidrio
       let nv = 0;
       for (const v of vidrios) {
         if (nv >= MAX_VIDRIOS) break;
         const r = v.el.getBoundingClientRect();
-        if (r.width < 2 || r.bottom < -40 || r.top > vh + 40) continue;
-        if (v.el.dataset.vidrio === "apagado") continue;
-        v.presion += ((presionado === v.el ? 1 : 0) - v.presion) * 0.25;
-        if (v.barrido > 0) {
-          v.barrido += dt / 650;
-          if (v.barrido > 1) v.barrido = 0;
-        }
-        const s = 1 - 0.035 * v.presion;
-        const w = r.width * s, h = r.height * s;
-        vr.set([r.left + (r.width - w) / 2, r.top + (r.height - h) / 2, w, h], nv * 4);
-        vx.set([Math.min(v.radio, Math.min(w, h) / 2), v.presion, v.barrido, 0], nv * 4);
+        if (r.width < 2 || r.bottom < -20 || r.top > vh + 20) continue;
+        vr.set([r.left, r.top, r.width, r.height], nv * 4);
+        vx.set([Math.min(v.radio, Math.min(r.width, r.height) / 2), 0, 0, 0], nv * 4);
         nv++;
       }
 
-      // 4. La cápsula de líquido bajo el link activo de la nav
-      let nav: [number, number, number, number] = [0, 0, 0, 0];
-      const activo = document.querySelector<HTMLElement>("[data-nav-activo]");
-      if (activo) {
-        const r = activo.getBoundingClientRect();
-        if (r.width > 0) {
-          const cx = r.left + r.width / 2;
-          if (navX === null) navX = cx;
-          const na = quieto ? 1 : 1 - Math.exp(-dt / 140);
-          navX += (cx - navX) * na;
-          if (!navW) navW = r.width;
-          navW += (r.width - navW) * na;
-          nav = [navX, r.top + r.height / 2, Math.max(0, navW / 2 - 12), Math.min(17, r.height * 0.5)];
-        }
-      }
-
-      const c: Cuadro = {
+      motor.dibujar({
         vw,
         vh,
         escala,
         tiempo: t,
-        u,
         calidad: nivel === "alto" ? 1 : 0,
-        gotas,
-        nGotas: n,
-        nav,
+        gota: [gp.x, gp.y, gp.lista ? gp.r : 0],
+        placas: placasGPU,
+        feli,
         vidrios: vr,
         vidriosX: vx,
         nVidrios: nv,
-        feli: fe,
-        hundido: hu,
-        texturas,
-      };
-      motor.dibujar(c);
+      });
       if (primero) {
         primero = false;
         html.dataset.escena = "lista";
@@ -425,12 +329,9 @@ export function Escena() {
       window.removeEventListener("resize", ensuciar);
       window.removeEventListener("scroll", scroll);
       window.removeEventListener("pointermove", mover);
-      window.removeEventListener("pointerdown", bajar);
-      window.removeEventListener("pointerup", soltar);
-      window.removeEventListener("pointercancel", soltar);
-      document.removeEventListener("pointerover", entrar);
       document.documentElement.removeEventListener("pointerleave", salir);
       canvas.removeEventListener("webglcontextlost", perdido);
+      for (const p of placas.values()) delete p.el.dataset.placaLista;
       motor.liberar();
       delete html.dataset.escena;
     };

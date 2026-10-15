@@ -8,7 +8,7 @@
  */
 import { levantar, navegador } from "./lib/servidor.mjs";
 
-const PARADAS = ["inicio", "perfil", "enfoque", "trabajo", "recorrido", "contacto"];
+const PARADAS = ["inicio", "perfil", "enfoque", "trabajo", "proyectos", "recorrido", "contacto"];
 
 const { base, cerrar } = await levantar(Number(process.env.PERF_PORT ?? 3265));
 try {

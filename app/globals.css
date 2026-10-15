@@ -1,48 +1,42 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   v6 «Visita guiada» — sistema visual
+   v7 «Vidrio y cobalto» — sistema visual
    ----------------------------------------------------------------------------
-   Base clara; el verde es MATERIAL (el líquido), nunca acento neón. Todo en HEX
-   sólido: nada de rgba() para texto o marca (regla de Felipe: el alfa delata
-   IA). Ningún verde aguanta como texto sobre blanco (lima 1,83:1, jade 2,31:1):
-   el texto es tinta verde botella. Una sola luz para todo el sitio, de arriba a
-   la izquierda: por eso todas las sombras duras caen abajo a la derecha.
+   Un solo material: vidrio claro que refracta lo que tiene detrás. Una sola
+   luz: un estudio cobalto que cae a azul noche. Un solo acento: ámbar, y sólo
+   para el estado "ahora". Una sola fuente: Doval Grotesk (lib/fonts.ts).
+   Todo en HEX sólido: nada de rgba() para texto o marca (regla de Felipe).
+   Contrastes sobre Noche: crema 16,9:1 · crema-2 12,0:1 · ámbar 11,4:1.
+   Sobre el cobalto más claro del estudio (#1736BD): crema 7,9:1 · crema-2 5,6:1.
    ========================================================================== */
 
 :root {
-  --papel: #ffffff;
-  --tinta: #0f3d2e; /* 12,16:1 sobre papel · 6,65 sobre lima · 5,27 sobre jade */
-  --tinta-2: #2e5a49; /* 7,85:1 sobre papel. Nunca sobre vidrio */
-  --lima: #78d561;
-  --jade: #28c18c;
-  --verde-texto: #1c8661; /* 4,53:1: el único verde que aguanta como texto */
-  --lima-hover: #8bdd77;
-  --linea: #c9dccf; /* líneas finas sobre papel */
-  --foco: #0f3d2e;
+  --noche: #071447;
+  --cobalto: #1736bd;
+  --crema: #f2eee6;
+  --crema-2: #c3ccf2;
+  --ambar: #ffb861;
+  --linea: #3a57c9;
+  --canto: #4f69d6; /* el canto de 1px del vidrio */
+  --vidrio-solido: #0f237f; /* el vidrio sin escena (o con contraste alto) */
+  --activo: #24389a;
 
-  --radio-papel: 22px;
-  --radio-vidrio: 26px;
-  --ancho: 1240px;
-  --margen: clamp(16px, 5vw, 96px);
-
-  --sombra-dura: 8px 8px 0 var(--jade);
-  --sombra-dura-hover: 12px 12px 0 var(--jade);
+  --ancho: 1296px;
+  --margen: clamp(16px, 5vw, 72px);
+  --radio-vidrio: 22px;
 
   --ease-salida: cubic-bezier(0.3, 0.7, 0.4, 1);
 }
 
 @theme inline {
-  --color-papel: var(--papel);
-  --color-tinta: var(--tinta);
-  --color-tinta-2: var(--tinta-2);
-  --color-lima: var(--lima);
-  --color-jade: var(--jade);
-  --color-verde-texto: var(--verde-texto);
+  --color-noche: var(--noche);
+  --color-cobalto: var(--cobalto);
+  --color-crema: var(--crema);
+  --color-crema-2: var(--crema-2);
+  --color-ambar: var(--ambar);
   --color-linea: var(--linea);
-  --font-sans: var(--font-bricolage), system-ui, sans-serif;
-  --font-mono: var(--font-spline), ui-monospace, monospace;
-  --font-script: var(--font-doval-script), cursive;
+  --font-sans: var(--font-doval), system-ui, sans-serif;
 }
 
 /* ============================================================================
@@ -52,32 +46,34 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: auto; /* el scroll suave lo maneja Lenis */
-  background: var(--papel);
+  background: var(--noche);
 }
 
 body {
   overflow-x: clip;
-  background: var(--papel);
-  color: var(--tinta);
-  font-family: var(--font-bricolage), system-ui, sans-serif;
+  background: var(--noche);
+  color: var(--crema);
+  font-family: var(--font-doval), system-ui, sans-serif;
+  font-weight: 400;
+  font-stretch: 100%;
   font-feature-settings: "kern", "liga";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: var(--lima);
-  color: var(--tinta);
+  background: var(--crema);
+  color: var(--noche);
 }
 
 :focus-visible {
-  outline: 3px solid var(--foco);
+  outline: 2px solid var(--crema);
   outline-offset: 3px;
   border-radius: 6px;
 }
 
 /* ============================================================================
-   ESCENA (canvas del líquido) y póster de respaldo
+   ESCENA (canvas WebGL) y respaldo
    ========================================================================== */
 
 .escena {
@@ -98,22 +94,16 @@ html[data-escena="poster"] .escena {
   display: none;
 }
 
-/* Sin WebGL (o equipo que no llega): un póster del líquido renderizado. */
+/* Sin WebGL 2 (o equipo que no llega): la misma luz de estudio, en CSS. Los
+   títulos, Feli y el vidrio pasan a ser DOM común (ver más abajo). */
 .escena-poster {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  display: none;
-  background: var(--papel) url("/assets/escena/poster.webp") center / cover no-repeat;
-}
-html[data-escena="poster"] .escena-poster {
-  display: block;
-}
-@media (max-width: 759px) {
-  .escena-poster {
-    background-image: url("/assets/escena/poster-movil.webp");
-  }
+  background:
+    radial-gradient(ellipse 62% 56% at 60% 40%, #1a3cc6 0%, #12298f 45%, var(--noche) 92%),
+    var(--noche);
 }
 
 /* Todo el contenido va por encima del canvas. */
@@ -122,223 +112,7 @@ html[data-escena="poster"] .escena-poster {
   z-index: 1;
 }
 
-/* Agarrar una gota (desktop) */
-html[data-sobre-gota] body {
-  cursor: grab;
-}
-html[data-arrastrando],
-html[data-arrastrando] * {
-  cursor: grabbing !important;
-  user-select: none;
-}
-
-/* ============================================================================
-   TIPOGRAFÍA
-   ========================================================================== */
-
 @layer components {
-  /* La script de cartel: 1 a 3 palabras, nunca tracking, nunca en botones ni
-     párrafos. Sombra DURA lima en la dirección de la luz. Cero glow. */
-  .script {
-    font-family: var(--font-doval-script), cursive;
-    font-weight: 400;
-    font-feature-settings: "calt" 1, "liga" 1, "kern" 1;
-    font-variant-ligatures: contextual;
-    letter-spacing: 0;
-    line-height: 0.86;
-    color: var(--tinta);
-    text-shadow: 0.045em 0.04em 0 var(--lima);
-  }
-  .script-jade {
-    text-shadow: 0.045em 0.04em 0 var(--jade);
-  }
-
-  .nombre-hero {
-    font-size: clamp(76px, 10vw, 156px);
-    line-height: 0.82;
-  }
-
-  .titulo-parada {
-    font-size: clamp(72px, 8.4vw, 128px);
-    padding-bottom: 0.08em;
-  }
-
-  .rol {
-    font-weight: 650;
-    font-size: clamp(17px, 1.7vw, 24px);
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-  }
-
-  .lead {
-    font-size: clamp(15px, 1.35vw, 19px);
-    line-height: 1.5;
-    color: var(--tinta-2);
-  }
-
-  .cuerpo {
-    font-size: 16.5px;
-    line-height: 1.55;
-    color: var(--tinta-2);
-  }
-
-  /* Etiquetas en mono, siempre en minúscula de oración (nada de MAYÚSCULAS
-     ESPACIADAS de plantilla). */
-  .etiqueta {
-    font-family: var(--font-spline), ui-monospace, monospace;
-    font-size: 12.5px;
-    line-height: 1.4;
-    letter-spacing: 0;
-    color: var(--tinta);
-  }
-
-  .link {
-    color: var(--tinta);
-    font-weight: 600;
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 5px;
-    text-decoration-color: var(--tinta);
-    transition: color 0.2s ease, text-decoration-color 0.2s ease;
-  }
-  .link:hover {
-    color: var(--verde-texto);
-    text-decoration-color: var(--lima);
-  }
-
-  /* ==========================================================================
-     VIDRIO
-     Con la escena lista, el panel es TRANSPARENTE: el shader pinta debajo la
-     refracción del líquido, la escarcha y el canto. Sin escena (o antes del
-     primer cuadro), vidrio sólido: papel con borde tinta.
-     ======================================================================== */
-  .vidrio {
-    border-radius: var(--radio-vidrio);
-    background: var(--papel);
-    border: 1.5px solid var(--tinta);
-    transition: transform 0.18s var(--ease-salida);
-  }
-  html[data-escena="lista"] .vidrio {
-    background: transparent;
-    border-color: transparent;
-  }
-  .vidrio-pildora {
-    border-radius: 9999px;
-  }
-  .vidrio:active {
-    transform: scale(0.965);
-  }
-
-  /* ==========================================================================
-     PAPEL (tarjetas): sólido, borde tinta y sombra dura jade. Un vidrio sobre
-     papel opaco no tendría nada que refractar, por eso las tarjetas no son
-     vidrio.
-     ======================================================================== */
-  .papel {
-    background: var(--papel);
-    border: 1.5px solid var(--tinta);
-    border-radius: var(--radio-papel);
-    box-shadow: var(--sombra-dura);
-    transition: box-shadow 0.25s var(--ease-salida), transform 0.25s var(--ease-salida);
-  }
-  a.papel:hover,
-  .papel-vivo:hover {
-    box-shadow: var(--sombra-dura-hover);
-    transform: translate(-2px, -2px);
-  }
-
-  /* Botón sólido lima, texto tinta (el blanco sobre verde no pasa contraste). */
-  .boton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    min-height: 48px;
-    padding: 0 1.4rem;
-    border-radius: 9999px;
-    background: var(--lima);
-    color: var(--tinta);
-    border: 1.5px solid var(--tinta);
-    box-shadow: 4px 4px 0 var(--tinta);
-    font-weight: 650;
-    font-size: 16px;
-    transition: background 0.2s ease, transform 0.18s var(--ease-salida), box-shadow 0.18s var(--ease-salida);
-  }
-  .boton:hover {
-    background: var(--lima-hover);
-  }
-  .boton:active {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--tinta);
-  }
-
-  .boton-vidrio {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 52px;
-    padding: 0 1.5rem;
-    font-weight: 650;
-    font-size: 16.5px;
-    color: var(--tinta);
-  }
-
-  .etiqueta-estado {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    border-radius: 8px;
-    border: 1.5px solid var(--tinta);
-    background: var(--lima);
-    font-family: var(--font-spline), ui-monospace, monospace;
-    font-size: 12.5px;
-    color: var(--tinta);
-  }
-
-  /* ==========================================================================
-     FELI (el guía)
-     El <img> es el respaldo: con la escena lista, Feli se pinta DENTRO del
-     shader (así el líquido puede pasarle por delante y el vidrio lo dobla) y
-     el <img> se oculta en cuanto su textura está en la GPU.
-     ======================================================================== */
-  .feli {
-    position: relative;
-    display: block;
-    width: 100%;
-    padding: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .feli img {
-    display: block;
-    width: 100%;
-    height: auto;
-    filter: drop-shadow(11px 11px 0 var(--jade));
-    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
-  }
-  html[data-escena="lista"] .feli[data-pintado] img {
-    visibility: hidden;
-  }
-
-  .cartel-vuelvo {
-    position: absolute;
-    left: 50%;
-    bottom: 22%;
-    translate: -50% 0;
-    rotate: -6deg;
-    padding: 0.2em 0.5em 0.3em;
-    background: var(--lima);
-    border: 1.5px solid var(--tinta);
-    border-radius: 14px;
-    box-shadow: 5px 5px 0 var(--tinta);
-    font-size: clamp(28px, 3vw, 40px);
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
   .contenedor {
     width: 100%;
     max-width: calc(var(--ancho) + var(--margen) * 2);
@@ -346,16 +120,231 @@ html[data-arrastrando] * {
     padding-inline: var(--margen);
   }
 
-  /* Una parada de la visita */
+  /* Una sección de la home */
   .parada {
     position: relative;
-    padding-block: clamp(72px, 12vh, 140px);
-    scroll-margin-top: 24px;
+    padding-block: 150px 120px;
+    scroll-margin-top: 0;
+  }
+  @media (max-width: 767px) {
+    .parada {
+      padding-block: 80px 72px;
+    }
+  }
+
+  /* ==========================================================================
+     TIPOGRAFÍA (todo es Doval Grotesk; cambia el peso y el ancho)
+     ======================================================================== */
+
+  /* PLACA: un título impreso en el fondo. Con la escena lista el texto del DOM
+     es transparente (sigue ahí para leer, seleccionar y para los lectores de
+     pantalla) y lo pinta el shader, así la gota lo puede refractar. Cada línea
+     es un span de una sola línea. */
+  .placa {
+    width: fit-content;
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
+    color: var(--crema);
+  }
+  .placa > span {
+    display: block;
+    white-space: nowrap;
+  }
+  html[data-escena="lista"] .placa[data-placa-lista] {
+    color: transparent;
+  }
+
+  .nombre-hero {
+    font-size: min(11.6vw, 21vh);
+    line-height: 0.9;
+  }
+  @media (max-width: 767px) {
+    .nombre-hero {
+      font-size: 18.6vw;
+    }
+  }
+
+  .titulo-seccion {
+    font-size: clamp(56px, 9.4vw, 150px);
+    line-height: 0.88;
+    font-weight: 850;
+  }
+  @media (max-width: 767px) {
+    /* en el celular el título angosta el ANCHO, no el tamaño: así "Recorrido"
+       entra entero sin achicarse */
+    .titulo-seccion {
+      font-size: 14.4vw;
+      font-stretch: 100%;
+    }
+  }
+
+  /* el nombre de un caso puede ser largo ("FutbolVision"): más chico */
+  .titulo-caso {
+    font-size: clamp(48px, 7vw, 112px);
+    line-height: 0.9;
+    font-weight: 850;
+  }
+  @media (max-width: 767px) {
+    .titulo-caso {
+      font-size: 9.6vw;
+      font-stretch: 100%;
+    }
+  }
+
+  .etiqueta {
+    font-size: 12.5px;
+    line-height: 1.4;
+    font-weight: 560;
+    font-stretch: 112%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--crema-2);
+  }
+
+  .lead {
+    font-size: 21px;
+    line-height: 1.4;
+    font-weight: 430;
+  }
+  @media (max-width: 767px) {
+    .lead {
+      font-size: 18px;
+    }
+  }
+
+  .cuerpo {
+    font-size: 17px;
+    line-height: 1.62;
+    color: var(--crema-2);
+  }
+
+  .h3 {
+    font-weight: 700;
+    font-stretch: 112%;
+    letter-spacing: -0.01em;
+  }
+
+  .link {
+    color: var(--crema);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+    text-decoration-color: var(--canto);
+    transition: text-decoration-color 0.2s ease;
+  }
+  .link:hover {
+    text-decoration-color: var(--crema);
+  }
+
+  .punto {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ambar);
+    margin-right: 8px;
+    vertical-align: 1px;
+  }
+
+  /* ==========================================================================
+     VIDRIO AHUMADO
+     Con la escena lista el panel es transparente: el shader pinta debajo la
+     refracción, el ahumado hacia Noche y el canto con la luz de arriba a la
+     izquierda. Sin escena, vidrio sólido.
+     ======================================================================== */
+  .vidrio {
+    border-radius: var(--radio-vidrio);
+    background: var(--vidrio-solido);
+    box-shadow: inset 0 0 0 1px var(--canto);
+  }
+  html[data-escena="lista"] .vidrio {
+    background: transparent;
+  }
+  .vidrio-pildora {
+    border-radius: 9999px;
+  }
+
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 9999px;
+    font-weight: 620;
+    font-size: 15px;
+    white-space: nowrap;
+    transition: transform 0.18s var(--ease-salida), background-color 0.2s ease;
+  }
+  .boton:active {
+    transform: scale(0.97);
+  }
+  .boton-solido {
+    background: var(--crema);
+    color: var(--noche);
+  }
+  .boton-solido:hover {
+    background: #ffffff;
+  }
+  .boton-vidrio {
+    color: var(--crema);
+  }
+
+  /* El marco de una captura de producto */
+  .marco {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 0 0 1px var(--canto), 0 40px 80px -30px #020829;
+    background: var(--noche);
+  }
+
+  /* ==========================================================================
+     FELI
+     El <img> es el respaldo: con la escena lista, Feli se pinta DENTRO del
+     shader (así la gota lo refracta cuando pasa por encima) y el <img> se oculta
+     en cuanto su textura está en la GPU. El corte de abajo se funde.
+     ======================================================================== */
+  .feli {
+    position: relative;
+    display: block;
+    pointer-events: none;
+  }
+  .feli img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: bottom;
+    -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
+  }
+  html[data-escena="lista"] .feli[data-pintado] img {
+    visibility: hidden;
+  }
+
+  /* Listas de proyectos e hitos */
+  .fila {
+    display: grid;
+    grid-template-columns: 3fr 5fr 3fr 40px;
+    gap: 20px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--linea);
+    align-items: baseline;
+  }
+  @media (max-width: 767px) {
+    .fila {
+      grid-template-columns: 1fr 24px;
+    }
   }
 }
 
-/* Movimiento reducido: se apaga lo gratuito (las transiciones de la UI). El
-   líquido y Feli siguen al scroll igual: la navegación nunca se congela. */
+/* Movimiento reducido: se apaga lo gratuito (transiciones de la UI). La gota
+   igual acompaña el scroll, pero sin ondular. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -367,10 +356,9 @@ html[data-arrastrando] * {
   }
 }
 
-/* Contraste alto / colores forzados: sin vidrio transparente. */
+/* Contraste alto / colores forzados / menos transparencia: vidrio sólido. */
 @media (prefers-contrast: more), (forced-colors: active), (prefers-reduced-transparency: reduce) {
   html[data-escena="lista"] .vidrio {
-    background: var(--papel);
-    border-color: var(--tinta);
+    background: var(--vidrio-solido);
   }
 }

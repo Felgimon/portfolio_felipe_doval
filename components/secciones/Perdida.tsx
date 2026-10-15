@@ -2,31 +2,28 @@
 import Link from "next/link";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Feli } from "@/components/guia/Feli";
-import { Globo } from "@/components/guia/Globo";
-import { guion } from "@/content/guia";
 
-/** La parada que no existe (404). */
+/** La página que no existe (404): un título directo, Feli y una salida. */
 export function Perdida() {
-  const { t, idioma } = useIdioma();
+  const { t } = useIdioma();
   return (
     <main
       id="contenido"
       className="capa flex min-h-dvh items-end pt-28"
-      data-gotas="0.5 1.0 220 0; 0.18 0.92 120 1; 0.84 0.9 140 1"
+      data-gota="0.78 0.5 0.11"
+      data-gota-m="0.8 0.5 0.1"
     >
-      <div className="contenedor grid items-end gap-8 lg:grid-cols-12">
-        <div className="pb-16 lg:col-span-7">
-          <h1 className="script titulo-parada outline-none">{t.perdida.titulo}</h1>
-          <Link href="/" data-vidrio data-gotas="0.9 0.5 56 1" className="vidrio vidrio-pildora boton-vidrio mt-8">
-            {t.perdida.volver}
+      <div className="contenedor grid items-end gap-8 md:grid-cols-12">
+        <div className="pb-16 md:col-span-8">
+          <p className="etiqueta">404</p>
+          <h1 data-placa className="placa titulo-seccion mt-4 outline-none">
+            <span>{t.perdida.titulo}</span>
+          </h1>
+          <Link href="/" className="boton boton-solido mt-10">
+            <span aria-hidden>←</span> {t.perdida.volver}
           </Link>
         </div>
-        <div className="flex items-end justify-end gap-4 lg:col-span-5">
-          <Globo parada="inicio" className="mb-[30%]" gotas="0.2 0.6 70 0">
-            {guion[idioma].perdida}
-          </Globo>
-          <Feli pose="encoge" parada="inicio" intro className="w-[40%] max-w-[220px] shrink-0" />
-        </div>
+        <Feli pose="perdida" prioridad className="ml-auto w-[34%] md:col-span-3 md:col-start-10 md:w-[60%]" />
       </div>
     </main>
   );

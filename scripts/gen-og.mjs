@@ -1,6 +1,6 @@
 /**
  * Genera la imagen para compartir (Open Graph / Twitter): una CAPTURA REAL del
- * inicio, con el líquido, el vidrio y Feli. Satori (next/og) no ejecuta WebGL,
+ * inicio, con la gota, el vidrio y Feli. Satori (next/og) no ejecuta WebGL,
  * así que la única forma de que la preview sea el sitio de verdad es sacarle
  * una foto con un navegador.
  *
@@ -18,7 +18,7 @@ try {
   const p = await b.newPage({ locale: "es-AR", viewport: { width: W, height: H }, deviceScaleFactor: 2 });
   // fx=full: en una máquina sin GPU el sitio bajaría a calidad baja.
   await p.goto(`${base}/?fx=full`, { waitUntil: "networkidle", timeout: 60000 });
-  await p.waitForTimeout(4500); // Feli termina de subir del líquido (1,35 s) y sobra
+  await p.waitForTimeout(4500); // las texturas (fotos y títulos) suben a la GPU y sobra
   await p.evaluate(() => document.querySelectorAll("nextjs-portal").forEach((e) => e.remove()));
   const grande = await p.screenshot({ type: "png" });
   const dataUrl = await p.evaluate(

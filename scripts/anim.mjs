@@ -1,8 +1,8 @@
 /**
- * ¿EL LÍQUIDO SE MUEVE? Compara dos capturas del inicio separadas 3 s: las
- * gotas flotan solas, así que un recorte con líquido tiene que cambiar. Si el
- * loop de la escena se cuelga (o el canvas no dibuja), esto lo agarra.
- * Con reduce-motion las gotas NO flotan solas: ahí tiene que quedar quieto.
+ * ¿LA GOTA ESTÁ VIVA? Compara dos capturas de la gota del inicio separadas
+ * 3 s: ondula sola (y su gotita satélite sube y baja), así que el recorte tiene
+ * que cambiar. Si el loop de la escena se cuelga (o el canvas no dibuja), esto
+ * lo agarra. Con reduce-motion la gota NO ondula: ahí tiene que quedar quieta.
  *
  * Uso: npm run build && node scripts/anim.mjs
  */
@@ -22,14 +22,17 @@ try {
     const p = await ctx.newPage();
     await p.goto(`${BASE}/?fx=full`, { waitUntil: "load", timeout: 45000 });
     await p.waitForTimeout(3000);
-    // el borde derecho del inicio: ahí siempre hay líquido
-    const clip = { x: 1180, y: 120, width: 260, height: 300 };
+    // la gota se apoya en el nombre, a 41% del ancho y 70% del alto del h1
+    const clip = await p.evaluate(() => {
+      const r = document.querySelector("h1[data-placa]").getBoundingClientRect();
+      return { x: Math.round(r.left + r.width * 0.41 - 130), y: Math.round(r.top + r.height * 0.7 - 150), width: 260, height: 300 };
+    });
     const a = await p.screenshot({ clip });
     await p.waitForTimeout(3000);
     const c = await p.screenshot({ clip });
     const distinto = !a.equals(c);
-    if (reducedMotion === "reduce") check(!distinto, "reduce-motion: el líquido no flota solo");
-    else check(distinto, "el líquido se mueve solo");
+    if (reducedMotion === "reduce") check(!distinto, "reduce-motion: la gota no ondula sola");
+    else check(distinto, "la gota ondula sola");
     await ctx.close();
   }
   await b.close();

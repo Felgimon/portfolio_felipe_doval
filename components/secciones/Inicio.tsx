@@ -1,80 +1,72 @@
 "use client";
-import { ArrowDown } from "lucide-react";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import { Feli } from "@/components/guia/Feli";
-import { Globo } from "@/components/guia/Globo";
 import { CopiarMail } from "@/components/ui/CopiarMail";
-import { guion } from "@/content/guia";
-import { ConEnlace, Filete } from "./comun";
 
 /**
- * INICIO. En 10 segundos tiene que quedar claro: quién es (el nombre), qué
- * hace (rol + bajada), qué está haciendo ahora (Superlum, en el globo) y cómo
- * escribirle (copiar el mail). Y la cuarta cosa que ningún template contesta:
- * cómo es él. Feli apoyado en la pileta, subiendo del líquido al cargar.
+ * INICIO. En 10 segundos: quién es (el nombre, enorme), qué hace (rol y
+ * bajada), qué está haciendo ahora (Superlum, en el panel ámbar) y cómo
+ * escribirle. La gota se apoya entre la O y la V de "Doval" y sigue al mouse
+ * de lejos.
  */
 export function Inicio() {
-  const { perfil, t, idioma } = useIdioma();
-  const g = guion[idioma].paradas.inicio;
+  const { perfil, t } = useIdioma();
   const { scrollTo } = useSmoothScroll();
 
   return (
     <section
       id="inicio"
       aria-labelledby="inicio-titulo"
-      className="relative"
-      data-gotas="0.93 0.3 205 0; 1.03 0.74 150 1; -0.03 1.04 128 0; 0.36 1.1 100 1; 0.64 0.1 40 0"
-      data-gotas-m="1.08 0.78 200 0; -0.1 1.04 150 1; 1.0 0.12 48 1"
+      className="relative flex flex-col px-4 pt-[104px] md:block md:h-[100svh] md:max-h-[1000px] md:min-h-[640px] md:p-0"
+      data-gota="0.41 0.7 0.115"
+      data-gota-m="0.4 0.66 0.085"
     >
-      <div className="contenedor grid [&>*]:min-w-0 gap-y-6 pt-24 lg:min-h-[100svh] lg:grid-cols-12 lg:pt-20">
-        <div className="pb-4 lg:col-span-7 lg:self-center lg:pb-0">
-          <h1 id="inicio-titulo" className="script nombre-hero outline-none" aria-label={perfil.nombre}>
-            <span aria-hidden className="block">
-              Felipe
-            </span>{" "}
-            <span aria-hidden className="block pl-[0.5em]">
-              Doval
-            </span>
-          </h1>
-          <Filete className="mt-1 -ml-2 w-[86%]" />
-          <p className="rol mt-5 max-w-[28ch]">{perfil.hero.kicker}</p>
-          <p className="lead mt-3 max-w-[46ch]">{perfil.hero.lead}</p>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <a
-              href="#perfil"
-              onClick={(e) => {
-                e.preventDefault();
-                const destino = document.getElementById("perfil");
-                if (destino) scrollTo(destino);
-              }}
-              data-vidrio
-              data-gotas="0.1 0.95 32 1"
-              className="vidrio vidrio-pildora boton-vidrio"
-            >
-              {t.hero.empezar}
-              <ArrowDown className="size-[18px]" aria-hidden strokeWidth={2.4} />
-            </a>
-            <CopiarMail parada="inicio" />
-          </div>
-        </div>
+      <h1
+        id="inicio-titulo"
+        data-placa
+        aria-label={perfil.nombre}
+        className="placa nombre-hero outline-none md:absolute md:top-[17vh] md:left-[var(--margen)]"
+      >
+        <span aria-hidden>Felipe</span>
+        <span aria-hidden>Doval</span>
+      </h1>
 
-        <div className="relative mt-4 lg:col-span-5 lg:mt-0 lg:self-end">
-          <Globo
-            parada="inicio"
-            className="absolute top-[8%] left-0 z-10 max-w-[54%] sm:max-w-[22rem] lg:top-[-30%] lg:right-[-2%] lg:left-auto lg:max-w-[21rem]"
-            gotas="0.78 0.62 76 0"
+      <Feli
+        pose="inicio"
+        prioridad
+        sizes="(max-width: 760px) 92vw, 60vw"
+        className="order-2 mt-2 w-[92%] self-end md:absolute md:right-[1vw] md:bottom-0 md:mt-0 md:h-[78vh] md:w-auto"
+      />
+
+      <div className="order-1 mt-7 md:absolute md:bottom-14 md:left-[var(--margen)] md:mt-0 md:max-w-[560px]">
+        <p className="etiqueta">{perfil.hero.kicker}</p>
+        <p className="lead mt-3.5">{perfil.hero.lead}</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <a
+            href="#trabajo"
+            onClick={(e) => {
+              e.preventDefault();
+              const destino = document.getElementById("trabajo");
+              if (destino) scrollTo(destino);
+            }}
+            className="boton boton-solido"
           >
-            <ConEnlace frase={g.frase} palabra="Superlum" href="#trabajo" />
-          </Globo>
-          <Feli
-            pose={g.pose}
-            parada="inicio"
-            intro
-            className="ml-auto w-[50%] max-w-[300px] sm:max-w-[360px] lg:h-[min(68svh,620px)] lg:w-auto lg:max-w-none lg:translate-x-[6%]"
-            sizes="(max-width: 1024px) 60vw, 640px"
-          />
+            {t.hero.verTrabajo}
+          </a>
+          <CopiarMail />
         </div>
+      </div>
+
+      <div
+        data-vidrio
+        className="vidrio relative order-3 -mt-24 mb-8 p-[18px_20px] md:absolute md:right-[var(--margen)] md:bottom-14 md:m-0 md:w-[300px]"
+      >
+        <p className="etiqueta">
+          <span className="punto" aria-hidden />
+          {t.hero.ahora}
+        </p>
+        <p className="mt-2 text-[16px] leading-[1.42]">{t.hero.ahoraTexto}</p>
       </div>
     </section>
   );

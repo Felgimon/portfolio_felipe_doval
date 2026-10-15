@@ -8,7 +8,7 @@ export function SaltarAlContenido() {
   return (
     <a
       href="#contenido"
-      className="sr-only rounded-full border-[1.5px] border-tinta bg-lima px-4 py-2 text-sm font-semibold text-tinta focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
+      className="sr-only rounded-full bg-crema px-4 py-2 text-sm font-semibold text-noche focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
     >
       {t.saltar}
     </a>

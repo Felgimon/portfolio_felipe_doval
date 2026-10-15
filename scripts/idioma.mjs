@@ -17,8 +17,8 @@ const check = (ok, msg) => {
 const ruido = (t) => /_vercel\/insights|status of 404/.test(t);
 
 const CASOS = [
-  { locale: "es-AR", lang: "es", cta: "Empezar la visita", nav: "Perfil", guia: "Te hago la visita", problema: "El problema" },
-  { locale: "en-US", lang: "en", cta: "Start the tour", nav: "Profile", guia: "show you around", problema: "The problem" },
+  { locale: "es-AR", lang: "es", cta: "Ver el trabajo", nav: "Perfil", ahora: "Construyendo Superlum", problema: "El problema" },
+  { locale: "en-US", lang: "en", cta: "See the work", nav: "Profile", ahora: "Building Superlum", problema: "The problem" },
 ];
 
 const { base: BASE, cerrar } = await levantar(3261);
@@ -40,7 +40,7 @@ try {
     }));
     check(home.lang === caso.lang, `${caso.locale}: <html lang="${home.lang}">`);
     check(home.inicio.includes(caso.cta), `${caso.locale}: botón "${caso.cta}"`);
-    check(home.inicio.includes(caso.guia), `${caso.locale}: Feli dice "${caso.guia}…"`);
+    check(home.inicio.includes(caso.ahora), `${caso.locale}: el panel Ahora dice "${caso.ahora}…"`);
     check(home.nav.includes(caso.nav), `${caso.locale}: la nav dice "${caso.nav}"`);
 
     await p.goto(`${BASE}/proyectos/superlum`, { waitUntil: "load", timeout: 45000 });

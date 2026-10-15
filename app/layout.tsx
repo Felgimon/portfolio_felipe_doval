@@ -117,7 +117,7 @@ export default function RootLayout({
         />
         <IdiomaProvider>
           <SaltarAlContenido />
-          {/* El líquido, Feli y el vidrio: un canvas fijo detrás de todo. */}
+          {/* El estudio, los títulos, Feli y la gota: un canvas fijo detrás de todo. */}
           <Escena />
           <SmoothScroll>
             <Nav />

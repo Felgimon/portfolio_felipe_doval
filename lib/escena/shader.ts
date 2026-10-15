@@ -1,165 +1,145 @@
 /**
- * EL SHADER DE LA ESCENA — una sola pasada de pantalla completa (WebGL 1).
+ * El SHADER de la escena (WebGL 2, GLSL ES 3.00). Un triángulo de pantalla
+ * completa; todo lo demás es este fragment shader:
  *
- * Pinta, de atrás para adelante:
- *   papel → líquido de fondo (capa 0) → Feli (sticker + sombra dura jade)
- *   → pileta (capa 1, tapa el corte recto de la foto) → vidrio.
+ *  1. ESTUDIO: la luz cobalto que cae a azul noche, con grano.
+ *  2. LO IMPRESO EN EL FONDO: las placas (los títulos, dibujados una vez en una
+ *     textura con Doval Grotesk) y las fotos de Feli con el pie fundido.
+ *  3. LA GOTA: una gota de vidrio claro hecha con raymarching de una SDF (un
+ *     huevo con una ondulación lenta y una gotita satélite unida con smin).
+ *     Refracta lo impreso con dispersión por canal (IOR 1,47 a 1,515), refleja
+ *     un estudio con softbox y dos tiras de luz, y tiene un brillo duro.
+ *  4. VIDRIO AHUMADO: los paneles de la UI (data-vidrio) refractan lo que tienen
+ *     detrás con un bisel, se ahuman hacia Noche y llevan un canto de luz.
  *
- * Todo en coordenadas de VIEWPORT en px CSS (y hacia abajo), igual que
- * getBoundingClientRect: el JS le pasa los rects tal cual los mide.
- *
- * Por qué el vidrio vive acá y no en un backdrop-filter: el filtro SVG de la
- * v5 sólo andaba en Chromium y costaba el 78% del frame sobre un fondo
- * animado. Acá la refracción es muestrear la escena en un punto desplazado
- * dentro de cada rectángulo redondeado: una pasada, todos los navegadores.
- *
- * El líquido está "pintado", no es plástico: dos bandas (lado iluminado / lado
- * en sombra) con terminador corto, un especular blanco DURO, un rebote suave y
- * una línea tinta sólo del lado en sombra (el mismo filete que las letras).
- * Una sola luz, de arriba a la izquierda, para todo el sitio.
+ * Coordenadas: px CSS con origen arriba a la izquierda (como el DOM).
  */
 
-export const MAX_GOTAS = 16;
-export const MAX_VIDRIOS = 10;
+export const MAX_VIDRIOS = 12;
 
-export const VERTEX = `
-attribute vec2 a;
-void main(){ gl_Position = vec4(a, 0., 1.); }
-`;
+export const VERTEX = `#version 300 es
+in vec2 a;
+void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
 
-export const FRAGMENT = `
+export const FRAGMENT = `#version 300 es
 precision highp float;
-uniform vec2 uRes;      // viewport en px CSS
-uniform float uScale;   // px de canvas por px CSS
-uniform float uTime;
-uniform float uU;       // unidad de escala (≈ lado corto / 1000)
-uniform float uQ;       // calidad: 1 alto, 0 bajo
-uniform float uK;       // suavidad de la unión (smin)
-// x, y, radio, tono + 2·capa (tono 0 lima .. 1 jade; capa 0 fondo, 1 pileta
-// delante de Feli). La capa va empaquetada en w para ahorrar uniforms: WebGL 1
-// garantiza muy pocos y los iPhone viejos dan 64 vectores en total.
-uniform vec4 uB[${MAX_GOTAS}];
-uniform int uNB;
-uniform vec4 uNav;      // cápsula bajo el link activo: cx, cy, medio largo, radio
-uniform vec4 uR[${MAX_VIDRIOS}];  // vidrio: x, y, w, h
-uniform vec4 uRX[${MAX_VIDRIOS}]; // radio, presión, barrido, 0
-uniform int uNR;
-uniform vec4 uF[2];     // Feli: x, y, w, h (w = 0 → apagado)
-uniform vec2 uFS;       // cuánto está hundido cada uno (px)
-uniform sampler2D uT0;
-uniform sampler2D uT1;
+out vec4 o;
+uniform vec2 uRes;
+uniform float uS, uT, uQ;
+uniform sampler2D uP0, uP1, uP2, uF0, uF1;
+uniform vec4 uPR0, uPR1, uPR2, uFR0, uFR1;
+uniform vec3 uC;
+uniform float uR;
+uniform vec4 uV[${MAX_VIDRIOS}];
+uniform vec4 uVX[${MAX_VIDRIOS}];
+uniform int uNV;
 
-const vec3 TINTA = vec3(.0588, .2392, .1804);
-const vec3 LIMA  = vec3(.4706, .8353, .3804);
-const vec3 JADE  = vec3(.1569, .7569, .5490);
-const vec3 PAPEL = vec3(1.);
-const vec3 L = vec3(-.5, -.62, .6);
+const vec3 NOCHE = vec3(.027, .078, .28);
+const vec3 COB = vec3(.085, .2, .72);
+const vec3 CREMA = vec3(.949, .933, .902);
 
-// unión suave con mezcla de color (iq, cuadrática): k bajo → cuello visible
-vec2 sminC(vec2 a, float b, float cb, float k){
-  float h = 1. - min(abs(a.x - b) / (4. * k), 1.);
-  float w = h * h; float m = w * .5; float s = w * k;
-  return a.x < b ? vec2(a.x - s, mix(a.y, cb, m)) : vec2(b - s, mix(cb, a.y, m));
-}
-
-vec2 campo(vec2 p, float capa){
-  vec2 r = vec2(1e5, 0.);
-  for (int i = 0; i < ${MAX_GOTAS}; i++){
-    if (i >= uNB) break;
-    vec4 b = uB[i];
-    float c = floor(b.w * .5);
-    if (abs(c - capa) > .5) continue;
-    r = sminC(r, length(p - b.xy) - b.z, b.w - 2. * c, uK);
-  }
-  if (capa < .5 && uNav.w > 0.){
-    float d = length(vec2(max(abs(p.x - uNav.x) - uNav.z, 0.), p.y - uNav.y)) - uNav.w;
-    r = sminC(r, d, 0., uK * .5);
-  }
-  return r;
-}
-
-// pinta el líquido de una capa sobre col; devuelve su cobertura
-float liquido(vec2 p, float capa, inout vec3 col){
-  vec2 f = campo(p, capa);
-  float d = f.x;
-  // sombra de contacto sobre el papel (tinta muy suave, corrida con la luz)
-  if (uQ > .5 && d < 60. * uU && capa < .5){
-    float ds = campo(p - vec2(10., 14.) * uU, capa).x;
-    col = mix(col, TINTA, (1. - smoothstep(-16. * uU, 22. * uU, ds)) * .07);
-  }
-  if (d > 1.5) return 0.;
-  float e = 1.5;
-  vec2 g = vec2(campo(p + vec2(e, 0.), capa).x - d, campo(p + vec2(0., e), capa).x - d);
-  g = g / max(length(g), 1e-4);
-  float R = 95. * uU;
-  float s = clamp(-d / R, 0., 1.);
-  float rho = 1. - s;
-  // normal de hemisferio continua (sin el "cono" del centro)
-  vec3 N = normalize(vec3(g * rho * .95, sqrt(max(1. - rho * rho, 0.)) + .08));
-  vec3 l = normalize(L);
-  float dif = dot(N, l);
-  vec3 base = mix(LIMA, JADE, f.y);
-  vec3 sombra = mix(mix(LIMA, JADE, .8), JADE * .8, f.y);
-  vec3 c = mix(sombra, base, smoothstep(.18, .46, dif));
-  // rebote suave del lado opuesto a la luz
-  float reb = smoothstep(.55, .85, rho) * smoothstep(0., .5, dot(g, -normalize(L.xy)));
-  c = mix(c, mix(base, PAPEL, .35), reb * .45);
-  // especular duro
-  float sp = pow(max(dot(N, normalize(l + vec3(0., 0., 1.))), 0.), 60.);
-  c = mix(c, PAPEL, smoothstep(.62, .67, sp) * (capa > .5 ? .45 : 1.));
-  // burbujas de gas subiendo adentro del líquido (sólo calidad alta)
-  if (uQ > .5 && s > .12){
-    vec2 q = p / (34. * uU);
-    q.y += uTime * .55;
-    vec2 id = floor(q);
-    vec2 fr = fract(q) - .5;
-    float h = fract(sin(dot(id, vec2(12.9898, 78.233))) * 43758.5453);
-    if (h > .86){
-      vec2 o = vec2(fract(h * 17.3) - .5, fract(h * 91.7) - .5) * .5;
-      float rr = .1 + .12 * fract(h * 7.1);
-      float dd = length(fr - o);
-      float anillo = smoothstep(rr, rr - .05, dd) - smoothstep(rr - .07, rr - .12, dd);
-      c = mix(c, PAPEL, anillo * .55 * smoothstep(.12, .3, s));
-    }
-  }
-  // filete tinta del lado en sombra
-  float rim = smoothstep(-2.6 * uU, -.5, d) * smoothstep(.2, -.5, dot(g, normalize(L.xy)));
-  c = mix(c, TINTA, rim * .5);
-  float a = smoothstep(1., -1., d);
-  col = mix(col, c, a);
-  return a;
-}
-
-vec4 muestraT(int i, vec2 q){
-  if (i == 0) return texture2D(uT0, q);
-  return texture2D(uT1, q);
-}
-
-void feli(vec2 p, int i, inout vec3 col){
-  vec4 r = i == 0 ? uF[0] : uF[1];
-  float hundido = i == 0 ? uFS.x : uFS.y;
-  if (r.z < 1. || p.y > r.y + r.w || p.y < r.y - 20.) return;
-  vec2 q = (p - r.xy - vec2(0., hundido)) / r.zw;
-  // la foto no puede asomar por debajo de su base (la tapa la pileta)
-  if (p.y > r.y + r.w) return;
-  vec2 o = vec2(11., 11.) * uU / r.zw;
-  vec2 q2 = q - o;
-  float sa = 0.;
-  if (q2.x > 0. && q2.x < 1. && q2.y > 0. && q2.y < 1.) sa = muestraT(i, q2).a;
-  col = mix(col, JADE, sa);
-  if (q.x > 0. && q.x < 1. && q.y > 0. && q.y < 1.){
-    vec4 t = muestraT(i, q);
-    col = mix(col, t.rgb, t.a);
-  }
-}
-
-vec3 escena(vec2 p){
-  vec3 col = PAPEL;
-  liquido(p, 0., col);
-  feli(p, 0, col);
-  feli(p, 1, col);
-  liquido(p, 1., col);
+vec3 estudio(vec2 p){
+  vec2 q = p / uRes;
+  float d = length((q - vec2(.6, .4)) * vec2(1., 1.25));
+  vec3 col = mix(COB, NOCHE, smoothstep(0., .9, d));
+  col = mix(col, vec3(.32, .52, 1.), smoothstep(.4, 0., d) * .13);
+  col *= 1. - .22 * smoothstep(.7, 1., q.y);
   return col;
+}
+
+vec4 tx(sampler2D s, vec4 r, vec2 p){
+  vec2 q = (p - r.xy) / r.zw;
+  if (r.z < 1. || q.x < 0. || q.x > 1. || q.y < 0. || q.y > 1.) return vec4(0);
+  return texture(s, q);
+}
+
+vec3 fondo(vec2 p){
+  vec3 col = estudio(p);
+  vec4 f = tx(uF0, uFR0, p);
+  f.a *= smoothstep(1., .8, (p.y - uFR0.y) / max(uFR0.w, 1.));
+  col = mix(col, f.rgb, f.a);
+  f = tx(uF1, uFR1, p);
+  f.a *= smoothstep(1., .8, (p.y - uFR1.y) / max(uFR1.w, 1.));
+  col = mix(col, f.rgb, f.a);
+  col = mix(col, CREMA, tx(uP0, uPR0, p).a);
+  col = mix(col, CREMA, tx(uP1, uPR1, p).a);
+  col = mix(col, CREMA, tx(uP2, uPR2, p).a);
+  return col;
+}
+
+float smin(float a, float b, float k){
+  float h = clamp(.5 + .5 * (b - a) / k, 0., 1.);
+  return mix(b, a, h) - k * h * (1. - h);
+}
+
+float mapa(vec3 p){
+  p -= uC;
+  float t = uT * .4;
+  float d = length(p / vec3(1., 1.18, 1.)) - uR;
+  d += uR * .035 * sin(p.x / uR * 3.1 + t) * sin(p.y / uR * 2.7 - t * .8) * sin(p.z / uR * 2.3 + t * .6);
+  vec3 g = vec3(uR * .95, -uR * .95 + uR * .12 * sin(t * .7), uR * .15);
+  d = smin(d, length(p - g) - uR * .16, uR * .22);
+  return d * .85;
+}
+
+vec3 nrm(vec3 p){
+  vec2 e = vec2(1., 0);
+  return normalize(vec3(
+    mapa(p + e.xyy) - mapa(p - e.xyy),
+    mapa(p + e.yxy) - mapa(p - e.yxy),
+    mapa(p + e.yyx) - mapa(p - e.yyx)));
+}
+
+vec3 entorno(vec3 d){
+  vec3 col = vec3(.01, .025, .09) + vec3(.03, .07, .3) * smoothstep(-.2, .8, -d.y);
+  float s1 = smoothstep(.36, .2, length(vec2((d.x + .35) * .8, (d.y + .62) * 1.5)));
+  float s2 = smoothstep(.09, .03, abs(d.x - .68)) * smoothstep(.9, .2, abs(d.y + .05));
+  float s3 = smoothstep(.08, .02, abs(d.x + .72)) * smoothstep(.7, .1, abs(d.y - .2));
+  return col + vec3(1.) * s1 * 2.6 + vec3(1., .72, .38) * s2 * 1.7 + vec3(.45, .75, 1.) * s3 * 1.2;
+}
+
+vec3 gota(vec2 p, vec3 col){
+  if (uR < 2. || length(p - uC.xy) > uR * 1.8) return col;
+  vec3 ro = vec3(p, uR * 3.), rd = normalize(vec3((p - uRes * .5) * .00035, -1.));
+  float t = uR * 1.2;
+  bool hit = false;
+  vec3 pos;
+  int pasos = uQ > .5 ? 80 : 44;
+  for (int i = 0; i < 80; i++) {
+    if (i >= pasos) break;
+    pos = ro + rd * t;
+    float d = mapa(pos);
+    if (d < .4) { hit = true; break; }
+    t += d;
+    if (t > uR * 5.) break;
+  }
+  if (!hit) return col;
+  vec3 n = nrm(pos);
+  float fr = .04 + .96 * pow(1. - max(dot(-rd, n), 0.), 4.);
+  vec3 refl = entorno(reflect(rd, n));
+  vec3 rd2 = refract(rd, n, 1. / 1.48), q = pos + rd2 * 2.;
+  float ti = 0.;
+  int adentro = uQ > .5 ? 48 : 24;
+  for (int i = 0; i < 48; i++) {
+    if (i >= adentro) break;
+    float d = -mapa(q);
+    if (d < .4) break;
+    q += rd2 * max(d, 1.);
+    ti += max(d, 1.);
+  }
+  vec3 n2 = -nrm(q), rgb;
+  float iors[3] = float[3](1.47, 1.49, 1.515);
+  for (int k = 0; k < 3; k++) {
+    vec3 rd3 = refract(rd2, n2, iors[k]);
+    vec3 v;
+    if (dot(rd3, rd3) < .01) v = entorno(reflect(rd2, n2));
+    else { float s = (-uR * .55 - q.z) / rd3.z; v = fondo(q.xy + rd3.xy * s); }
+    rgb[k] = v[k];
+  }
+  rgb *= exp(-ti * vec3(.0005, .00025, .0001));
+  vec3 g = mix(rgb, refl, fr);
+  g += vec3(1.) * pow(max(dot(reflect(rd, n), normalize(vec3(-.5, -.7, .6))), 0.), 140.) * 1.6;
+  return g;
 }
 
 float sdRR(vec2 p, vec2 b, float r){
@@ -168,58 +148,44 @@ float sdRR(vec2 p, vec2 b, float r){
 }
 
 void main(){
-  vec2 p = vec2(gl_FragCoord.x, uRes.y * uScale - gl_FragCoord.y) / uScale;
-  float mejor = 1e5; vec4 R = vec4(0.); vec4 X = vec4(0.);
-  for (int i = 0; i < ${MAX_VIDRIOS}; i++){
-    if (i >= uNR) break;
-    vec4 r = uR[i];
-    if (r.z < 2.) continue;
-    float rad = min(uRX[i].x, min(r.z, r.w) * .5);
+  vec2 p = vec2(gl_FragCoord.x, uRes.y * uS - gl_FragCoord.y) / uS;
+  vec3 col = fondo(p);
+  // la sombra suave que la gota deja en el estudio
+  float sh = uR < 2. ? 0. : smoothstep(uR * 1.6, uR * .3, length((p - (uC.xy + vec2(uR * .3, uR * .25))) * vec2(.7, .9)));
+  col *= 1. - .22 * sh;
+  col = gota(p, col);
+
+  // vidrio ahumado de la UI: el panel más cercano
+  float mejor = 1e5;
+  vec4 R = vec4(0), X = vec4(0);
+  for (int i = 0; i < ${MAX_VIDRIOS}; i++) {
+    if (i >= uNV) break;
+    vec4 r = uV[i];
+    float rad = min(uVX[i].x, min(r.z, r.w) * .5);
     float d = sdRR(p - r.xy - r.zw * .5, r.zw * .5, rad);
-    if (d < mejor){ mejor = d; R = r; X = uRX[i]; X.x = rad; }
+    if (d < mejor) { mejor = d; R = r; X = uVX[i]; X.x = rad; }
   }
-  vec3 col;
-  if (mejor < 0.){
+  if (mejor < 0.) {
     vec2 c = R.xy + R.zw * .5, hb = R.zw * .5;
-    vec2 g = vec2(sdRR(p - c + vec2(1., 0.), hb, X.x) - sdRR(p - c - vec2(1., 0.), hb, X.x),
-                  sdRR(p - c + vec2(0., 1.), hb, X.x) - sdRR(p - c - vec2(0., 1.), hb, X.x));
-    g = g / max(length(g), 1e-4);
-    // bisel: el centro magnifica un poco, el borde empuja hacia afuera
-    float W = min(20., min(X.x + 4., min(R.z, R.w) * .3));
-    float t = clamp(-mejor / W, 0., 1.);
-    float bisel = pow(1. - t, 2.2);
-    float k = (44. + X.y * 24.) * bisel + X.y * 5.;
-    vec2 base = c + (p - c) * (.86 - X.y * .05);
-    vec2 o = g * k;
-    if (uQ > .5 && bisel > .03){
-      // aberración cromática sólo en el bisel: el borde cian
-      col = vec3(escena(base + o * .93).r, escena(base + o).g, escena(base + o * 1.1).b);
-    } else {
-      col = escena(base + o);
-    }
-    col = mix(col, PAPEL, .28); // escarcha: garantiza contraste AA de la tinta
-    float luz = dot(g, normalize(L.xy));
-    float canto = smoothstep(2.4, 0., -mejor);
-    col = mix(col, PAPEL, canto * smoothstep(-.1, .6, luz) * .95);
-    col = mix(col, TINTA, canto * smoothstep(.1, -.7, luz) * .38);
-    float interior = smoothstep(7., 4., -mejor) * smoothstep(3., 4.5, -mejor);
-    col = mix(col, PAPEL, interior * smoothstep(.2, .9, luz) * .5);
-    if (X.z > 0.){
-      float sw = ((p.x - R.x) + (p.y - R.y) * .6) / (R.z + R.w * .6);
-      float banda = smoothstep(.07, 0., abs(sw - (X.z * 1.5 - .25)));
-      col = mix(col, PAPEL, banda * .55);
-    }
-  } else {
-    col = escena(p);
-    if (mejor < 26.){
-      vec2 c = R.xy + R.zw * .5;
-      float ds = sdRR(p - c - vec2(0., 6.), R.zw * .5, X.x);
-      col = mix(col, TINTA, (1. - smoothstep(-2., 14., ds)) * .10);
-    }
+    vec2 g = vec2(
+      sdRR(p - c + vec2(1, 0), hb, X.x) - sdRR(p - c - vec2(1, 0), hb, X.x),
+      sdRR(p - c + vec2(0, 1), hb, X.x) - sdRR(p - c - vec2(0, 1), hb, X.x));
+    g /= max(length(g), 1e-4);
+    float W = min(18., min(R.z, R.w) * .3);
+    float bis = pow(1. - clamp(-mejor / W, 0., 1.), 2.2);
+    vec2 o2 = g * (30. * bis);
+    vec2 base = c + (p - c) * .94;
+    vec3 v;
+    if (uQ > .5) v = vec3(fondo(base + o2 * .94).r, fondo(base + o2).g, fondo(base + o2 * 1.08).b);
+    else v = fondo(base + o2);
+    v = gota(base + o2, v);
+    v = mix(v, NOCHE, .42);
+    float luz = dot(g, normalize(vec2(-.6, -.8)));
+    float canto = smoothstep(1.6, 0., -mejor);
+    v = mix(v, CREMA, canto * smoothstep(-.2, .8, luz) * .55);
+    col = v;
   }
-  // dither contra el banding
-  float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453)
-          + fract(sin(dot(gl_FragCoord.xy + 1.7, vec2(39.3468, 11.135))) * 24634.6345) - 1.;
-  gl_FragColor = vec4(col + n / 255., 1.);
-}
-`;
+  float gr = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+  col += (gr - .5) * .028;
+  o = vec4(col, 1.);
+}`;

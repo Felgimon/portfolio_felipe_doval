@@ -1,72 +1,51 @@
 "use client";
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { decir } from "@/components/guia/voz";
-import { guion } from "@/content/guia";
-import type { IdParada } from "@/content/ui";
 
 /**
  * "Copiar mi mail". La dirección NO está en el HTML ni en el contenido: se
  * arma recién en el clic, desde partes sueltas (anti-scraping, pedido de
- * Felipe). En la v5 se armaba durante el render y el server la dejaba escrita
- * en el HTML estático; así ya no pasa.
- *
- * Al copiar, Feli lo comenta en el globo de la parada donde está el botón.
+ * Felipe). El resultado se anuncia en el mismo botón (aria-live).
  */
 const PARTES = [["felipe", "ferrari", "doval"], ["gmail", "com"]] as const;
 
 export function CopiarMail({
-  parada,
   className,
-  vidrio = false,
-  gotas,
-  gotasM,
+  variante = "vidrio",
 }: {
-  parada: IdParada;
   className?: string;
-  /** botón de vidrio (true) o link de texto (false) */
-  vidrio?: boolean;
-  gotas?: string;
-  gotasM?: string;
+  /** botón sólido crema o de vidrio ahumado */
+  variante?: "solido" | "vidrio";
 }) {
-  const { t, idioma } = useIdioma();
-  const [copiado, setCopiado] = useState(false);
+  const { t } = useIdioma();
+  const [estado, setEstado] = useState<"" | "ok" | "error">("");
 
   const copiar = async () => {
     const mail = `${PARTES[0].join("")}@${PARTES[1].join(".")}`;
     try {
       await navigator.clipboard.writeText(mail);
-      setCopiado(true);
-      decir(parada, guion[idioma].copiado, "pulgar");
-      window.setTimeout(() => setCopiado(false), 2400);
+      setEstado("ok");
     } catch {
-      decir(parada, guion[idioma].noCopiado);
+      setEstado("error");
     }
+    window.setTimeout(() => setEstado(""), 2400);
   };
 
-  const texto = copiado ? t.contacto.mailCopiado : t.hero.copiarMail;
-  const Icono = copiado ? Check : Copy;
+  const texto = estado === "ok" ? t.contacto.mailCopiado : estado === "error" ? t.contacto.noCopiado : t.hero.copiarMail;
 
-  if (vidrio) {
-    return (
-      <button
-        type="button"
-        onClick={copiar}
-        data-vidrio
-        data-gotas={gotas}
-        data-gotas-m={gotasM}
-        className={cn("vidrio vidrio-pildora boton-vidrio", className)}
-      >
-        <Icono className="size-[18px]" aria-hidden strokeWidth={2.2} />
-        {texto}
-      </button>
-    );
-  }
   return (
-    <button type="button" onClick={copiar} className={cn("link", className)}>
-      {texto}
+    <button
+      type="button"
+      onClick={copiar}
+      data-vidrio={variante === "vidrio" ? "" : undefined}
+      className={cn(
+        "boton",
+        variante === "vidrio" ? "vidrio vidrio-pildora boton-vidrio" : "boton-solido",
+        className,
+      )}
+    >
+      <span aria-live="polite">{texto}</span>
     </button>
   );
 }

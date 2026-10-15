@@ -1,12 +1,12 @@
-// Genera los favicons (v6): una GOTA lima con la "F" de Doval Script en tinta.
-// Renderizado con canvas de Chromium (la fuente real, no una aproximación).
+// Genera los favicons (v7): la "F" de Doval Grotesk extendida y negra, en
+// crema, sobre un cuadrado redondeado con la misma luz de estudio del sitio
+// (cobalto que cae a noche). Renderizado con canvas de Chromium y la fuente
+// real.
 //   node scripts/gen-favicons.mjs
 //
-// Por qué una gota y no las letras solas (como en la v5): la barra de pestañas
-// puede ser blanca o casi negra, y ningún color solo aguanta en las dos (el
-// techo medido era 3,05:1). La gota lima se ve sobre oscuro (8,8:1) y sobre
-// claro se recorta igual, porque adentro va la F en tinta (6,65:1 sobre lima).
-// No es "una caja detrás": es el líquido del sitio, el mismo material.
+// Por qué un cuadrado y no la letra sola: la barra de pestañas puede ser
+// blanca o casi negra. El cobalto se recorta sobre blanco (7,9:1) y sobre
+// oscuro manda la F crema (16,9:1 sobre noche).
 //
 // El ícono de iOS (apple-icon) es OPACO: iOS rellena la transparencia con negro.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -16,7 +16,7 @@ import { navegador } from "./lib/servidor.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const APP = join(ROOT, "app");
-const FONT_B64 = readFileSync(join(ROOT, "brand", "tipografia", "DovalScript-Regular.ttf")).toString("base64");
+const FONT_B64 = readFileSync(join(ROOT, "app", "fonts", "DovalGrotesk.woff2")).toString("base64");
 
 const b = await navegador();
 const p = await b.newPage();
@@ -24,41 +24,40 @@ const p = await b.newPage();
 const draw = (size, opaco) =>
   p.evaluate(
     async ([size, fontB64, opaco]) => {
-      const font = new FontFace("Doval", Uint8Array.from(atob(fontB64), (c) => c.charCodeAt(0)).buffer);
+      const font = new FontFace("DovalG", Uint8Array.from(atob(fontB64), (c) => c.charCodeAt(0)).buffer, {
+        weight: "100 900",
+        stretch: "62% 125%",
+      });
       await font.load();
       document.fonts.add(font);
       const c = document.createElement("canvas");
       c.width = size;
       c.height = size;
       const x = c.getContext("2d");
-      const LIMA = "#78d561", JADE = "#28c18c", TINTA = "#0f3d2e";
-      if (opaco) {
-        x.fillStyle = LIMA;
-        x.fillRect(0, 0, size, size);
-      } else {
-        // la gota, con su sombra dura jade abajo a la derecha
-        const r = size * 0.44, cx = size * 0.48, cy = size * 0.48;
-        x.fillStyle = JADE;
+      const NOCHE = "#071447", COBALTO = "#1736bd", CREMA = "#f2eee6";
+      const g = x.createRadialGradient(size * 0.62, size * 0.36, 0, size * 0.62, size * 0.36, size * 0.9);
+      g.addColorStop(0, COBALTO);
+      g.addColorStop(1, NOCHE);
+      x.fillStyle = g;
+      if (opaco) x.fillRect(0, 0, size, size);
+      else {
         x.beginPath();
-        x.arc(cx + size * 0.04, cy + size * 0.04, r, 0, Math.PI * 2);
-        x.fill();
-        x.fillStyle = LIMA;
-        x.beginPath();
-        x.arc(cx, cy, r, 0, Math.PI * 2);
+        x.roundRect(0, 0, size, size, size * 0.22);
         x.fill();
       }
       // la F, medida de verdad y centrada por su caja de glifo
       let fs = size * 0.8;
-      x.font = `${fs}px Doval`;
+      x.fontStretch = "expanded";
+      x.font = `900 ${fs}px DovalG`;
       let m = x.measureText("F");
       const alto = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
-      fs *= (size * (opaco ? 0.62 : 0.58)) / alto;
-      x.font = `${fs}px Doval`;
+      fs *= (size * 0.56) / alto;
+      x.font = `900 ${fs}px DovalG`;
       m = x.measureText("F");
       const ancho = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-      const tx = (size - ancho) / 2 + m.actualBoundingBoxLeft - size * (opaco ? 0 : 0.02);
-      const ty = (size + m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 - size * (opaco ? 0 : 0.02);
-      x.fillStyle = TINTA;
+      const tx = (size - ancho) / 2 + m.actualBoundingBoxLeft;
+      const ty = (size + m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+      x.fillStyle = CREMA;
       x.fillText("F", tx, ty);
       return c.toDataURL("image/png");
     },

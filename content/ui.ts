@@ -2,7 +2,7 @@ import type { Idioma } from "@/lib/idioma";
 
 /**
  * Los STRINGS DE INTERFAZ en los dos idiomas. Todo texto visible que no viva en
- * `perfil`, `proyectos` o `guia` (lo que dice Feli) sale de acá.
+ * `perfil` o `proyectos` sale de acá.
  *
  * Lo que NO se traduce, a propósito:
  *  - metadata / JSON-LD / sitemap (el SEO del sitio es "felipe doval" en
@@ -17,14 +17,15 @@ export type IdParada =
   | "perfil"
   | "enfoque"
   | "trabajo"
+  | "proyectos"
   | "recorrido"
   | "contacto";
 
 export type TextosUI = {
   paradas: Record<IdParada, string>;
-  nav: { aria: string; paradas: string; cerrar: string; volverVisita: string };
+  nav: { aria: string; menu: string; cerrar: string; volver: string; hablemos: string; inicio: string };
   saltar: string;
-  hero: { empezar: string; copiarMail: string };
+  hero: { verTrabajo: string; copiarMail: string; ahora: string; ahoraTexto: string };
   perfil: { stack: string };
   trabajo: {
     enProgreso: string;
@@ -33,12 +34,11 @@ export type TextosUI = {
     repoPrivado: string;
     rol: string;
     stack: string;
-    otros: string;
     ariaVerCaso: string;
     ariaAbrirRepo: string;
   };
   recorrido: { tipos: Record<string, string>; falta: string };
-  contacto: { lead: string; copiarMail: string; mailCopiado: string };
+  contacto: { lead: string; copiarMail: string; mailCopiado: string; noCopiado: string };
   categoriasStack: Record<string, string>;
   detalle: {
     miRol: string;
@@ -53,7 +53,7 @@ export type TextosUI = {
   };
   perdida: { titulo: string; volver: string };
   falta: string;
-  footer: { creditoFuente: string };
+  footer: { ubicacion: string };
 };
 
 export const textosUI: Record<Idioma, TextosUI> = {
@@ -63,17 +63,25 @@ export const textosUI: Record<Idioma, TextosUI> = {
       perfil: "Perfil",
       enfoque: "Enfoque",
       trabajo: "Trabajo",
+      proyectos: "Proyectos",
       recorrido: "Recorrido",
       contacto: "Contacto",
     },
     nav: {
-      aria: "Paradas de la visita",
-      paradas: "Paradas",
+      aria: "Secciones",
+      menu: "Menú",
       cerrar: "Cerrar",
-      volverVisita: "Volver a la visita",
+      volver: "Volver",
+      hablemos: "Hablemos",
+      inicio: "Felipe Doval, inicio",
     },
     saltar: "Saltar al contenido",
-    hero: { empezar: "Empezar la visita", copiarMail: "Copiar mi mail" },
+    hero: {
+      verTrabajo: "Ver el trabajo",
+      copiarMail: "Copiar mi mail",
+      ahora: "Ahora",
+      ahoraTexto: "Construyendo Superlum, un workspace operativo a medida para una empresa real.",
+    },
     perfil: { stack: "Con qué construyo" },
     trabajo: {
       enProgreso: "En progreso",
@@ -82,7 +90,6 @@ export const textosUI: Record<Idioma, TextosUI> = {
       repoPrivado: "Repo privado",
       rol: "Rol",
       stack: "Stack",
-      otros: "Lo que me trajo hasta acá",
       ariaVerCaso: "ver el caso",
       ariaAbrirRepo: "abrir",
     },
@@ -94,6 +101,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       lead: "Estoy abierto a proyectos, pasantías y buenas ideas. Si algo de lo que viste te resonó, escribime; respondo.",
       copiarMail: "Copiar mi mail",
       mailCopiado: "Mail copiado",
+      noCopiado: "No se pudo copiar",
     },
     categoriasStack: {
       Frontend: "Frontend",
@@ -114,11 +122,9 @@ export const textosUI: Record<Idioma, TextosUI> = {
       aprendizajes: "Lo que aprendí",
       siguiente: "Siguiente caso",
     },
-    perdida: { titulo: "Parada perdida", volver: "Volver al inicio" },
+    perdida: { titulo: "No está", volver: "Volver al inicio" },
     falta: "FALTA",
-    footer: {
-      creditoFuente: "Doval Script, derivada de Norican (SIL OFL)",
-    },
+    footer: { ubicacion: "Buenos Aires" },
   },
   en: {
     paradas: {
@@ -126,17 +132,25 @@ export const textosUI: Record<Idioma, TextosUI> = {
       perfil: "Profile",
       enfoque: "Approach",
       trabajo: "Work",
+      proyectos: "Projects",
       recorrido: "Journey",
       contacto: "Contact",
     },
     nav: {
-      aria: "Tour stops",
-      paradas: "Stops",
+      aria: "Sections",
+      menu: "Menu",
       cerrar: "Close",
-      volverVisita: "Back to the tour",
+      volver: "Back",
+      hablemos: "Let's talk",
+      inicio: "Felipe Doval, home",
     },
     saltar: "Skip to content",
-    hero: { empezar: "Start the tour", copiarMail: "Copy my email" },
+    hero: {
+      verTrabajo: "See the work",
+      copiarMail: "Copy my email",
+      ahora: "Now",
+      ahoraTexto: "Building Superlum, a custom operations workspace for a real company.",
+    },
     perfil: { stack: "What I build with" },
     trabajo: {
       enProgreso: "In progress",
@@ -145,7 +159,6 @@ export const textosUI: Record<Idioma, TextosUI> = {
       repoPrivado: "Private repo",
       rol: "Role",
       stack: "Stack",
-      otros: "What got me here",
       ariaVerCaso: "read the case",
       ariaAbrirRepo: "open",
     },
@@ -157,6 +170,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       lead: "I'm open to projects, internships and good ideas. If anything you saw resonated, write me; I reply.",
       copiarMail: "Copy my email",
       mailCopiado: "Email copied",
+      noCopiado: "Couldn't copy it",
     },
     categoriasStack: {
       Frontend: "Frontend",
@@ -177,10 +191,8 @@ export const textosUI: Record<Idioma, TextosUI> = {
       aprendizajes: "What I learned",
       siguiente: "Next case",
     },
-    perdida: { titulo: "Lost stop", volver: "Back to the start" },
+    perdida: { titulo: "Not here", volver: "Back to the start" },
     falta: "MISSING",
-    footer: {
-      creditoFuente: "Doval Script, derived from Norican (SIL OFL)",
-    },
+    footer: { ubicacion: "Buenos Aires" },
   },
 };

@@ -2,13 +2,13 @@ import { Inicio } from "@/components/secciones/Inicio";
 import { Perfil } from "@/components/secciones/Perfil";
 import { Enfoque } from "@/components/secciones/Enfoque";
 import { Trabajo } from "@/components/secciones/Trabajo";
+import { Proyectos } from "@/components/secciones/Proyectos";
 import { Recorrido } from "@/components/secciones/Recorrido";
 import { Contacto } from "@/components/secciones/Contacto";
 
 /**
- * La home = la visita guiada. Seis paradas, en orden; en cada una Feli sube
- * del líquido, señala lo que importa y dice una sola frase. Todo el contenido
- * se lee scrolleando normal: Feli agrega voz, no esconde nada.
+ * La home: siete secciones en orden, cada una con su título directo. La gota
+ * de vidrio va de título en título; Feli acompaña en fotos.
  */
 export default function Home() {
   return (
@@ -17,6 +17,7 @@ export default function Home() {
       <Perfil />
       <Enfoque />
       <Trabajo />
+      <Proyectos />
       <Recorrido />
       <Contacto />
     </main>

@@ -1,17 +1,20 @@
 /**
- * AUDITORÍA DE RIESGO (v6) — lo que más chance tiene de romperse en silencio:
+ * AUDITORÍA DE RIESGO (v7) — lo que más chance tiene de romperse en silencio:
  *  1. Rutas de servicio: OG/Twitter, robots, sitemap, 404 de slug y de ruta.
- *  2. SIN WebGL: el póster, Feli como <img> y el vidrio sólido (nadie navega
+ *  2. SIN WebGL: el estudio en CSS, el nombre como texto, Feli como <img> y
+ *     el vidrio sólido (nadie navega
  *     sin GPU a mano, así que nadie lo vería romperse).
- *  3. TECLADO: la nav lleva a la parada Y el foco pasa al contenido (en la v5
+ *  3. TECLADO: la nav lleva a la sección Y el foco pasa al contenido (en la v5
  *     el foco se quedaba en la nav).
- *  4. El mail: se copia al portapapeles, Feli lo comenta, y NO está en el HTML.
- *  5. "Volver a la visita" desde un caso.
+ *  4. El mail: se copia al portapapeles, el botón lo confirma, y NO está en
+ *     el HTML.
+ *  5. "Volver" desde un caso.
  *  6. REDUCIR MOVIMIENTO: la navegación no se congela (regresión v5.17.2): la
- *     escena sigue pintando a Feli al llegar a cada parada.
+ *     escena sigue pintando a Feli al llegar a cada sección.
  *  7. Reglas de texto de Felipe: cero rayas en el texto visible y nunca la
  *     palabra de la herramienta de workspace que no se nombra.
- *  8. El huevo de pascua de tocar a Feli.
+ *  8. v7: Feli sólo en fotos (sin globos), UNA sola fuente en todo el sitio y
+ *     los títulos pintados por la escena.
  *
  * Uso: npm run build && node scripts/audit.mjs
  * (PW_CHROMIUM / GL_SOFT: ver scripts/lib/servidor.mjs)
@@ -81,17 +84,20 @@ try {
       const img = document.querySelector("[data-feli] img");
       const vid = document.querySelector(".vidrio");
       const cv = document.querySelector("canvas.escena");
+      const h1 = document.querySelector("h1[data-placa]");
       return {
         estado: document.documentElement.dataset.escena,
         feli: img ? img.getBoundingClientRect().width > 50 && getComputedStyle(img).visibility !== "hidden" : false,
         canvas: cv ? getComputedStyle(cv).display : "sin canvas",
         vidrio: vid ? getComputedStyle(vid).backgroundColor : "",
+        nombre: h1 ? getComputedStyle(h1).color : "",
       };
     });
     check(r.estado === "poster", `sin WebGL → modo póster (${r.estado})`);
     check(r.canvas === "none", `sin WebGL → canvas oculto (${r.canvas})`);
     check(r.feli, "sin WebGL → Feli visible como <img>");
-    check(r.vidrio === "rgb(255, 255, 255)", `sin WebGL → vidrio sólido (${r.vidrio})`);
+    check(r.vidrio === "rgb(15, 35, 127)", `sin WebGL → vidrio sólido (${r.vidrio})`);
+    check(r.nombre === "rgb(242, 238, 230)", `sin WebGL → el nombre se ve como texto (${r.nombre})`);
     check(errores.length === 0, `sin WebGL → 0 errores de página (${errores.length})`);
     await ctx.close();
   }
@@ -117,7 +123,7 @@ try {
     await p.waitForTimeout(2200);
     const nav = await p.evaluate(() => ({ y: window.scrollY, foco: document.activeElement?.id }));
     check(nav.y > 1000, `teclado: Enter llevó a Trabajo (scrollY ${Math.round(nav.y)})`);
-    check(nav.foco === "trabajo-titulo", `teclado: el foco pasó al título de la parada (${nav.foco})`);
+    check(nav.foco === "trabajo-titulo", `teclado: el foco pasó al título de la sección (${nav.foco})`);
     check(p.url().endsWith("#trabajo"), `la URL quedó en #trabajo (${p.url()})`);
 
     await p.evaluate(() => document.getElementById("contacto").scrollIntoView());
@@ -126,29 +132,36 @@ try {
     await p.waitForTimeout(500);
     const clip = await p.evaluate(() => navigator.clipboard.readText());
     check(clip === MAIL, "portapapeles: copió el mail");
-    const dice = await p.locator("#contacto [data-vidrio]", { hasText: /Copiado/ }).count();
-    check(dice > 0, "Feli comenta que se copió");
+    const dice = await p.locator("#contacto button", { hasText: /Mail copiado/ }).count();
+    check(dice > 0, "el botón confirma que se copió");
 
-    await p.evaluate(() => window.scrollTo(0, 0));
-    await p.waitForTimeout(800);
-    const feli = p.locator("#inicio [data-feli]");
-    for (let i = 0; i < 5; i++) {
-      await feli.click();
-      await p.waitForTimeout(150);
-    }
-    const huevo = await p.evaluate(() => ({
-      hundido: document.querySelector("#inicio [data-feli]")?.hasAttribute("data-hundir"),
-      cartel: document.querySelector(".cartel-vuelvo")?.textContent,
+    // Feli acompaña en fotos, no habla (v7): nada de globos ni frases
+    const feli = await p.evaluate(() => ({
+      fotos: document.querySelectorAll("[data-feli]").length,
+      ocultas: [...document.querySelectorAll("[data-feli]")].every((x) => x.getAttribute("aria-hidden") === "true"),
+      globos: document.querySelectorAll(".globo, .cartel-vuelvo, [data-globo]").length,
     }));
-    check(huevo.hundido && huevo.cartel === "Ahora vuelvo", `huevo: a la quinta Feli se va (${huevo.cartel})`);
+    check(feli.fotos >= 4 && feli.ocultas, `Feli: ${feli.fotos} fotos decorativas (aria-hidden)`);
+    check(feli.globos === 0, `Feli: sin globos ni comentarios (${feli.globos})`);
+
+    // una sola fuente en todo el sitio
+    const familias = await p.evaluate(() => [...new Set([...document.querySelectorAll("body *")].map((x) => getComputedStyle(x).fontFamily.split(",")[0].trim()))]);
+    check(familias.length === 1 && /doval/i.test(familias[0]), `una sola fuente: ${familias.join(" | ")}`);
+
+    // con la escena lista, los títulos los pinta el shader (el DOM queda transparente)
+    const placas = await p.evaluate(() => ({
+      escena: document.documentElement.dataset.escena,
+      color: getComputedStyle(document.querySelector("h1[data-placa]")).color,
+    }));
+    check(placas.escena !== "lista" || placas.color === "rgba(0, 0, 0, 0)", `placa: el nombre lo pinta la escena (${placas.escena}, ${placas.color})`);
 
     const texto = await p.evaluate(() => document.body.innerText);
     check(!texto.includes("—"), "texto visible sin rayas (—)");
 
     await p.goto(`${BASE}/proyectos/superlum`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    const volver = p.locator("header a", { hasText: /Volver a la visita|Back to the tour/ });
-    check((await volver.count()) === 1, `"Volver a la visita" en el caso`);
+    const volver = p.locator("header a:visible", { hasText: /Volver|Back/ });
+    check((await volver.count()) === 1, `"Volver" en el caso`);
     await volver.click();
     await p.waitForURL(/#trabajo$/, { timeout: 15000 }).catch(() => {});
     check(p.url().includes("/#trabajo"), `volver navegó a /#trabajo (${p.url()})`);
@@ -169,13 +182,13 @@ try {
     await p.waitForTimeout(2000);
     const r = await p.evaluate(() => ({
       escena: document.documentElement.dataset.escena,
-      activo: document.querySelector("[data-nav-activo]")?.textContent?.trim(),
+      activo: document.querySelector("nav [aria-current=location]")?.textContent?.trim(),
       pintado: document.querySelector("#perfil [data-feli]")?.hasAttribute("data-pintado"),
     }));
     check(r.activo === "Perfil", `reduced-motion: la nav sigue al scroll (${r.activo})`);
     check(
       r.escena !== "lista" || r.pintado,
-      `reduced-motion: la escena pinta a Feli al llegar a la parada (${r.escena}, ${r.pintado})`,
+      `reduced-motion: la escena pinta a Feli al llegar a la sección (${r.escena}, ${r.pintado})`,
     );
     await ctx.close();
   }

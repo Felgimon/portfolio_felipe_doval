@@ -1,40 +1,41 @@
-import { FRAGMENT, MAX_GOTAS, MAX_VIDRIOS, VERTEX } from "./shader";
+import { FRAGMENT, MAX_VIDRIOS, VERTEX } from "./shader";
 
 /**
- * El MOTOR: WebGL 1 crudo, sin three.js (la escena entera es un triángulo de
- * pantalla completa y un fragment shader). Se encarga de compilar, de las
- * texturas de Feli y de subir los uniforms. La lógica de qué dibujar vive en
+ * El MOTOR: WebGL 2 crudo, sin three.js. Compila, sube las texturas (fotos de
+ * Feli y placas de los títulos) y los uniforms. Qué dibujar lo decide
  * components/escena/Escena.tsx.
  */
+
+export const MAX_PLACAS = 3;
+
+/** Una placa: el rect en pantalla y su textura (o null si no hay). */
+export type PlacaGPU = { rect: [number, number, number, number]; tex: WebGLTexture } | null;
 
 export type Cuadro = {
   vw: number;
   vh: number;
   escala: number;
   tiempo: number;
-  u: number;
   calidad: 0 | 1;
-  gotas: Float32Array; // MAX_GOTAS * 4 (w = tono + 2·capa)
-  nGotas: number;
-  nav: [number, number, number, number];
+  gota: [number, number, number]; // x, y, radio (radio 0 = sin gota)
+  placas: PlacaGPU[];
+  feli: { rect: [number, number, number, number]; src: string }[];
   vidrios: Float32Array; // MAX_VIDRIOS * 4
-  vidriosX: Float32Array; // MAX_VIDRIOS * 4
+  vidriosX: Float32Array; // MAX_VIDRIOS * 4 (x = radio)
   nVidrios: number;
-  feli: Float32Array; // 2 * 4
-  hundido: Float32Array; // 2
-  texturas: [string | null, string | null];
 };
 
 const NOMBRES = [
-  "uRes", "uScale", "uTime", "uU", "uQ", "uK", "uB", "uNB", "uNav",
-  "uR", "uRX", "uNR", "uF", "uFS", "uT0", "uT1",
+  "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV",
+  "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
 ] as const;
-const ARRAYS = new Set(["uB", "uR", "uRX", "uF"]);
+const ARRAYS = new Set(["uV", "uVX"]);
+const CERO: [number, number, number, number] = [0, 0, 0, 0];
 
 export class Motor {
-  private gl: WebGLRenderingContext;
+  private gl: WebGL2RenderingContext;
   private u: Record<(typeof NOMBRES)[number], WebGLUniformLocation | null>;
-  private texturas = new Map<string, { tex: WebGLTexture; lista: boolean }>();
+  private fotos = new Map<string, { tex: WebGLTexture; lista: boolean }>();
   private vacia: WebGLTexture;
   readonly canvas: HTMLCanvasElement;
   /** se llama cuando una foto termina de subir a la GPU (hay que redibujar) */
@@ -42,7 +43,7 @@ export class Motor {
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    const gl = canvas.getContext("webgl", {
+    const gl = canvas.getContext("webgl2", {
       antialias: false,
       alpha: false,
       depth: false,
@@ -51,7 +52,7 @@ export class Motor {
       preserveDrawingBuffer: false,
       powerPreference: "high-performance",
     });
-    if (!gl) throw new Error("sin-webgl");
+    if (!gl) throw new Error("sin-webgl2");
     this.gl = gl;
 
     const programa = gl.createProgram();
@@ -67,23 +68,21 @@ export class Motor {
 
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 3, -1, -1, 3]),
-      gl.STATIC_DRAW,
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
     const u = {} as Motor["u"];
-    for (const n of NOMBRES) {
-      u[n] = gl.getUniformLocation(programa, ARRAYS.has(n) ? `${n}[0]` : n);
-    }
+    for (const n of NOMBRES) u[n] = gl.getUniformLocation(programa, ARRAYS.has(n) ? `${n}[0]` : n);
     this.u = u;
-    gl.uniform1i(u.uT0, 0);
-    gl.uniform1i(u.uT1, 1);
+    // unidades fijas: placas 0..2, Feli 3..4
+    gl.uniform1i(u.uP0, 0);
+    gl.uniform1i(u.uP1, 1);
+    gl.uniform1i(u.uP2, 2);
+    gl.uniform1i(u.uF0, 3);
+    gl.uniform1i(u.uF1, 4);
 
-    this.vacia = this.crearTextura();
+    this.vacia = this.nuevaTextura();
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
   }
 
@@ -93,13 +92,11 @@ export class Motor {
     if (!s) throw new Error("shader");
     gl.shaderSource(s, fuente);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(s) ?? "compile");
-    }
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? "compile");
     return s;
   }
 
-  private crearTextura(): WebGLTexture {
+  nuevaTextura(): WebGLTexture {
     const gl = this.gl;
     const t = gl.createTexture();
     if (!t) throw new Error("textura");
@@ -111,12 +108,24 @@ export class Motor {
     return t;
   }
 
-  /** ¿La textura de esta foto ya está en la GPU? (la pide si no la tenía) */
-  textura(src: string): boolean {
-    const ya = this.texturas.get(src);
+  /** Sube un canvas 2D a una textura (las placas). */
+  subir(tex: WebGLTexture, fuente: HTMLCanvasElement) {
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fuente);
+  }
+
+  borrar(tex: WebGLTexture) {
+    this.gl.deleteTexture(tex);
+  }
+
+  /** ¿La foto ya está en la GPU? (la pide si no la tenía) */
+  foto(src: string): boolean {
+    const ya = this.fotos.get(src);
     if (ya) return ya.lista;
-    const entrada = { tex: this.crearTextura(), lista: false };
-    this.texturas.set(src, entrada);
+    const entrada = { tex: this.nuevaTextura(), lista: false };
+    this.fotos.set(src, entrada);
     const gl = this.gl;
     const img = new Image();
     img.decoding = "async";
@@ -143,24 +152,31 @@ export class Motor {
     const gl = this.gl;
     const u = this.u;
     gl.uniform2f(u.uRes, c.vw, c.vh);
-    gl.uniform1f(u.uScale, c.escala);
-    gl.uniform1f(u.uTime, c.tiempo);
-    gl.uniform1f(u.uU, c.u);
+    gl.uniform1f(u.uS, c.escala);
+    gl.uniform1f(u.uT, c.tiempo);
     gl.uniform1f(u.uQ, c.calidad);
-    gl.uniform1f(u.uK, 34 * c.u);
-    gl.uniform4fv(u.uB, c.gotas);
-    gl.uniform1i(u.uNB, Math.min(c.nGotas, MAX_GOTAS));
-    gl.uniform4f(u.uNav, ...c.nav);
-    gl.uniform4fv(u.uR, c.vidrios);
-    gl.uniform4fv(u.uRX, c.vidriosX);
-    gl.uniform1i(u.uNR, Math.min(c.nVidrios, MAX_VIDRIOS));
-    gl.uniform4fv(u.uF, c.feli);
-    gl.uniform2f(u.uFS, c.hundido[0], c.hundido[1]);
+    gl.uniform3f(u.uC, c.gota[0], c.gota[1], 0);
+    gl.uniform1f(u.uR, c.gota[2]);
+    gl.uniform4fv(u.uV, c.vidrios);
+    gl.uniform4fv(u.uVX, c.vidriosX);
+    gl.uniform1i(u.uNV, Math.min(c.nVidrios, MAX_VIDRIOS));
+
+    const rects = [u.uPR0, u.uPR1, u.uPR2];
+    for (let i = 0; i < MAX_PLACAS; i++) {
+      const pl = c.placas[i];
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, pl ? pl.tex : this.vacia);
+      const r = pl ? pl.rect : CERO;
+      gl.uniform4f(rects[i], r[0], r[1], r[2], r[3]);
+    }
+    const frects = [u.uFR0, u.uFR1];
     for (let i = 0; i < 2; i++) {
-      const src = c.texturas[i];
-      const e = src ? this.texturas.get(src) : undefined;
-      gl.activeTexture(i === 0 ? gl.TEXTURE0 : gl.TEXTURE1);
+      const f = c.feli[i];
+      const e = f ? this.fotos.get(f.src) : undefined;
+      gl.activeTexture(gl.TEXTURE3 + i);
       gl.bindTexture(gl.TEXTURE_2D, e?.lista ? e.tex : this.vacia);
+      const r = f && e?.lista ? f.rect : CERO;
+      gl.uniform4f(frects[i], r[0], r[1], r[2], r[3]);
     }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
@@ -171,7 +187,7 @@ export class Motor {
 
   liberar() {
     const gl = this.gl;
-    for (const { tex } of this.texturas.values()) gl.deleteTexture(tex);
+    for (const { tex } of this.fotos.values()) gl.deleteTexture(tex);
     gl.deleteTexture(this.vacia);
     gl.getExtension("WEBGL_lose_context")?.loseContext();
   }

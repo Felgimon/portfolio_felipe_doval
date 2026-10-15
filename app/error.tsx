@@ -40,19 +40,19 @@ export default function Error({
         <button
           type="button"
           onClick={reset}
-          className="boton"
+          className="boton boton-solido"
         >
           Reintentar
         </button>
         <Link
           href="/"
-          className="boton"
+          className="boton boton-solido"
         >
           Volver al inicio
         </Link>
       </div>
       {error.digest && (
-        <p className="etiqueta mt-8 text-tinta-2">
+        <p className="etiqueta mt-8">
           referencia: {error.digest}
         </p>
       )}
