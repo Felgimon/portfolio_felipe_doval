@@ -65,7 +65,7 @@ export function Pieza({ p, etiqueta, enCurso, invertida, prioridad }: {
             className="boton boton-solido"
             aria-label={`${p.nombre}: ${t.trabajo.ariaVerCaso}`}
           >
-            {t.trabajo.verCaso} <span aria-hidden>→</span>
+            {t.trabajo.verCaso} <span aria-hidden className="flecha flecha-der">→</span>
           </Link>
           {repo && (
             <a
@@ -75,7 +75,7 @@ export function Pieza({ p, etiqueta, enCurso, invertida, prioridad }: {
               data-vidrio
               className="boton vidrio vidrio-pildora boton-vidrio"
             >
-              {repo.label} <span aria-hidden>↗</span>
+              {repo.label} <span aria-hidden className="flecha flecha-diag">↗</span>
             </a>
           )}
         </div>

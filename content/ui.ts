@@ -38,7 +38,14 @@ export type TextosUI = {
     ariaAbrirRepo: string;
   };
   recorrido: { tipos: Record<string, string>; falta: string };
-  contacto: { lead: string; copiarMail: string; mailCopiado: string; noCopiado: string };
+  contacto: {
+    lead: string;
+    copiarMail: string;
+    mailCopiado: string;
+    noCopiado: string;
+    enPortapapeles: string;
+    copialoAMano: string;
+  };
   categoriasStack: Record<string, string>;
   detalle: {
     miRol: string;
@@ -102,6 +109,8 @@ export const textosUI: Record<Idioma, TextosUI> = {
       copiarMail: "Copiar mi mail",
       mailCopiado: "Mail copiado",
       noCopiado: "No se pudo copiar",
+      enPortapapeles: "En tu portapapeles",
+      copialoAMano: "Copialo a mano",
     },
     categoriasStack: {
       Frontend: "Frontend",
@@ -171,6 +180,8 @@ export const textosUI: Record<Idioma, TextosUI> = {
       copiarMail: "Copy my email",
       mailCopiado: "Email copied",
       noCopiado: "Couldn't copy it",
+      enPortapapeles: "On your clipboard",
+      copialoAMano: "Copy it by hand",
     },
     categoriasStack: {
       Frontend: "Frontend",

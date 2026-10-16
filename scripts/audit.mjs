@@ -126,14 +126,37 @@ try {
     check(nav.foco === "trabajo-titulo", `teclado: el foco pasó al título de la sección (${nav.foco})`);
     check(p.url().endsWith("#trabajo"), `la URL quedó en #trabajo (${p.url()})`);
 
+    // la cápsula de vidrio de la nav sigue al mouse y vuelve a la activa
+    const enlace = await p.locator('header a[data-id="proyectos"]').boundingBox();
+    await p.mouse.move(enlace.x + enlace.width / 2, enlace.y + enlace.height / 2, { steps: 4 });
+    await p.waitForTimeout(1300);
+    const capsula = await p.evaluate(() => {
+      const c = document.querySelector(".capsula").getBoundingClientRect();
+      const a = document.querySelector('header a[data-id="proyectos"]').getBoundingClientRect();
+      return Math.abs(c.left - a.left) < 3 && Math.abs(c.width - a.width) < 3;
+    });
+    check(capsula, "nav: la cápsula de vidrio va al link con el mouse encima");
+    await p.mouse.move(5, 890);
+    await p.waitForTimeout(1300);
+    const vuelve = await p.evaluate(() => {
+      const c = document.querySelector(".capsula").getBoundingClientRect();
+      const a = document.querySelector('header a[data-id="trabajo"]').getBoundingClientRect();
+      return Math.abs(c.left - a.left) < 3;
+    });
+    check(vuelve, "nav: al salir, la cápsula vuelve a la sección activa (Trabajo)");
+
     await p.evaluate(() => document.getElementById("contacto").scrollIntoView());
     await p.waitForTimeout(1200);
     await p.locator("#contacto button", { hasText: /Copiar mi mail/ }).first().click();
     await p.waitForTimeout(500);
     const clip = await p.evaluate(() => navigator.clipboard.readText());
     check(clip === MAIL, "portapapeles: copió el mail");
-    const dice = await p.locator("#contacto button", { hasText: /Mail copiado/ }).count();
-    check(dice > 0, "el botón confirma que se copió");
+    const dice = await p.evaluate(() => {
+      const c = document.querySelector("#contacto .copiar");
+      return { estado: c?.getAttribute("data-estado"), ficha: c?.querySelector(".copiar-direccion")?.textContent ?? "" };
+    });
+    check(dice.estado === "ok", `el botón confirma que se copió (${dice.estado})`);
+    check(dice.ficha === MAIL, "la ficha muestra la dirección recién después de copiar");
 
     // Feli acompaña en fotos, no habla (v7): nada de globos ni frases
     const feli = await p.evaluate(() => ({

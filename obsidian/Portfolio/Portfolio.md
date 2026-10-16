@@ -22,6 +22,7 @@ Figma, página *Diseño v7* ([[el-figma-son-capas-no-una-captura]]).
 - [[la-gota-lee-los-titulos]]
 - [[doval-grotesk-una-sola-letra]]
 - [[el-figma-son-capas-no-una-captura]]
+- [[los-hovers-son-vidrio]]
 
 ## v6 «Visita guiada» (historia)
 

@@ -18,7 +18,11 @@ import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/li
  *                       con su misma fuente; el texto del DOM queda transparente
  *                       (data-placa-lista) pero sigue ahí para leer y copiar
  *   data-feli           una foto de Feli (data-pose-src = la foto)
- *   data-vidrio         un panel de vidrio ahumado
+ *   data-vidrio         un panel de vidrio ahumado. Si se puede tocar (a,
+ *                       button), reacciona al mouse: lente, reflejo y canto.
+ *                       ="claro": vidrio casi sin ahumar (la cápsula de la
+ *                       nav). ="hover": aparece sólo con el mouse encima (las
+ *                       filas de proyectos). Al tocarlo, una onda lo recorre.
  *   data-gota="fx fy r" en una sección: dónde se apoya la gota cuando esa
  *                       sección está activa, en fracciones de SU título
  *                       (data-placa) y r en fracción de la pantalla
@@ -33,7 +37,8 @@ import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/li
  */
 
 type Placa = { el: HTMLElement; tex: WebGLTexture; firma: string };
-type Vidrio = { el: HTMLElement; radio: number };
+/** h: hover animado · a: presencia animada (data-vidrio="hover" aparece sólo con el mouse encima) */
+type Vidrio = { el: HTMLElement; radio: number; h: number; a: number; tipo: string; vivo: boolean };
 type Seccion = { el: HTMLElement; d: number[]; dm: number[]; placa: HTMLElement | null };
 
 const leer = (s: string | undefined) => (s ?? "").trim().split(/\s+/).map(Number).filter((n) => !Number.isNaN(n));
@@ -131,10 +136,20 @@ export function Escena() {
       const dpr = window.devicePixelRatio || 1;
       escala = nivel === "alto" ? Math.min(dpr, 1.5) : 0.6;
       motor.tamaño(Math.max(1, Math.round(vw * escala)), Math.max(1, Math.round(vh * escala)));
-      vidrios = [...document.querySelectorAll<HTMLElement>("[data-vidrio]")].map((el) => ({
-        el,
-        radio: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0,
-      }));
+      const previos = new Map(vidrios.map((v) => [v.el, v]));
+      vidrios = [...document.querySelectorAll<HTMLElement>("[data-vidrio]")].map((el) => {
+        const tipo = el.dataset.vidrio ?? "";
+        const antes = previos.get(el);
+        return {
+          el,
+          radio: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0,
+          h: antes?.h ?? 0,
+          a: antes?.a ?? (tipo === "hover" ? 0 : 1),
+          tipo,
+          // sólo lo que se puede tocar reacciona al mouse (un panel informativo no)
+          vivo: el.matches("a, button, [data-vidrio-vivo]"),
+        };
+      });
       felis = [...document.querySelectorAll<HTMLElement>("[data-feli]")];
       secciones = [...document.querySelectorAll<HTMLElement>("[data-gota]")].map((el) => ({
         el,
@@ -203,6 +218,27 @@ export function Escena() {
     };
     window.addEventListener("pointermove", mover, { passive: true });
     document.documentElement.addEventListener("pointerleave", salir);
+
+    // --- la onda: al tocar un vidrio, y más fuerte cuando algo sale bien ---
+    const onda = { x: 0, y: 0, t0: -1e9, fuerza: 0 };
+    const lanzar = (x: number, y: number, fuerza: number) => {
+      if (rm.matches) return;
+      onda.x = x;
+      onda.y = y;
+      onda.t0 = performance.now();
+      onda.fuerza = fuerza;
+      actividad = performance.now();
+    };
+    const tocar = (e: PointerEvent) => {
+      const el = e.target instanceof Element ? e.target.closest<HTMLElement>("[data-vidrio]") : null;
+      if (el?.matches("a, button")) lanzar(e.clientX, e.clientY, 1);
+    };
+    const festejo = (e: Event) => {
+      const d = (e as CustomEvent<{ x: number; y: number }>).detail;
+      if (d) lanzar(d.x, d.y, 1.6);
+    };
+    window.addEventListener("pointerdown", tocar, { passive: true });
+    window.addEventListener("vidrio:onda", festejo);
 
     const perdido = (e: Event) => {
       e.preventDefault();
@@ -285,16 +321,26 @@ export function Escena() {
         }
       }
 
-      // 4. Vidrio
+      // 4. Vidrio: hover (mouse o foco de teclado) y presencia, con resorte
       let nv = 0;
+      const kh = 1 - Math.exp(-dt / 110);
+      let moviendo = false;
       for (const v of vidrios) {
-        if (nv >= MAX_VIDRIOS) break;
+        const encima = v.vivo && ((fino.matches && v.el.matches(":hover")) || v.el.matches(":focus-visible"));
+        const objetivo = encima ? 1 : 0;
+        v.h += (objetivo - v.h) * (quieto ? 1 : kh);
+        if (v.tipo === "hover") v.a += (objetivo - v.a) * (quieto ? 1 : kh);
+        if (Math.abs(objetivo - v.h) > 0.01) moviendo = true;
+        if (nv >= MAX_VIDRIOS || v.a < 0.01) continue;
         const r = v.el.getBoundingClientRect();
         if (r.width < 2 || r.bottom < -20 || r.top > vh + 20) continue;
         vr.set([r.left, r.top, r.width, r.height], nv * 4);
-        vx.set([Math.min(v.radio, Math.min(r.width, r.height) / 2), 0, 0, 0], nv * 4);
+        vx.set([Math.min(v.radio, Math.min(r.width, r.height) / 2), v.h, v.a, v.tipo === "claro" ? 1 : 0], nv * 4);
         nv++;
       }
+      if (moviendo) actividad = ahora;
+      const edad = (ahora - onda.t0) / 1000;
+      if (edad < 1.2) actividad = ahora;
 
       motor.dibujar({
         vw,
@@ -308,6 +354,8 @@ export function Escena() {
         vidrios: vr,
         vidriosX: vx,
         nVidrios: nv,
+        puntero: [px, py],
+        onda: [onda.x, onda.y, edad, edad < 1.2 ? onda.fuerza : 0],
       });
       if (primero) {
         primero = false;
@@ -329,6 +377,8 @@ export function Escena() {
       window.removeEventListener("resize", ensuciar);
       window.removeEventListener("scroll", scroll);
       window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerdown", tocar);
+      window.removeEventListener("vidrio:onda", festejo);
       document.documentElement.removeEventListener("pointerleave", salir);
       canvas.removeEventListener("webglcontextlost", perdido);
       for (const p of placas.values()) delete p.el.dataset.placaLista;

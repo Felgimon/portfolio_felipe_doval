@@ -267,7 +267,20 @@ html[data-escena="poster"] .escena {
     border-radius: 9999px;
   }
 
+  /* ==========================================================================
+     BOTONES
+     Dos materiales, y los dos reaccionan como lo que son:
+     - VIDRIO (.boton-vidrio + data-vidrio): el hover lo pinta el shader (lente
+       bajo el puntero, reflejo que lo sigue, canto encendido de ese lado) y al
+       tocarlo una onda lo recorre. Ver Escena.tsx.
+     - ESMALTE (.boton-solido): crema con relieve (luz arriba, sombra abajo) y
+       un reflejo que sigue al puntero (--mx/--my, los pone Reflejos.tsx).
+     El "press" es un resorte: baja y rebota.
+     ======================================================================== */
   .boton {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -278,20 +291,287 @@ html[data-escena="poster"] .escena {
     font-weight: 620;
     font-size: 15px;
     white-space: nowrap;
-    transition: transform 0.18s var(--ease-salida), background-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 0.25s ease;
   }
   .boton:active {
-    transform: scale(0.97);
+    transform: scale(0.95);
+    transition-duration: 0.12s;
   }
   .boton-solido {
-    background: var(--crema);
     color: var(--noche);
+    background: linear-gradient(180deg, #fbf9f4 0%, var(--crema) 52%, #e4ddcf 100%);
+    box-shadow:
+      inset 0 1px 0 #ffffff,
+      inset 0 -1px 0 #d3cab8;
   }
-  .boton-solido:hover {
-    background: #ffffff;
+  /* el reflejo: una mancha de luz blanca donde está el puntero, como sobre esmalte */
+  .boton-solido::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle at var(--mx, 50%) var(--my, 0%),
+      #ffffff 0%,
+      #ffffff 18%,
+      transparent 62%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  @media (hover: hover) {
+    .boton-solido:hover::before {
+      opacity: 1;
+    }
   }
   .boton-vidrio {
     color: var(--crema);
+  }
+  /* sin escena el vidrio es sólido: el hover lo aclara */
+  @media (hover: hover) {
+    html:not([data-escena="lista"]) .boton-vidrio:hover {
+      background: #16308f;
+    }
+  }
+
+  /* las flechas acompañan el gesto */
+  .flecha {
+    display: inline-block;
+    transition: translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @media (hover: hover) {
+    :is(a, button):hover > .flecha-der,
+    :is(a, button):hover .flecha-der {
+      translate: 4px 0;
+    }
+    :is(a, button):hover .flecha-izq {
+      translate: -4px 0;
+    }
+    :is(a, button):hover .flecha-diag {
+      translate: 3px -3px;
+    }
+  }
+  :is(a, button):focus-visible .flecha-der {
+    translate: 4px 0;
+  }
+  :is(a, button):focus-visible .flecha-diag {
+    translate: 3px -3px;
+  }
+
+  :is(a, button):hover .flecha-abajo,
+  :is(a, button):focus-visible .flecha-abajo {
+    translate: 0 3px;
+  }
+
+  /* ==========================================================================
+     COPIAR MI MAIL
+     ======================================================================== */
+  .copiar-insignia {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    flex: none;
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .boton-vidrio .copiar-insignia {
+    background: var(--crema);
+    color: var(--noche);
+  }
+  .boton-solido .copiar-insignia {
+    background: var(--noche);
+    color: var(--crema);
+  }
+  .copiar .hoja {
+    transition:
+      transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.25s ease;
+  }
+  .copiar .tilde {
+    stroke-dasharray: 22;
+    stroke-dashoffset: 22;
+    transition: stroke-dashoffset 0.4s cubic-bezier(0.65, 0, 0.35, 1) 0.12s;
+  }
+  /* hover: las hojas se separan (el gesto de "copiar") */
+  @media (hover: hover) {
+    .copiar-boton:hover .hoja-atras {
+      transform: translate(1.5px, -1.5px);
+    }
+    .copiar-boton:hover .hoja-adelante {
+      transform: translate(-1.5px, 1.5px);
+    }
+  }
+  /* copiado: las hojas se juntan y desaparecen, se dibuja el tilde */
+  .copiar[data-estado="ok"] .hoja {
+    transform: translate(2.5px, -2.5px) scale(0.6);
+    transform-origin: center;
+    opacity: 0;
+  }
+  .copiar[data-estado="ok"] .tilde {
+    stroke-dashoffset: 0;
+  }
+  .copiar[data-estado="ok"] .copiar-insignia {
+    animation: copiar-latido 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes copiar-latido {
+    40% {
+      transform: scale(1.18);
+    }
+  }
+  /* el texto: dos renglones en la misma celda, el de "copiado" sube */
+  .copiar-texto {
+    display: grid;
+    overflow: hidden;
+  }
+  .copiar-texto > * {
+    grid-area: 1 / 1;
+    transition:
+      transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.3s ease;
+  }
+  .copiar-hecho {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  .copiar[data-estado] .copiar-normal {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+  .copiar[data-estado] .copiar-hecho {
+    transform: none;
+    opacity: 1;
+  }
+  /* el aro del botón de esmalte (el de vidrio tiene la onda del shader) */
+  .boton-solido.copiar-boton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 2px var(--noche);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .copiar[data-estado="ok"] .boton-solido.copiar-boton::after {
+    animation: copiar-aro 0.7s ease-out;
+  }
+  @keyframes copiar-aro {
+    0% {
+      opacity: 0.5;
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.12);
+    }
+  }
+  /* la ficha con la dirección: sube como una burbuja */
+  .copiar-aviso {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 12px);
+    z-index: 5;
+    pointer-events: none;
+  }
+  @media (max-width: 767px) {
+    /* en el celular el botón del inicio queda a la derecha: la ficha se alinea a su borde derecho */
+    .copiar-derecha .copiar-aviso {
+      left: auto;
+      right: 0;
+    }
+    .copiar-derecha .copiar-ficha {
+      transform-origin: calc(100% - 24px) 100%;
+    }
+  }
+  @media (min-width: 768px) {
+    .copiar-derecha .copiar-aviso {
+      left: calc(100% + 14px);
+      bottom: auto;
+      top: 50%;
+      translate: 0 -50%;
+    }
+    .copiar-derecha .copiar-ficha {
+      transform-origin: 0 50%;
+    }
+  }
+  .copiar-ficha {
+    display: block;
+    padding: 10px 16px 11px;
+    border-radius: 16px;
+    background: var(--vidrio-solido);
+    box-shadow:
+      inset 0 0 0 1px var(--canto),
+      inset 0 1px 0 #5f78e0,
+      0 18px 40px -18px #020829;
+    white-space: nowrap;
+    transform-origin: 24px 100%;
+    animation: copiar-ficha 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .copiar[data-estado="error"] .copiar-aviso {
+    pointer-events: auto;
+  }
+  .copiar-direccion {
+    display: block;
+    margin-top: 2px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--crema);
+    user-select: all;
+  }
+  @keyframes copiar-ficha {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.6);
+    }
+  }
+
+  /* la cápsula de la nav: vidrio claro con la escena; sin escena, un fondo */
+  .capsula {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-radius: 9999px;
+    background: var(--activo);
+    pointer-events: none;
+    transform: scale(0);
+  }
+  html[data-escena="lista"] .capsula {
+    background: transparent;
+  }
+
+  /* el nombre de la nav: al pasar, la letra se ensancha (el eje de ancho) */
+  .marca {
+    font-size: 14px;
+    font-weight: 800;
+    font-stretch: 125%;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    transition:
+      font-weight 0.45s var(--ease-salida),
+      letter-spacing 0.45s var(--ease-salida);
+  }
+  @media (hover: hover) {
+    .marca:hover {
+      font-weight: 900;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  /* un vidrio que aparece con el mouse (filas, siguiente caso) */
+  .vidrio-hover {
+    border-radius: 18px;
+    transition: background-color 0.25s ease;
+  }
+  @media (hover: hover) {
+    html:not([data-escena="lista"]) .vidrio-hover:hover {
+      background: var(--vidrio-solido);
+    }
   }
 
   /* El marco de una captura de producto */
@@ -327,14 +607,26 @@ html[data-escena="poster"] .escena {
     visibility: hidden;
   }
 
-  /* Listas de proyectos e hitos */
+  /* La lista de proyectos: la fila entera es el link; al pasar el mouse se
+     forma una burbuja de vidrio debajo y el nombre se corre. */
   .fila {
     display: grid;
     grid-template-columns: 3fr 5fr 3fr 40px;
     gap: 20px;
-    padding: 24px 0;
-    border-bottom: 1px solid var(--linea);
+    margin-inline: -16px;
+    padding: 24px 16px;
     align-items: baseline;
+  }
+  .fila .fila-nombre {
+    transition: translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @media (hover: hover) {
+    .fila:hover .fila-nombre {
+      translate: 8px 0;
+    }
+  }
+  .fila:focus-visible .fila-nombre {
+    translate: 8px 0;
   }
   @media (max-width: 767px) {
     .fila {

@@ -32,7 +32,7 @@ export function Contacto() {
               data-vidrio
               className="boton vidrio vidrio-pildora boton-vidrio"
             >
-              GitHub <span aria-hidden>↗</span>
+              GitHub <span aria-hidden className="flecha flecha-diag">↗</span>
             </a>
             <a
               href={perfil.links.linkedin}
@@ -41,7 +41,7 @@ export function Contacto() {
               data-vidrio
               className="boton vidrio vidrio-pildora boton-vidrio"
             >
-              LinkedIn <span aria-hidden>↗</span>
+              LinkedIn <span aria-hidden className="flecha flecha-diag">↗</span>
             </a>
           </div>
         </div>

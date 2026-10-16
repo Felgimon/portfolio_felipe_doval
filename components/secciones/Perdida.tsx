@@ -20,7 +20,7 @@ export function Perdida() {
             <span>{t.perdida.titulo}</span>
           </h1>
           <Link href="/" className="boton boton-solido mt-10">
-            <span aria-hidden>←</span> {t.perdida.volver}
+            <span aria-hidden className="flecha flecha-izq">←</span> {t.perdida.volver}
           </Link>
         </div>
         <Feli pose="perdida" prioridad className="ml-auto w-[34%] md:col-span-3 md:col-start-10 md:w-[60%]" />

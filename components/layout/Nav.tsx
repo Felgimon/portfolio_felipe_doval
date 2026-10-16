@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { gsap } from "@/lib/gsap";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -11,8 +12,12 @@ import type { IdParada } from "@/content/ui";
 
 /**
  * La NAV: el nombre a la izquierda (vuelve al inicio), una píldora de vidrio
- * con las secciones en el centro y "Hablemos" sólido a la derecha. La sección
- * activa se marca con un fondo más claro dentro de la píldora.
+ * con las secciones en el centro y "Hablemos" sólido a la derecha.
+ *
+ * Adentro de la píldora hay una CÁPSULA de vidrio claro (data-vidrio="claro",
+ * la pinta el shader como una gota): marca la sección activa y, con el mouse o
+ * el foco del teclado, se desliza con un resorte elástico hasta el link que
+ * estás por tocar; al salir, vuelve a la activa.
  *
  * Los links son anclas de verdad (#trabajo se puede compartir y el botón Atrás
  * funciona). Al ir a una sección el foco pasa a su título.
@@ -31,6 +36,40 @@ export function Nav() {
   const [abierta, setAbierta] = useState(false);
   const hoja = useRef<HTMLDivElement>(null);
   const boton = useRef<HTMLButtonElement>(null);
+  const pildora = useRef<HTMLUListElement>(null);
+  const capsula = useRef<HTMLLIElement>(null);
+  const [sobre, setSobre] = useState<IdParada | null>(null);
+  const marcado = sobre ?? ((enNav as IdParada[]).includes(activa) ? activa : null);
+
+  // la cápsula va al link marcado; sin link marcado, se encoge hasta desaparecer
+  useEffect(() => {
+    const ul = pildora.current;
+    const cap = capsula.current;
+    if (!ul || !cap) return;
+    const colocar = (inmediato: boolean) => {
+      const a = marcado ? ul.querySelector<HTMLElement>(`a[data-id="${marcado}"]`) : null;
+      const quieto = inmediato || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!a) {
+        gsap.to(cap, { scale: 0, duration: quieto ? 0 : 0.3, ease: "power2.in", overwrite: true });
+        return;
+      }
+      // medido contra la píldora (el offsetParent de cada link es su <li>)
+      const ra = a.getBoundingClientRect();
+      const ru = ul.getBoundingClientRect();
+      const destino = { x: ra.left - ru.left, y: ra.top - ru.top, width: ra.width, height: ra.height };
+      if (quieto || cap.dataset.lista === undefined) {
+        gsap.set(cap, { ...destino, scale: 1 });
+        cap.dataset.lista = "";
+      } else {
+        gsap.to(cap, { ...destino, scale: 1, duration: 0.75, ease: "elastic.out(1, 0.72)", overwrite: true });
+      }
+    };
+    colocar(false);
+    const rs = () => colocar(true);
+    window.addEventListener("resize", rs);
+    document.fonts?.ready.then(rs);
+    return () => window.removeEventListener("resize", rs);
+  }, [marcado, enHome]);
 
   useEffect(() => {
     if (!abierta) return;
@@ -67,22 +106,34 @@ export function Nav() {
         href="/"
         onClick={(e) => ir(e, "inicio")}
         aria-label={t.nav.inicio}
-        className="justify-self-start text-[14px] font-[800] tracking-[0.01em] uppercase [font-stretch:125%]"
+        className="marca justify-self-start"
       >
         Felipe Doval
       </Link>
 
         {enHome ? (
-          <ul data-vidrio className="vidrio vidrio-pildora hidden items-center gap-0.5 p-[5px] lg:flex">
+          <ul
+            ref={pildora}
+            data-vidrio
+            onPointerLeave={() => setSobre(null)}
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setSobre(null);
+            }}
+            className="vidrio vidrio-pildora relative hidden items-center gap-0.5 p-[5px] lg:flex"
+          >
+            <li ref={capsula} aria-hidden role="presentation" data-vidrio="claro" className="capsula" />
             {enNav.map((id) => (
-              <li key={id}>
+              <li key={id} className="relative">
                 <a
                   href={href(id)}
+                  data-id={id}
                   onClick={(e) => ir(e, id)}
+                  onPointerEnter={(e) => e.pointerType === "mouse" && setSobre(id)}
+                  onFocus={() => setSobre(id)}
                   aria-current={activa === id ? "location" : undefined}
                   className={cn(
-                    "block rounded-full px-[15px] py-[9px] text-[14px] font-medium transition-colors",
-                    activa === id ? "bg-[var(--activo)] text-crema" : "text-crema-2 hover:text-crema",
+                    "relative block rounded-full px-[15px] py-[9px] text-[14px] font-medium transition-colors duration-300",
+                    marcado === id ? "text-crema" : "text-crema-2",
                   )}
                 >
                   {t.paradas[id]}
@@ -92,14 +143,14 @@ export function Nav() {
           </ul>
         ) : (
           <Link href={volverA} data-vidrio className="boton vidrio vidrio-pildora boton-vidrio hidden min-h-[42px] text-[14px] lg:inline-flex">
-            <span aria-hidden>←</span> {t.nav.volver}
+            <span aria-hidden className="flecha flecha-izq">←</span> {t.nav.volver}
           </Link>
         )}
 
         <div className="flex items-center gap-2 justify-self-end">
           {!enHome && (
             <Link href={volverA} data-vidrio className="boton vidrio vidrio-pildora boton-vidrio min-h-[44px] px-[18px] text-[14px] lg:hidden">
-              <span aria-hidden>←</span> {t.nav.volver}
+              <span aria-hidden className="flecha flecha-izq">←</span> {t.nav.volver}
             </Link>
           )}
           {enHome && (

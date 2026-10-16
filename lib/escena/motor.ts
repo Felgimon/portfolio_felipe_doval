@@ -21,12 +21,14 @@ export type Cuadro = {
   placas: PlacaGPU[];
   feli: { rect: [number, number, number, number]; src: string }[];
   vidrios: Float32Array; // MAX_VIDRIOS * 4
-  vidriosX: Float32Array; // MAX_VIDRIOS * 4 (x = radio)
+  vidriosX: Float32Array; // MAX_VIDRIOS * 4 (x radio, y hover, z presencia, w tipo)
   nVidrios: number;
+  puntero: [number, number];
+  onda: [number, number, number, number]; // x, y, edad (s), fuerza
 };
 
 const NOMBRES = [
-  "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV",
+  "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
 ] as const;
 const ARRAYS = new Set(["uV", "uVX"]);
@@ -160,6 +162,8 @@ export class Motor {
     gl.uniform4fv(u.uV, c.vidrios);
     gl.uniform4fv(u.uVX, c.vidriosX);
     gl.uniform1i(u.uNV, Math.min(c.nVidrios, MAX_VIDRIOS));
+    gl.uniform2f(u.uM, c.puntero[0], c.puntero[1]);
+    gl.uniform4f(u.uOnda, c.onda[0], c.onda[1], c.onda[2], c.onda[3]);
 
     const rects = [u.uPR0, u.uPR1, u.uPR2];
     for (let i = 0; i < MAX_PLACAS; i++) {

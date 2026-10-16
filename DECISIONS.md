@@ -3,10 +3,74 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v7.0** es la vigente (rediseño completo «Vidrio y cobalto»).
+> Las secciones **v7.x** son las vigentes (rediseño «Vidrio y cobalto»).
 > Debajo queda toda la historia: v6 (la visita guiada en líquido verde), v5.x
 > (el sol en el estudio blanco), v4, v3, v2 y v1. Las notas también están en
 > `obsidian/Portfolio/`.
+
+---
+
+## v7.1 — Los hovers son vidrio, y "Copiar mi mail" se entiende
+
+### El pedido
+A Felipe no le gustaban los hovers (en la nav directamente no había) y pidió
+que jueguen con el vidrio, "como la burbuja", con un efecto reflectivo,
+profesional y sin que falte ningún botón. Y que "Copiar mi mail" parezca un
+botón de copiar, con una buena animación al copiar.
+
+### La idea
+El vidrio de la UI ya lo pinta el shader: el hover puede ser **vidrio de
+verdad**, no un brillo de CSS que lo imite. Dos materiales, cada uno reacciona
+como lo que es:
+- **Vidrio** (botones de vidrio, la nav, las filas, el siguiente caso): con el
+  mouse encima el vidrio se aclara y toma volumen de cúpula, una **lente**
+  agranda lo que está debajo del puntero, un **reflejo** lo sigue (corrido hacia
+  la luz de arriba a la izquierda) y el **canto** se engrosa y se enciende del
+  lado del puntero. Al tocarlo, una **onda** circular recorre el vidrio.
+- **Esmalte** (los botones crema): relieve (luz arriba, sombra abajo) y una
+  mancha de luz que sigue al puntero (`Reflejos.tsx` pone `--mx/--my`).
+- **La nav:** una **cápsula de vidrio claro** (data-vidrio="claro", una gotita)
+  marca la sección activa y se desliza con un resorte elástico de GSAP hasta el
+  link con el mouse o el foco del teclado; al salir, vuelve.
+- **Las filas de proyectos y "Siguiente caso":** data-vidrio="hover", una
+  burbuja de vidrio que se forma debajo con el mouse, y el nombre se corre.
+- **Las flechas** acompañan (→ avanza, ↗ sube en diagonal, ← retrocede, ↓
+  baja), el press es un resorte (baja y rebota) y el nombre de la nav ensancha
+  el tracking y sube de peso (la fuente es variable).
+- Se descartó el botón "magnético" (que persigue al mouse): en un sitio con
+  una gota que ya sigue al puntero, era un segundo protagonista.
+
+Sólo reacciona lo que se puede tocar (un panel informativo no). Con mouse o
+foco de teclado; en el celular no hay hover pegado (`pointer: fine` y
+`@media (hover: hover)`). Con reducir movimiento no hay onda.
+
+### Copiar mi mail
+- Se lee como lo que es: la insignia con el ícono de **copiar** (dos hojas),
+  que al pasar el mouse se separan.
+- Al tocar (respuesta **optimista**: no espera al portapapeles): las hojas se
+  juntan y se **dibuja un tilde**, el texto sube a "Mail copiado", una onda
+  recorre el vidrio (en el de esmalte, un aro) y aparece una **ficha con la
+  dirección** copiada, a la derecha en el inicio y arriba en Contacto y en el
+  celular. La ficha es sólida a propósito: una primera versión de vidrio claro
+  dejaba ver el párrafo de atrás y no se leía.
+- Si el portapapeles falla: "No se pudo copiar" y la ficha queda 7 s con la
+  dirección seleccionable para copiarla a mano.
+- La dirección sigue sin estar en el HTML: se arma y se muestra recién en el
+  clic.
+
+### Bugs encontrados al probar
+- La cápsula cambiaba de ancho pero no se movía: se medía contra su `<li>` (el
+  offsetParent), no contra la píldora.
+- El primer hover de vidrio era tan sutil que no se veía (detrás de un botón
+  suele haber azul liso, y la lente sola no muestra nada): se sumaron el
+  aclarado, la cúpula y un canto más grueso.
+
+### Verificación
+`gate` 0 errores · `audit` **40/40** (suma: la cápsula va al link con el mouse
+y vuelve a la activa; la ficha muestra la dirección recién después de copiar) ·
+`idioma`, `touch`, `anim`, `smoke` en verde. Capturas antes/después de cada
+tipo de botón y la secuencia de copiado cuadro por cuadro (animaciones
+congeladas con `getAnimations()`), en escritorio y celular.
 
 ---
 

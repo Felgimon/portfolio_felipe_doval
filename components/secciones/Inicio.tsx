@@ -52,9 +52,9 @@ export function Inicio() {
             }}
             className="boton boton-solido"
           >
-            {t.hero.verTrabajo}
+            {t.hero.verTrabajo} <span aria-hidden className="flecha flecha-abajo">↓</span>
           </a>
-          <CopiarMail />
+          <CopiarMail ficha="derecha" />
         </div>
       </div>
 

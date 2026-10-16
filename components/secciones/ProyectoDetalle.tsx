@@ -73,7 +73,7 @@ export function ProyectoDetalle({ slug }: { slug: string }) {
                 data-vidrio
                 className="boton vidrio vidrio-pildora boton-vidrio"
               >
-                {e.label} <span aria-hidden>↗</span>
+                {e.label} <span aria-hidden className="flecha flecha-diag">↗</span>
               </a>
             ))}
           </div>
@@ -148,10 +148,10 @@ export function ProyectoDetalle({ slug }: { slug: string }) {
 
         {siguiente && (
           <nav className="mt-20 flex justify-end" aria-label={d.siguiente}>
-            <Link href={`/proyectos/${siguiente.slug}`} className="group text-right">
+            <Link href={`/proyectos/${siguiente.slug}`} data-vidrio="hover" className="vidrio-hover group -m-5 rounded-[28px] p-5 text-right">
               <span className="etiqueta block">{d.siguiente}</span>
-              <span className="mt-2 block text-[36px] leading-none font-[850] uppercase [font-stretch:125%] transition-colors group-hover:text-white md:text-[48px]">
-                {siguiente.nombre} <span aria-hidden>→</span>
+              <span className="mt-2 block text-[36px] leading-none font-[850] uppercase [font-stretch:125%] md:text-[48px]">
+                {siguiente.nombre} <span aria-hidden className="flecha flecha-der">→</span>
               </span>
             </Link>
           </nav>

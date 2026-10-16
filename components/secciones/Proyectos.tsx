@@ -31,23 +31,24 @@ export function Proyectos() {
             const link = p.enlaces.find((e) => e.tipo === "repo" || e.tipo === "demo");
             const fila = (
               <>
-                <span className="h3 text-[20px] md:text-[22px]">{p.nombre}</span>
+                <span className="fila-nombre h3 text-[20px] md:text-[22px]">{p.nombre}</span>
                 <span className="hidden text-[16px] text-crema-2 md:block">{p.unaLinea}</span>
                 <span className="hidden text-[14px] text-crema-2 md:block">{p.stack.slice(0, 2).join(", ")}</span>
                 <span aria-hidden className="text-right text-[18px]">
-                  {link ? "↗" : ""}
+                  {link && <span className="flecha flecha-diag">↗</span>}
                 </span>
               </>
             );
             return (
-              <li key={p.slug}>
+              <li key={p.slug} className="border-b border-linea">
                 {link ? (
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${p.nombre}: ${t.trabajo.ariaAbrirRepo} ${link.label}`}
-                    className="fila transition-colors hover:text-white"
+                    data-vidrio="hover"
+                    className="fila vidrio-hover"
                   >
                     {fila}
                   </a>

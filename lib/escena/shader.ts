@@ -10,7 +10,9 @@
  *     Refracta lo impreso con dispersión por canal (IOR 1,47 a 1,515), refleja
  *     un estudio con softbox y dos tiras de luz, y tiene un brillo duro.
  *  4. VIDRIO AHUMADO: los paneles de la UI (data-vidrio) refractan lo que tienen
- *     detrás con un bisel, se ahuman hacia Noche y llevan un canto de luz.
+ *     detrás con un bisel, se ahuman hacia Noche y llevan un canto de luz. Con
+ *     el mouse encima: una lente bajo el puntero, un reflejo que lo sigue y el
+ *     canto más encendido de ese lado. Al tocar, una onda recorre el vidrio.
  *
  * Coordenadas: px CSS con origen arriba a la izquierda (como el DOM).
  */
@@ -33,6 +35,8 @@ uniform float uR;
 uniform vec4 uV[${MAX_VIDRIOS}];
 uniform vec4 uVX[${MAX_VIDRIOS}];
 uniform int uNV;
+uniform vec2 uM;   // el puntero (px)
+uniform vec4 uOnda; // la onda al tocar: x, y, edad (s), fuerza
 
 const vec3 NOCHE = vec3(.027, .078, .28);
 const vec3 COB = vec3(.085, .2, .72);
@@ -155,7 +159,9 @@ void main(){
   col *= 1. - .22 * sh;
   col = gota(p, col);
 
-  // vidrio ahumado de la UI: el panel más cercano
+  // VIDRIO de la UI. Por panel (uVX): x radio, y hover (0..1), z presencia
+  // (0..1: las filas se vuelven vidrio al pasar el mouse), w tipo (0 ahumado,
+  // 1 claro, como una gota). Si hay paneles anidados gana el último del DOM.
   float mejor = 1e5;
   vec4 R = vec4(0), X = vec4(0);
   for (int i = 0; i < ${MAX_VIDRIOS}; i++) {
@@ -163,7 +169,7 @@ void main(){
     vec4 r = uV[i];
     float rad = min(uVX[i].x, min(r.z, r.w) * .5);
     float d = sdRR(p - r.xy - r.zw * .5, r.zw * .5, rad);
-    if (d < mejor) { mejor = d; R = r; X = uVX[i]; X.x = rad; }
+    if (d < 0.) { mejor = d; R = r; X = uVX[i]; X.x = rad; }
   }
   if (mejor < 0.) {
     vec2 c = R.xy + R.zw * .5, hb = R.zw * .5;
@@ -171,19 +177,41 @@ void main(){
       sdRR(p - c + vec2(1, 0), hb, X.x) - sdRR(p - c - vec2(1, 0), hb, X.x),
       sdRR(p - c + vec2(0, 1), hb, X.x) - sdRR(p - c - vec2(0, 1), hb, X.x));
     g /= max(length(g), 1e-4);
-    float W = min(18., min(R.z, R.w) * .3);
+    float h = X.y, claro = X.w, chico = min(R.z, R.w);
+    float W = min(18., chico * .3);
     float bis = pow(1. - clamp(-mejor / W, 0., 1.), 2.2);
-    vec2 o2 = g * (30. * bis);
-    vec2 base = c + (p - c) * .94;
+    vec2 o2 = g * ((30. + 14. * claro) * bis);
+    // la lente: con el mouse encima, lo que está debajo del puntero se agranda
+    vec2 dm = p - uM;
+    float rl = max(chico * .9, 34.);
+    float lente = h * exp(-dot(dm, dm) / (rl * rl));
+    vec2 base = c + (p - c) * (.94 - .05 * claro) - dm * .16 * lente;
+    // la onda al tocar: un frente circular que dobla el vidrio
+    vec2 dr = p - uOnda.xy;
+    float rr = length(dr);
+    float onda = uOnda.w * exp(-uOnda.z * 2.8) * exp(-pow((rr - uOnda.z * 520.) / 24., 2.));
+    o2 += dr / max(rr, 1.) * onda * 16.;
     vec3 v;
     if (uQ > .5) v = vec3(fondo(base + o2 * .94).r, fondo(base + o2).g, fondo(base + o2 * 1.08).b);
     else v = fondo(base + o2);
     v = gota(base + o2, v);
-    v = mix(v, NOCHE, .42);
+    // el ahumado se aclara con el hover (el vidrio "se enciende"); el claro casi no ahúma
+    v = mix(v, NOCHE, .42 - .3 * claro - .2 * h);
+    // con el hover el panel toma volumen de cúpula: más luz arriba, menos abajo
+    v *= 1. + .1 * h * clamp(-(p.y - c.y) / max(hb.y, 1.), -1., 1.);
+    // el reflejo: una mancha de luz que sigue al puntero, corrida hacia la luz
+    vec2 qb = (dm + vec2(.12, .28) * chico) / vec2(max(R.w * 1.5, 56.), max(R.w * .62, 26.));
+    v = mix(v, CREMA, h * exp(-dot(qb, qb)) * .26);
+    // el canto: la luz de arriba a la izquierda, más el lado que mira al puntero;
+    // con el hover se engrosa
     float luz = dot(g, normalize(vec2(-.6, -.8)));
-    float canto = smoothstep(1.6, 0., -mejor);
-    v = mix(v, CREMA, canto * smoothstep(-.2, .8, luz) * .55);
-    col = v;
+    float canto = smoothstep(1.6 + 1.4 * h, 0., -mejor);
+    float lado = h * smoothstep(0., 1., dot(g, normalize(uM - c + vec2(1e-3))));
+    v = mix(v, CREMA, canto * (smoothstep(-.2, .8, luz) * .55 + lado * .4 + onda * .4));
+    // el vidrio claro tiene además el aro interno de una burbuja
+    float aro = smoothstep(5., 1.5, -mejor) * (1. - canto);
+    v = mix(v, CREMA, aro * claro * smoothstep(.1, .9, luz) * .3);
+    col = mix(col, v, X.z);
   }
   float gr = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
   col += (gr - .5) * .028;
