@@ -7,9 +7,10 @@ import { alCambiar, alternar, estaPrendido } from "@/lib/sonido";
 /**
  * Prende o apaga el sonido del sitio (lib/sonido.ts).
  *
- * - "icono" (la nav): un círculo de vidrio con un ecualizador de tres barras.
- *   Prendido, las barras se mueven; apagado, quedan chatas, apagadas y
- *   tachadas, que se lea de un vistazo que está en silencio.
+ * - "icono" (la nav): sólo el ecualizador de tres barras, sin caja. Prendido,
+ *   las barras se mueven; apagado, quedan quietas, apagadas y tachadas, que se
+ *   lea de un vistazo que está en silencio. El hover es la gota: llega y se
+ *   vuelve un círculo de vidrio encima del ícono (Burbuja.tsx).
  * - "fila" (el menú del celular): el mismo ícono con el estado escrito.
  * - "texto" (Así soy, debajo de "Música"): un link de texto.
  *
@@ -55,8 +56,7 @@ export function BotonSonido({ variante = "icono", className }: { variante?: "ico
       aria-pressed={prendido}
       aria-label={t.sonido.boton}
       title={accion}
-      data-vidrio
-      className={cn("boton vidrio vidrio-pildora boton-vidrio sonido sonido-icono", className)}
+      className={cn("sonido sonido-icono", className)}
     >
       {eq}
     </button>

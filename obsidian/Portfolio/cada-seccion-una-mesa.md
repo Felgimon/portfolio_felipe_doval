@@ -29,6 +29,12 @@ columna libre), nunca debajo de un texto; Enfoque sumó las suyas (regla,
 escuadra, compás). El botón de sonido es sólo el ícono y, apagado, se ve
 tachado. Saqué el panel "Ahora" de la portada.
 
+**v8.3:** los objetos eran muy chicos. Ahora se recortan uno por uno y se
+acomodan grandes donde hay aire: una fila debajo de la bio en Perfil, el juego
+de dibujo arriba a la derecha en Enfoque, una fila larga entre Trabajo y
+Proyectos, un 2x2 en la columna libre de Recorrido y las dos tazas a la
+derecha en Contacto.
+
 Las imágenes están generadas con IA (no son mis cosas): si saco fotos o hago
 cianotipos de verdad de mis objetos, se cambian con
 `node scripts/gen-cianotipos.mjs`. En el Figma: página **Diseño v8 · Más yo**.

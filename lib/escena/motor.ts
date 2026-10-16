@@ -20,7 +20,7 @@ export type Cuadro = {
   gota: [number, number, number]; // x, y, radio (radio 0 = sin gota)
   placas: PlacaGPU[];
   feli: { rect: [number, number, number, number]; src: string }[];
-  cianotipos: { rect: [number, number, number, number]; src: string }[];
+  cianotipos: { rect: [number, number, number, number]; src: string; funde: boolean }[];
   vidrios: Float32Array; // MAX_VIDRIOS * 4
   vidriosX: Float32Array; // MAX_VIDRIOS * 4 (x radio, y hover, z presencia, w tipo)
   nVidrios: number;
@@ -32,7 +32,7 @@ export type Cuadro = {
 const NOMBRES = [
   "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda", "uForma",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
-  "uK0", "uK1", "uKR0", "uKR1", "uPapel", "uGrano",
+  "uK0", "uK1", "uKR0", "uKR1", "uPapel", "uGrano", "uKF",
 ] as const;
 const ARRAYS = new Set(["uV", "uVX"]);
 const CERO: [number, number, number, number] = [0, 0, 0, 0];
@@ -207,6 +207,7 @@ export class Motor {
     }
     this.fotosGPU(c.feli, 3, [u.uFR0, u.uFR1]);
     this.fotosGPU(c.cianotipos, 5, [u.uKR0, u.uKR1]);
+    gl.uniform2f(u.uKF, c.cianotipos[0]?.funde ? 1 : 0, c.cianotipos[1]?.funde ? 1 : 0);
     gl.activeTexture(gl.TEXTURE7);
     gl.bindTexture(gl.TEXTURE_2D, this.texPapel ?? this.vacia);
     gl.drawArrays(gl.TRIANGLES, 0, 3);

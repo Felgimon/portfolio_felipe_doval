@@ -142,6 +142,32 @@ try {
     const vuelve = await p.evaluate(() => !document.querySelector("[data-gota-aqui]") && !document.documentElement.dataset.gotaModo);
     check(vuelve, "nav: al salir, la gota vuelve a su título");
 
+    // v8.2: la burbuja es el hover de TODO lo que se toca (no sólo la nav)
+    for (const [sel, nombre] of [
+      ["#inicio a.boton-solido", "un botón de esmalte (Ver el trabajo)"],
+      ["#inicio .copiar-boton", "un botón de vidrio (Copiar mi mail)"],
+      ["header button.sonido-icono", "el ícono de sonido"],
+    ]) {
+      await p.evaluate(() => window.scrollTo(0, 0));
+      await p.waitForTimeout(400);
+      const caja = await p.locator(sel).first().boundingBox();
+      await p.mouse.move(caja.x + caja.width / 2, caja.y + caja.height / 2, { steps: 3 });
+      await p.waitForTimeout(1300);
+      const est = await p.evaluate((s) => ({
+        aqui: document.querySelector(s)?.hasAttribute("data-gota-aqui"),
+        escena: document.documentElement.dataset.escena,
+        modo: document.documentElement.dataset.gotaModo,
+      }), sel);
+      check(est.aqui && (est.escena !== "lista" || est.modo === "boton"), `burbuja: la gota llega a ${nombre} (${est.escena}, ${est.modo})`);
+      await p.mouse.move(5, 890);
+      await p.waitForTimeout(600);
+    }
+    const sonidoIcono = await p.evaluate(() => {
+      const b = document.querySelector("header button.sonido-icono");
+      return { vidrio: b?.hasAttribute("data-vidrio"), nombre: b?.getAttribute("aria-label"), pressed: b?.getAttribute("aria-pressed") };
+    });
+    check(!sonidoIcono.vidrio && sonidoIcono.nombre === "Sonido" && sonidoIcono.pressed !== null, `sonido: es sólo el ícono, con nombre y estado (${JSON.stringify(sonidoIcono)})`);
+
     await p.evaluate(() => document.getElementById("contacto").scrollIntoView());
     await p.waitForTimeout(1200);
     await p.locator("#contacto button", { hasText: /Copiar mi mail/ }).first().click();
@@ -179,10 +205,13 @@ try {
 
     // v8: los cianotipos (el fondo de cada sección) están y la escena los pinta
     const cianos = await p.evaluate(() => [...document.querySelectorAll("[data-cianotipo]")].map((e) => e.dataset.cianotipo));
-    check(cianos.join() === "musica,curiosidad,enfoque,herramientas,movimiento,gente", `cianotipos en sus secciones (${cianos.join()})`);
+    check(
+      cianos.join() === "musica,curiosidad,perfil-grande,enfoque,enfoque-grande,herramientas,trabajo-grande,movimiento,recorrido-grande,gente,contacto-grande",
+      `cianotipos en sus secciones, grandes en escritorio y en fila en el celular (${cianos.join()})`,
+    );
     const pintado = await p.evaluate(() => ({
       escena: document.documentElement.dataset.escena,
-      gente: document.querySelector('[data-cianotipo="gente"]')?.dataset.pintado !== undefined,
+      gente: document.querySelector('[data-cianotipo="contacto-grande"]')?.dataset.pintado !== undefined,
     }));
     check(pintado.escena !== "lista" || pintado.gente, `la escena pinta el cianotipo de la sección a la vista (${JSON.stringify(pintado)})`);
 
@@ -235,7 +264,7 @@ try {
     const r = await p.evaluate(() => ({
       escena: document.documentElement.dataset.escena,
       activo: document.querySelector("nav [aria-current=location]")?.textContent?.trim(),
-      pintado: document.querySelector('#perfil [data-cianotipo]')?.hasAttribute("data-pintado"),
+      pintado: document.querySelector('#perfil [data-cianotipo="perfil-grande"]')?.hasAttribute("data-pintado"),
     }));
     check(r.activo === "Perfil", `reduced-motion: la nav sigue al scroll (${r.activo})`);
     check(

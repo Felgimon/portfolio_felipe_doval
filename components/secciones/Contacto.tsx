@@ -18,12 +18,14 @@ export function Contacto() {
     <section
       id="contacto"
       aria-labelledby="contacto-titulo"
-      className="parada !pb-10"
+      className="parada !pb-10 max-md:pt-[150px]"
       data-gota="0.9 0.5 0.09"
       data-gota-m="0.9 0.5 0.09"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="gente" className="max-md:top-[-92px] max-md:w-[80%] md:top-[150px] md:w-[42%]" />
+        <Cianotipo nombre="gente" className="top-[-116px] w-[78%] md:hidden" />
+        {/* las dos tazas, grandes, a la derecha del texto */}
+        <Cianotipo nombre="contacto-grande" className="top-[140px] right-[2%] w-[46%] max-w-[680px] max-md:hidden" />
         <div className="md:max-w-[58%]">
           <TituloSeccion id="contacto-titulo">{t.paradas.contacto}</TituloSeccion>
           <p className="lead mt-10 max-w-[34ch]">{t.contacto.lead}</p>

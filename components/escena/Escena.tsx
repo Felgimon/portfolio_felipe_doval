@@ -264,6 +264,8 @@ export function Escena() {
     // la gota: posición, radio, y su forma de botón (medio ancho, medio alto, cuánto)
     // cada valor es un resorte (con un poco de rebote, como un líquido)
     const resorte = (v: number) => ({ v, vel: 0 });
+    /** el elemento sobre el que está la gota (su propio hover de vidrio se apaga) */
+    let gotaEn: HTMLElement | null = null;
     const gp = {
       x: resorte(0), y: resorte(0), r: resorte(0), hw: resorte(0), hh: resorte(0), m: resorte(0),
       lista: false,
@@ -337,23 +339,30 @@ export function Escena() {
         const src = el.dataset.src;
         if (!src) continue;
         if (motor.foto(src) && el.dataset.pintado === undefined) el.dataset.pintado = "";
-        cianotipos.push({ rect: [r.left, r.top, r.width, r.height], src });
+        cianotipos.push({ rect: [r.left, r.top, r.width, r.height], src, funde: el.dataset.funde !== undefined });
       }
 
       // 3. La gota: va a la sección activa y se apoya en una letra de su título.
-      // Con el mouse (o el foco) sobre un link de la nav, vuela hasta ahí y se
-      // vuelve una píldora de vidrio del tamaño del link.
+      // Con el mouse (o el foco) sobre algo que se toca (data-gota-aqui: la nav,
+      // los botones, las filas), vuela hasta ahí y se vuelve una burbuja de
+      // vidrio con su forma, encima. Un poco más grande que el botón, para que
+      // su canto se vea alrededor; el ícono de sonido, un círculo.
       let activa: Seccion | undefined = secciones[0];
       for (const s of secciones) if (s.el.getBoundingClientRect().top < vh * 0.5) activa = s;
-      const boton = quieto ? null : document.querySelector<HTMLElement>("[data-gota-aqui]");
+      let boton = quieto ? null : document.querySelector<HTMLElement>("[data-gota-aqui]");
+      // si el scroll lo sacó de abajo del puntero, ya no es el objetivo
+      if (boton && !boton.matches(":hover, :focus-visible")) boton = null;
+      gotaEn = boton;
       const rb = boton?.getBoundingClientRect();
       if (activa?.placa || (rb && rb.width > 0)) {
         let tx: number, ty: number, tr: number, thw: number, thh: number, tm: number;
-        if (rb && rb.width > 0) {
+        if (boton && rb && rb.width > 0) {
+          const pad = boton.matches(".nav-link") ? 0 : boton.matches(".boton-solido") ? 5 : 3;
           tx = rb.left + rb.width / 2;
           ty = rb.top + rb.height / 2;
-          thw = rb.width / 2;
-          thh = rb.height / 2;
+          thh = Math.max(rb.height / 2 + pad, 18);
+          thw = rb.width / 2 + pad + (rb.height < 30 ? 12 : 0);
+          if (boton.matches(".sonido-icono")) thw = thh = Math.max(thw, thh);
           tr = thh;
           tm = 1;
         } else {
@@ -386,6 +395,9 @@ export function Escena() {
         }
         if (gp.m.v > 0.5) html.dataset.gotaModo = "boton";
         else delete html.dataset.gotaModo;
+        // sólo en las pruebas (con el reloj manual): dónde está la gota
+        const w = window as { __relojEscena?: number; __gota?: number[] };
+        if (w.__relojEscena !== undefined) w.__gota = [gp.x.v, gp.y.v, gp.hw.v, gp.hh.v, gp.m.v];
       }
 
       // 4. Vidrio: hover (mouse o foco de teclado) y presencia, con resorte
@@ -393,7 +405,10 @@ export function Escena() {
       const kh = 1 - Math.exp(-dt / 110);
       let moviendo = false;
       for (const v of vidrios) {
-        const encima = v.vivo && ((fino.matches && v.el.matches(":hover")) || v.el.matches(":focus-visible"));
+        // con la gota encima, el vidrio propio no reacciona: la burbuja es el hover
+        const bajoGota = gotaEn !== null && gp.m.v > 0.05 && (v.el === gotaEn || v.el.contains(gotaEn));
+        const encima =
+          !bajoGota && v.vivo && ((fino.matches && v.el.matches(":hover")) || v.el.matches(":focus-visible"));
         const objetivo = encima ? 1 : 0;
         v.h += (objetivo - v.h) * (quieto ? 1 : kh);
         if (v.tipo === "hover") v.a += (objetivo - v.a) * (quieto ? 1 : kh);
@@ -409,20 +424,22 @@ export function Escena() {
       const edad = (ahora - onda.t0) / 1000;
       if (edad < 1.2) actividad = ahora;
 
+      // sólo en las pruebas (y para exportar al Figma): apagar capas de la escena
+      const capas = (window as { __capasEscena?: Record<string, boolean> }).__capasEscena;
       motor.dibujar({
         vw,
         vh,
         escala,
         tiempo: t,
         calidad: nivel === "alto" ? 1 : 0,
-        gota: [gp.x.v, gp.y.v, gp.lista ? Math.max(gp.r.v, 1) : 0],
+        gota: [gp.x.v, gp.y.v, gp.lista && capas?.gota !== false ? Math.max(gp.r.v, 1) : 0],
         forma: [gp.hw.v, gp.hh.v, gp.m.v],
-        placas: placasGPU,
-        feli,
+        placas: capas?.placas === false ? [] : placasGPU,
+        feli: capas?.feli === false ? [] : feli,
         cianotipos,
         vidrios: vr,
         vidriosX: vx,
-        nVidrios: nv,
+        nVidrios: capas?.vidrio === false ? 0 : nv,
         puntero: [px, py],
         onda: [onda.x, onda.y, edad, edad < 1.2 ? onda.fuerza : 0],
       });

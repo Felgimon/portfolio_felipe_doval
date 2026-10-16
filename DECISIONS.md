@@ -10,6 +10,96 @@ dependencias y bugs). Se actualiza en cada fase.
 
 ---
 
+## v8.3 — Los objetos, grandes, donde hay aire
+
+### El pedido
+Los objetos de las secciones eran muy chiquitos. Que sean grandes (pueden
+quedar debajo de texto), en los espacios más vacíos, y que queden excelentes.
+
+### Cómo
+Las filas de la v8.1 eran una sola imagen por sección: para agrandarlas sin que
+choquen con el texto hacía falta poder acomodar cada objeto. `scripts/
+componer-cianotipos.py` recorta los objetos uno por uno del original (las
+partes de un mismo objeto, como dos zapatillas o dos columnas de teclas,
+quedan juntas) y los vuelve a acomodar, en knolling, con la forma del lugar
+vacío de cada sección:
+- **Perfil:** la lupa, el lápiz, la protoboard y la lamparita en fila, en el
+  flujo, debajo de la bio (la columna izquierda quedaba vacía abajo).
+- **Enfoque:** el juego de dibujo (la regla arriba; escuadra, compás, lápiz y
+  libreta debajo) arriba a la derecha, al lado del título y la bajada, sin
+  pisar el título, apenas por detrás de las tarjetas de vidrio.
+- **Trabajo:** una fila larga en el aire entre Superlum y Proyectos.
+- **Recorrido:** 2x2 en la columna libre (zapatillas y pelota; llaves y
+  tarjeta).
+- **Contacto:** las dos tazas en espejo, a la derecha del texto.
+- En el celular siguen las filas chicas arriba de cada título.
+- Los bordes sólo se funden en los que van a sangre (la portada y el 404): las
+  composiciones ya traen su aire y fundirlas cortaba los objetos de abajo.
+
+---
+
+## v8.2 — La burbuja es el hover de todo, y los objetos se ven
+
+### El pedido
+El botón de sonido, sólo el ícono (sin botón); de hover, la burbuja que se
+pone encima. Un debug de los hovers con burbuja en todos los botones: no
+parecían una burbuja encima y en varios ni llegaba. Los objetos del fondo, menos
+transparentes (con el papel nuevo no se veían) y bien ubicados. Y el diseño
+nuevo entero en el Figma.
+
+### El debug (lo que estaba mal)
+- La gota sólo volaba a los links de la nav. El resto de los botones tenía el
+  hover de la v7.1: el vidrio propio se aclaraba y hacía de lente, y el esmalte
+  tenía su mancha de luz. Ninguno era "una burbuja encima": por eso no se leía
+  así, y en los de esmalte no había vidrio en absoluto.
+- Se armó un script que recorre TODO lo que se toca (home y un caso), le pasa
+  el mouse, adelanta el reloj de la escena y mide dónde terminó la gota contra
+  el centro del elemento, con una captura de cada uno: 30 elementos, todos con
+  la gota encima (el único "fuera de lugar" era la marca, que se ensancha al
+  pasar el mouse; la gota la sigue bien).
+
+### Cómo es ahora
+- **`Burbuja.tsx`**: un solo listener para el sitio que marca con
+  `data-gota-aqui` lo que tiene el mouse o el foco de teclado: botones, chips,
+  la marca, el ícono de sonido, el link "Prender el sonido", las filas de
+  proyectos y "Siguiente caso". La nav lo sigue manejando ella (además cambia
+  el color y suena).
+- La escena hace la burbuja un poco más grande que el botón (3 px; 5 px en los
+  de esmalte), para que el canto se vea alrededor; en el ícono de sonido es un
+  círculo. Mientras la gota está encima, el vidrio propio del botón no
+  reacciona: la burbuja es el único hover.
+- **Los de esmalte** quedan "bajo vidrio": el canvas no puede pintar encima de
+  un botón opaco del DOM, así que el canto de la burbuja se ve alrededor y el
+  esmalte suma, con CSS, el brillo de cúpula arriba, el canto claro y una
+  sombra azul abajo.
+- Si el scroll saca al botón de abajo del puntero, la gota lo suelta.
+- **Sonido:** sólo el ícono (sin caja); el hover es la gota en círculo. Sin
+  escena o con movimiento reducido, un círculo de fondo.
+
+### Los objetos
+Con el papel, al 12% casi desaparecían: pasan al 24% (también en el póster sin
+WebGL). En el celular asomaban detrás de la nav fija: cada sección con objetos
+tiene más aire arriba y los objetos quedan entre la nav y el título, como la
+cabecera de un capítulo. En Trabajo la fila se corrió a la derecha para no
+pegarse al "JO".
+
+### El Figma
+Página **Diseño v8.2**: las 8 pantallas de escritorio (con la nav y el pie)
+como capas editables. Se exportan del sitio real con un script: el layout
+congelado (estilos calculados), el texto común en Archivo (los mismos
+contornos que Doval Grotesk al 100%), los textos anchos (títulos, etiquetas,
+la marca, las flechas) en contornos de la fuente real, el fondo (papel y
+objetos) renderizado por la escena sin títulos ni gota, y la gota como capa
+aparte encima, recortada con su silueta exacta. Más una lámina con los
+estados: el ícono de sonido y la burbuja sobre cada tipo de botón.
+
+### Verificación
+`gate` 0 errores · `audit` **51/51** (suma: la gota llega a un botón de
+esmalte, a uno de vidrio y al ícono de sonido; el sonido es sólo el ícono, con
+nombre y estado) · `idioma`, `touch`, `anim`, `smoke` en verde.
+
+---
+
 ## v8.1 — Una sola foto, el papel de fondo y los objetos donde hay aire
 
 ### El pedido

@@ -16,12 +16,14 @@ export function Recorrido() {
     <section
       id="recorrido"
       aria-labelledby="recorrido-titulo"
-      className="parada"
+      className="parada max-md:pt-[150px]"
       data-gota="0.97 0.5 0.085"
       data-gota-m="0.94 0.5 0.085"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="movimiento" className="max-md:top-[-92px] max-md:w-[80%] md:top-[200px] md:w-[40%]" />
+        <Cianotipo nombre="movimiento" className="top-[-116px] w-[78%] md:hidden" />
+        {/* lo de moverse, grande, en la columna libre de la derecha */}
+        <Cianotipo nombre="recorrido-grande" className="top-[150px] right-[1%] w-[38%] max-w-[560px] max-md:hidden" />
         <TituloSeccion id="recorrido-titulo">{t.paradas.recorrido}</TituloSeccion>
         <div className="mt-16 grid items-start gap-7 md:grid-cols-12">
           <ol className="border-t border-linea md:col-span-8">

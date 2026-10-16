@@ -39,7 +39,8 @@ rectángulo redondeado. Cero texturas de terceros, cero modelos.
 ## Los cianotipos del fondo (v8)
 
 `brand/cianotipos/*.jpg` (originales) → `public/assets/cianotipos/*.webp` (mapas
-de luz, `scripts/gen-cianotipos.mjs`). Seis fotogramas en cianotipo de objetos
+de luz, `scripts/gen-cianotipos.mjs`; las composiciones grandes de escritorio,
+`*-grande.webp`, con `scripts/componer-cianotipos.py`). Seis fotogramas en cianotipo de objetos
 de todos los días (auriculares, una lupa, teclas, zapatillas, dos tazas, un
 mapa), **generados con IA** para este sitio (GPT Image 2.5, vía Higgsfield, con
 la cuenta de Felipe). Son ilustrativos: no son fotos de objetos de Felipe. Si

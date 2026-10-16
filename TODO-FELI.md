@@ -41,7 +41,8 @@ generados con IA: son objetos "de cualquiera". Si querés que sean tuyos:
   hacé cianotipos de verdad (un kit de papel cianotipo cuesta poco y es un
   plan lindo). Dejalos como JPG en `brand/cianotipos/<nombre>.jpg` (mismos
   nombres: musica, curiosidad, herramientas, movimiento, gente, mapa) y corré
-  `node scripts/gen-cianotipos.mjs`.
+  `node scripts/gen-cianotipos.mjs` y `python3 scripts/componer-cianotipos.py`
+  (si cambian los objetos, revisá en ese script qué índice es cada uno).
 
 ## 🟡 Ver las notas en Obsidian
 

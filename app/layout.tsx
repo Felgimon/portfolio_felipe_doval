@@ -7,6 +7,7 @@ import { IdiomaProvider } from "@/components/idioma/IdiomaProvider";
 import { KonamiEasterEgg } from "@/components/motion/KonamiEasterEgg";
 import { DevOverlay } from "@/components/motion/DevOverlay";
 import { Reflejos } from "@/components/motion/Reflejos";
+import { Burbuja } from "@/components/motion/Burbuja";
 import { Escena } from "@/components/escena/Escena";
 import { Nav } from "@/components/layout/Nav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -127,6 +128,7 @@ export default function RootLayout({
           </SmoothScroll>
         </IdiomaProvider>
         <Reflejos />
+        <Burbuja />
         <KonamiEasterEgg />
         <DevOverlay />
         {/* Vercel Web Analytics. Va ÚLTIMO y fuera de los providers a propósito:

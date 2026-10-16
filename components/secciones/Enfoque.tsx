@@ -16,12 +16,14 @@ export function Enfoque() {
     <section
       id="enfoque"
       aria-labelledby="enfoque-titulo"
-      className="parada"
+      className="parada max-md:pt-[150px]"
       data-gota="0.84 0.5 0.085"
       data-gota-m="0.88 0.5 0.085"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="enfoque" className="max-md:top-[-100px] max-md:w-[46%] md:top-[-78px] md:w-[30%]" />
+        <Cianotipo nombre="enfoque" className="top-[-124px] w-[44%] md:hidden" />
+        {/* el juego de dibujo, grande, arriba a la derecha: al lado del título y la bajada, y apenas por detrás de las tarjetas de vidrio */}
+        <Cianotipo nombre="enfoque-grande" className="top-[-80px] right-[var(--margen)] w-[31%] max-w-[470px] max-md:hidden" />
         <TituloSeccion id="enfoque-titulo">{t.paradas.enfoque}</TituloSeccion>
         <p className="lead mt-8 max-w-[56ch]">{perfil.enfoque.resumen}</p>
         <ul className="mt-12 grid gap-5 md:grid-cols-2 md:gap-7">

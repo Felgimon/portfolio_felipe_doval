@@ -2,14 +2,24 @@ import { cn } from "@/lib/utils";
 
 /** Cada cianotipo con su proporción (la del archivo: la escena no lo estira). */
 const MEDIDAS = {
+  // a sangre (se funden los bordes)
   musica: [1600, 905],
   mapa: [1600, 905],
+  // filas compactas (el celular)
   curiosidad: [1600, 686],
   enfoque: [1600, 1194],
   herramientas: [1600, 686],
   movimiento: [1600, 686],
   gente: [1600, 686],
+  // composiciones grandes (escritorio): scripts/componer-cianotipos.py
+  "perfil-grande": [1398, 696],
+  "enfoque-grande": [1338, 998],
+  "trabajo-grande": [2030, 628],
+  "recorrido-grande": [1020, 928],
+  "contacto-grande": [1068, 560],
 } as const;
+
+const A_SANGRE = new Set<string>(["musica", "mapa"]);
 
 export type NombreCianotipo = keyof typeof MEDIDAS;
 
@@ -33,6 +43,7 @@ export function Cianotipo({ nombre, className }: { nombre: NombreCianotipo; clas
       aria-hidden
       data-cianotipo={nombre}
       data-src={src}
+      data-funde={A_SANGRE.has(nombre) ? "" : undefined}
       className={cn("cianotipo", className)}
       style={{ "--cianotipo": `url(${src})`, aspectRatio: `${w} / ${h}` } as React.CSSProperties}
     />

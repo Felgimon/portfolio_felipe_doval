@@ -331,6 +331,20 @@ html[data-escena="poster"] .escena {
       opacity: 1;
     }
   }
+  /* con la gota encima (v8.2), el esmalte queda bajo vidrio: un brillo de cúpula
+     arriba, el canto claro y una sombra azul abajo, como una burbuja apoyada */
+  html[data-gota-modo="boton"] .boton-solido[data-gota-aqui] {
+    box-shadow:
+      inset 0 1px 0 #ffffff,
+      inset 0 0 0 1px #ffffff,
+      inset 0 -8px 12px -8px #8ea0e6;
+  }
+  html[data-gota-modo="boton"] .boton-solido[data-gota-aqui]::before {
+    opacity: 1;
+    background:
+      linear-gradient(180deg, #ffffff 0%, transparent 46%),
+      radial-gradient(circle at var(--mx, 50%) var(--my, 0%), #ffffff 0%, transparent 55%);
+  }
   .boton-vidrio {
     color: var(--crema);
   }
@@ -669,7 +683,9 @@ html[data-escena="poster"] .escena {
 }
 html[data-escena="poster"] .cianotipo {
   background: var(--cianotipo) center / cover no-repeat;
-  opacity: 0.12;
+  opacity: 0.24;
+}
+html[data-escena="poster"] .cianotipo[data-funde] {
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
 }
@@ -682,11 +698,37 @@ html[data-escena="poster"] .cianotipo {
 /* EL BOTÓN SONIDO: sólo el ícono, un ecualizador de tres barras.
    Prendido: las barras se mueven (crema). Apagado: chatas, en crema-2 y
    tachadas por una raya en diagonal: se ve que está en silencio. */
-.sonido-icono {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  justify-content: center;
+/* en la capa de componentes: así "hidden lg:inline-flex" de la nav le gana */
+@layer components {
+  .sonido-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: var(--crema);
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.25s ease;
+  }
+}
+.sonido-icono:active .eq {
+  scale: 0.9;
+}
+/* sin la gota (sin escena o con movimiento reducido), el hover es un círculo */
+@media (hover: hover) {
+  html:not([data-escena="lista"]) .sonido-icono:hover,
+  html[data-escena="lista"] .sonido-icono:hover:not([data-gota-aqui]) {
+    background: var(--activo);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  .sonido-icono:hover {
+    background: var(--activo);
+  }
+}
+html:not([data-escena="lista"]) .sonido-icono:focus-visible {
+  background: var(--activo);
 }
 .eq {
   position: relative;

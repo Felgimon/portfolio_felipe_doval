@@ -20,12 +20,12 @@ export function Perfil() {
     <section
       id="perfil"
       aria-labelledby="perfil-titulo"
-      className="parada"
+      className="parada max-md:pt-[150px]"
       data-gota="0.93 0.5 0.085"
       data-gota-m="0.9 0.5 0.085"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="curiosidad" className="max-md:top-[-92px] max-md:w-[80%] md:top-[-84px] md:w-[46%]" />
+        <Cianotipo nombre="curiosidad" className="top-[-116px] w-[78%] md:hidden" />
         <TituloSeccion id="perfil-titulo">{t.paradas.perfil}</TituloSeccion>
         <div className="mt-14 grid items-start gap-x-16 gap-y-12 md:grid-cols-12">
           <div className="md:col-span-6">
@@ -35,6 +35,8 @@ export function Perfil() {
                 {p}
               </p>
             ))}
+            {/* los objetos de curioso, grandes, en el aire que queda debajo de la bio */}
+            <Cianotipo nombre="perfil-grande" className="relative mt-10 -ml-[6%] w-[112%] max-md:hidden" />
           </div>
           <div className="md:col-span-5 md:col-start-8">
             <h3 className="etiqueta">{t.perfil.stack}</h3>

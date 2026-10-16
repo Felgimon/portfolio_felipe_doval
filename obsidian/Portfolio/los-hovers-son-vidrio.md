@@ -19,6 +19,10 @@ verdad**, no un brillo de CSS que lo imite.
   versión era una cápsula aparte y no gustó: no parecía una burbuja.)
 - **Las filas de proyectos y "Siguiente caso":** se forma una burbuja de vidrio
   debajo y el nombre se corre.
+- **v8.2: la gota es el hover de TODO.** Botones, chips, la marca, el ícono de
+  sonido y las filas: la gota vuela y se pone encima como una burbuja con su
+  forma. En los botones crema, el canto se ve alrededor y el esmalte queda
+  "bajo vidrio". El sonido es sólo el ícono (sin botón).
 - **Las flechas** se mueven hacia donde van; el press rebota.
 
 **Copiar mi mail** ahora tiene el ícono de copiar (dos hojas que se separan al
