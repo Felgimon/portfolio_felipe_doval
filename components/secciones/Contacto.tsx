@@ -1,6 +1,5 @@
 "use client";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Feli } from "@/components/guia/Feli";
 import { Cianotipo } from "@/components/escena/Cianotipo";
 import { CopiarMail } from "@/components/ui/CopiarMail";
 import { abrirMail } from "@/lib/mail";
@@ -23,9 +22,9 @@ export function Contacto() {
       data-gota="0.9 0.5 0.09"
       data-gota-m="0.9 0.5 0.09"
     >
-      <Cianotipo nombre="gente" />
-      <div className="contenedor grid items-end gap-7 md:grid-cols-12">
-        <div className="md:col-span-7">
+      <div className="contenedor relative">
+        <Cianotipo nombre="gente" className="max-md:top-[-92px] max-md:w-[80%] md:top-[150px] md:w-[42%]" />
+        <div className="md:max-w-[58%]">
           <TituloSeccion id="contacto-titulo">{t.paradas.contacto}</TituloSeccion>
           <p className="lead mt-10 max-w-[34ch]">{t.contacto.lead}</p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -72,7 +71,6 @@ export function Contacto() {
             <p className="mt-3 text-[14px] text-crema-2">{t.contacto.temasAyuda}</p>
           </div>
         </div>
-        <Feli pose="contacto" className="ml-auto w-[48%] md:col-span-4 md:col-start-9 md:w-[58%]" />
       </div>
     </section>
   );

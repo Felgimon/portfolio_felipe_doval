@@ -24,9 +24,9 @@ export type IdParada =
 export type TextosUI = {
   paradas: Record<IdParada, string>;
   nav: { aria: string; menu: string; cerrar: string; volver: string; hablemos: string; inicio: string };
-  sonido: { boton: string; prender: string; apagar: string };
+  sonido: { boton: string; prender: string; apagar: string; prendido: string; apagado: string };
   saltar: string;
-  hero: { verTrabajo: string; copiarMail: string; ahora: string; ahoraTexto: string };
+  hero: { verTrabajo: string; copiarMail: string };
   perfil: { stack: string; asiSoy: string };
   trabajo: {
     enProgreso: string;
@@ -87,13 +87,17 @@ export const textosUI: Record<Idioma, TextosUI> = {
       hablemos: "Hablemos",
       inicio: "Felipe Doval, inicio",
     },
-    sonido: { boton: "Sonido", prender: "Prender el sonido", apagar: "Apagar el sonido" },
+    sonido: {
+      boton: "Sonido",
+      prender: "Prender el sonido",
+      apagar: "Apagar el sonido",
+      prendido: "Sonido prendido",
+      apagado: "Sonido apagado",
+    },
     saltar: "Saltar al contenido",
     hero: {
       verTrabajo: "Ver el trabajo",
       copiarMail: "Copiar mi mail",
-      ahora: "Ahora",
-      ahoraTexto: "Construyendo Superlum, un workspace operativo a medida para una empresa real.",
     },
     perfil: { stack: "Con qué construyo", asiSoy: "Así soy" },
     trabajo: {
@@ -168,13 +172,17 @@ export const textosUI: Record<Idioma, TextosUI> = {
       hablemos: "Let's talk",
       inicio: "Felipe Doval, home",
     },
-    sonido: { boton: "Sound", prender: "Turn the sound on", apagar: "Turn the sound off" },
+    sonido: {
+      boton: "Sound",
+      prender: "Turn the sound on",
+      apagar: "Turn the sound off",
+      prendido: "Sound on",
+      apagado: "Sound off",
+    },
     saltar: "Skip to content",
     hero: {
       verTrabajo: "See the work",
       copiarMail: "Copy my email",
-      ahora: "Now",
-      ahoraTexto: "Building Superlum, a custom operations workspace for a real company.",
     },
     perfil: { stack: "What I build with", asiSoy: "This is me" },
     trabajo: {

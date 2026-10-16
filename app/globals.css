@@ -102,8 +102,11 @@ html[data-escena="poster"] .escena {
   z-index: 0;
   pointer-events: none;
   background:
+    url("/assets/papel.webp") 0 0 / 620px,
     radial-gradient(ellipse 62% 56% at 60% 40%, #1a3cc6 0%, #12298f 45%, var(--noche) 92%),
     var(--noche);
+  /* el papel (v8.1): sólo su grano, sobre la luz de estudio */
+  background-blend-mode: soft-light, normal, normal;
 }
 
 /* Todo el contenido va por encima del canvas. */
@@ -651,20 +654,17 @@ html[data-escena="poster"] .escena {
    v8: LOS CIANOTIPOS (el fondo de cada sección) y EL SONIDO
    ========================================================================== */
 
-/* La caja del cianotipo: 16:9 arriba de la sección. La pinta la escena; el
-   fondo CSS es sólo el respaldo sin escena (por eso no se carga antes). */
-.cianotipo {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  z-index: -1;
-  pointer-events: none;
-}
-@media (max-width: 767px) {
+/* La caja del cianotipo (dónde y de qué tamaño, lo dice cada sección). La
+   pinta la escena; el fondo CSS es sólo el respaldo sin escena (por eso no se
+   carga antes). */
+@layer components {
   .cianotipo {
-    width: 200%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    z-index: -1;
+    pointer-events: none;
   }
 }
 html[data-escena="poster"] .cianotipo {
@@ -679,21 +679,35 @@ html[data-escena="poster"] .cianotipo {
   }
 }
 
-/* El ecualizador del botón Sonido: tres barras quietas; suenan si está prendido */
+/* EL BOTÓN SONIDO: sólo el ícono, un ecualizador de tres barras.
+   Prendido: las barras se mueven (crema). Apagado: chatas, en crema-2 y
+   tachadas por una raya en diagonal: se ve que está en silencio. */
+.sonido-icono {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+}
 .eq {
+  position: relative;
   display: inline-flex;
   align-items: flex-end;
-  gap: 2px;
-  height: 12px;
+  justify-content: center;
+  gap: 3px;
+  width: 18px;
+  height: 16px;
 }
 .eq span {
-  width: 2px;
-  height: 5px;
-  border-radius: 1px;
+  width: 3px;
+  height: 7px;
+  border-radius: 2px;
   background: currentColor;
-  transition: height 0.3s var(--ease-salida);
+  transition: height 0.35s var(--ease-salida);
 }
 .eq span:nth-child(2) {
+  height: 13px;
+}
+.eq span:nth-child(3) {
   height: 9px;
 }
 .sonido[aria-pressed="true"] .eq span {
@@ -708,12 +722,35 @@ html[data-escena="poster"] .cianotipo {
 .sonido[aria-pressed="false"] {
   color: var(--crema-2);
 }
+.sonido[aria-pressed="false"] .eq span {
+  opacity: 0.55;
+}
+/* la raya del silencio: tapa las barras con un filo del color del vidrio, que
+   se lea aunque el ícono sea chico */
+.sonido[aria-pressed="false"] .eq::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 7px;
+  width: 26px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  box-shadow: 0 0 0 1.5px var(--vidrio-solido);
+  rotate: -42deg;
+}
 @keyframes eq {
   from {
-    height: 3px;
+    height: 4px;
   }
   to {
-    height: 12px;
+    height: 16px;
+  }
+}
+/* con movimiento reducido no se mueve, pero prendido se ve alto y parejo */
+@media (prefers-reduced-motion: reduce) {
+  .sonido[aria-pressed="true"] .eq span {
+    height: 13px;
   }
 }
 

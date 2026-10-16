@@ -22,6 +22,13 @@ con la gente y conocerla.
 - **Así soy** en Perfil, con mis palabras, y **¿De qué charlamos?** en
   Contacto: elegís un tema y se abre el mail con el asunto listo.
 
+**v8.1:** probé sin fotos mías salvo en la portada, y el fondo pasó a ser el
+papel azul granulado de los cianotipos. Los objetos se rehicieron como filas
+ordenadas y cada sección las pone donde hay aire (al lado del título o en la
+columna libre), nunca debajo de un texto; Enfoque sumó las suyas (regla,
+escuadra, compás). El botón de sonido es sólo el ícono y, apagado, se ve
+tachado. Saqué el panel "Ahora" de la portada.
+
 Las imágenes están generadas con IA (no son mis cosas): si saco fotos o hago
 cianotipos de verdad de mis objetos, se cambian con
 `node scripts/gen-cianotipos.mjs`. En el Figma: página **Diseño v8 · Más yo**.

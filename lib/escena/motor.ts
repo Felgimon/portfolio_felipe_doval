@@ -32,7 +32,7 @@ export type Cuadro = {
 const NOMBRES = [
   "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda", "uForma",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
-  "uK0", "uK1", "uKR0", "uKR1",
+  "uK0", "uK1", "uKR0", "uKR1", "uPapel", "uGrano",
 ] as const;
 const ARRAYS = new Set(["uV", "uVX"]);
 const CERO: [number, number, number, number] = [0, 0, 0, 0];
@@ -42,6 +42,7 @@ export class Motor {
   private u: Record<(typeof NOMBRES)[number], WebGLUniformLocation | null>;
   private fotos = new Map<string, { tex: WebGLTexture; lista: boolean }>();
   private vacia: WebGLTexture;
+  private texPapel: WebGLTexture | null = null;
   readonly canvas: HTMLCanvasElement;
   /** se llama cuando una foto termina de subir a la GPU (hay que redibujar) */
   alCargar: () => void = () => {};
@@ -80,7 +81,7 @@ export class Motor {
     const u = {} as Motor["u"];
     for (const n of NOMBRES) u[n] = gl.getUniformLocation(programa, ARRAYS.has(n) ? `${n}[0]` : n);
     this.u = u;
-    // unidades fijas: placas 0..2, Feli 3..4, cianotipos 5..6
+    // unidades fijas: placas 0..2, Feli 3..4, cianotipos 5..6, papel 7
     gl.uniform1i(u.uP0, 0);
     gl.uniform1i(u.uP1, 1);
     gl.uniform1i(u.uP2, 2);
@@ -88,6 +89,8 @@ export class Motor {
     gl.uniform1i(u.uF1, 4);
     gl.uniform1i(u.uK0, 5);
     gl.uniform1i(u.uK1, 6);
+    gl.uniform1i(u.uPapel, 7);
+    gl.uniform1f(u.uGrano, 0);
 
     this.vacia = this.nuevaTextura();
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
@@ -125,6 +128,29 @@ export class Motor {
 
   borrar(tex: WebGLTexture) {
     this.gl.deleteTexture(tex);
+  }
+
+  /**
+   * EL PAPEL (v8.1): la textura del papel cianotipo, en gris, que se repite en
+   * espejo (sin costuras) sobre el estudio. Hasta que carga, el grano es 0.
+   */
+  papel(src: string) {
+    const gl = this.gl;
+    const tex = this.nuevaTextura();
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      if (gl.isContextLost()) return;
+      gl.activeTexture(gl.TEXTURE7);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.uniform1f(this.u.uGrano, 1);
+      this.alCargar();
+    };
+    img.src = src;
+    this.texPapel = tex;
   }
 
   /** ¿La foto ya está en la GPU? (la pide si no la tenía) */
@@ -181,6 +207,8 @@ export class Motor {
     }
     this.fotosGPU(c.feli, 3, [u.uFR0, u.uFR1]);
     this.fotosGPU(c.cianotipos, 5, [u.uKR0, u.uKR1]);
+    gl.activeTexture(gl.TEXTURE7);
+    gl.bindTexture(gl.TEXTURE_2D, this.texPapel ?? this.vacia);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
@@ -204,6 +232,7 @@ export class Motor {
   liberar() {
     const gl = this.gl;
     for (const { tex } of this.fotos.values()) gl.deleteTexture(tex);
+    if (this.texPapel) gl.deleteTexture(this.texPapel);
     gl.deleteTexture(this.vacia);
     gl.getExtension("WEBGL_lose_context")?.loseContext();
   }

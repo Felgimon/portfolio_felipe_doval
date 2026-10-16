@@ -17,8 +17,8 @@ const check = (ok, msg) => {
 const ruido = (t) => /_vercel\/insights|status of 404/.test(t);
 
 const CASOS = [
-  { locale: "es-AR", lang: "es", cta: "Ver el trabajo", nav: "Perfil", ahora: "Construyendo Superlum", problema: "El problema" },
-  { locale: "en-US", lang: "en", cta: "See the work", nav: "Profile", ahora: "Building Superlum", problema: "The problem" },
+  { locale: "es-AR", lang: "es", cta: "Ver el trabajo", nav: "Perfil", asiSoy: "Así soy", problema: "El problema" },
+  { locale: "en-US", lang: "en", cta: "See the work", nav: "Profile", asiSoy: "This is me", problema: "The problem" },
 ];
 
 const { base: BASE, cerrar } = await levantar(3261);
@@ -36,11 +36,12 @@ try {
     const home = await p.evaluate(() => ({
       lang: document.documentElement.lang,
       inicio: document.getElementById("inicio")?.innerText ?? "",
+      perfil: document.getElementById("perfil")?.innerText ?? "",
       nav: [...document.querySelectorAll("nav[aria-label] a")].map((x) => x.textContent.trim()),
     }));
     check(home.lang === caso.lang, `${caso.locale}: <html lang="${home.lang}">`);
     check(home.inicio.includes(caso.cta), `${caso.locale}: botón "${caso.cta}"`);
-    check(home.inicio.includes(caso.ahora), `${caso.locale}: el panel Ahora dice "${caso.ahora}…"`);
+    check(home.perfil.toLowerCase().includes(caso.asiSoy.toLowerCase()), `${caso.locale}: Perfil dice "${caso.asiSoy}"`);
     check(home.nav.includes(caso.nav), `${caso.locale}: la nav dice "${caso.nav}"`);
 
     await p.goto(`${BASE}/proyectos/superlum`, { waitUntil: "load", timeout: 45000 });

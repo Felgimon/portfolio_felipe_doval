@@ -16,14 +16,13 @@ import sharp from "sharp";
 
 const ORIGEN = "brand/cianotipos";
 const DESTINO = "public/assets/cianotipos";
-const ANCHO = 1600;
-const ALTO = 900;
+const ANCHO = 1600; // el alto sale de la proporción de cada original
 const LUZ = [168, 191, 255]; // #a8bfff, el celeste de un cianotipo lavado
 
 for (const archivo of (await readdir(ORIGEN)).filter((f) => f.endsWith(".jpg"))) {
   const nombre = path.basename(archivo, ".jpg");
   const { data, info } = await sharp(path.join(ORIGEN, archivo))
-    .resize(ANCHO, ALTO, { fit: "cover" })
+    .resize({ width: ANCHO })
     .greyscale()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -53,5 +52,5 @@ for (const archivo of (await readdir(ORIGEN)).filter((f) => f.endsWith(".jpg")))
   await sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } })
     .webp({ quality: 50, alphaQuality: 70 })
     .toFile(salida);
-  console.log(`${salida} (papel ${p50}, luz ${p995})`);
+  console.log(`${salida} ${info.width}x${info.height} (papel ${p50}, luz ${p995})`);
 }

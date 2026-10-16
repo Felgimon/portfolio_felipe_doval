@@ -46,6 +46,9 @@ la cuenta de Felipe). Son ilustrativos: no son fotos de objetos de Felipe. Si
 algún día hay fotos o cianotipos propios de sus cosas, se reemplazan con el
 mismo script.
 
+El papel del fondo (`brand/papel.jpg` → `public/assets/papel.webp`, v8.1)
+también está generado para el sitio, con el mismo estilo.
+
 Las referencias del mood board (en el Figma, no en el sitio) son de dominio
 público o CC0 vía Openverse: los cianotipos de Anna Atkins (1843–1854) y fotos
 CC0 de rawpixel, StockSnap y Flickr.

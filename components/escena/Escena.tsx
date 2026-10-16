@@ -201,6 +201,7 @@ export function Escena() {
     };
     window.addEventListener("resize", ensuciar);
     motor.alCargar = ensuciar;
+    motor.papel("/assets/papel.webp");
     // la fuente es display:block, pero igual: si las placas se dibujaron antes
     // de que cargara, se vuelven a dibujar
     document.fonts?.ready.then(() => {

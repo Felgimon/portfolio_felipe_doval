@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Feli } from "@/components/guia/Feli";
 import { Cianotipo } from "@/components/escena/Cianotipo";
 
-/** La página que no existe (404): un título directo, Feli y una salida. */
+/** La página que no existe (404): un título directo, una salida y, de fondo, un mapa con su brújula. */
 export function Perdida() {
   const { t } = useIdioma();
   return (
@@ -14,7 +13,7 @@ export function Perdida() {
       data-gota="0.78 0.5 0.11"
       data-gota-m="0.8 0.5 0.1"
     >
-      <Cianotipo nombre="mapa" />
+      <Cianotipo nombre="mapa" className="max-md:w-[200%]" />
       <div className="contenedor grid items-end gap-8 md:grid-cols-12">
         <div className="pb-16 md:col-span-8">
           <p className="etiqueta">404</p>
@@ -25,7 +24,6 @@ export function Perdida() {
             <span aria-hidden className="flecha flecha-izq">←</span> {t.perdida.volver}
           </Link>
         </div>
-        <Feli pose="perdida" prioridad className="ml-auto w-[34%] md:col-span-3 md:col-start-10 md:w-[60%]" />
       </div>
     </main>
   );

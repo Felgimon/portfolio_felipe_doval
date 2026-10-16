@@ -1,26 +1,40 @@
 import { cn } from "@/lib/utils";
 
-export type NombreCianotipo = "musica" | "curiosidad" | "herramientas" | "movimiento" | "gente" | "mapa";
+/** Cada cianotipo con su proporción (la del archivo: la escena no lo estira). */
+const MEDIDAS = {
+  musica: [1600, 905],
+  mapa: [1600, 905],
+  curiosidad: [1600, 686],
+  enfoque: [1600, 1194],
+  herramientas: [1600, 686],
+  movimiento: [1600, 686],
+  gente: [1600, 686],
+} as const;
+
+export type NombreCianotipo = keyof typeof MEDIDAS;
 
 /**
- * EL FONDO DE UNA SECCIÓN (v8): un cianotipo de objetos de todos los días,
- * ordenados (Felipe es ordenado y el fondo lo dice). El archivo es un mapa de
+ * LOS OBJETOS DE UNA SECCIÓN (v8): un cianotipo de cosas de todos los días,
+ * ordenadas (Felipe es ordenado y el fondo lo dice). El archivo es un mapa de
  * luz (scripts/gen-cianotipos.mjs): la escena lo pinta como luz baja sobre el
- * estudio, debajo de Feli y de los títulos, y la gota lo agranda al pasar.
+ * papel, debajo de los títulos, y la gota lo agranda al pasar.
  *
- * En el DOM es una caja 16:9 arriba de la sección (en el celular, el doble de
- * ancha y pegada a la derecha, donde están los objetos). Sin escena, el mismo
- * archivo va de fondo CSS, con la misma intensidad.
+ * Dónde va lo decide cada sección (className): siempre en un lugar vacío, al
+ * lado del título o donde no hay texto, nunca debajo de un párrafo. La caja
+ * mantiene la proporción del archivo.
+ *
+ * Sin escena, el mismo archivo va de fondo CSS, con la misma intensidad.
  */
 export function Cianotipo({ nombre, className }: { nombre: NombreCianotipo; className?: string }) {
   const src = `/assets/cianotipos/${nombre}.webp`;
+  const [w, h] = MEDIDAS[nombre];
   return (
     <div
       aria-hidden
       data-cianotipo={nombre}
       data-src={src}
       className={cn("cianotipo", className)}
-      style={{ "--cianotipo": `url(${src})` } as React.CSSProperties}
+      style={{ "--cianotipo": `url(${src})`, aspectRatio: `${w} / ${h}` } as React.CSSProperties}
     />
   );
 }

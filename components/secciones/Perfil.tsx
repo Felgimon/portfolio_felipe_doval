@@ -1,15 +1,15 @@
 "use client";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Feli } from "@/components/guia/Feli";
 import { Cianotipo } from "@/components/escena/Cianotipo";
 import type { CategoriaStack } from "@/content/types";
 import { BotonSonido } from "@/components/ui/BotonSonido";
 import { Dato, TituloSeccion } from "./comun";
 
 /**
- * PERFIL. Feli a la izquierda, la bio a la derecha. El stack va como frases
- * corridas por categoría (sin logos ni chips: texto que se lee). Abajo, Así
- * soy: los cuatro rasgos que contó Felipe, en sus palabras (v8).
+ * PERFIL. La bio a la izquierda; a la derecha, con qué construye (frases
+ * corridas por categoría, sin logos ni chips) y Así soy: los cuatro rasgos que
+ * contó Felipe, en sus palabras (v8). Al lado del título, sus objetos de
+ * curioso: una lupa, un lápiz, una protoboard y una lamparita.
  */
 export function Perfil() {
   const { perfil, t } = useIdioma();
@@ -24,19 +24,21 @@ export function Perfil() {
       data-gota="0.93 0.5 0.085"
       data-gota-m="0.9 0.5 0.085"
     >
-      <Cianotipo nombre="curiosidad" />
-      <div className="contenedor">
+      <div className="contenedor relative">
+        <Cianotipo nombre="curiosidad" className="max-md:top-[-92px] max-md:w-[80%] md:top-[-84px] md:w-[46%]" />
         <TituloSeccion id="perfil-titulo">{t.paradas.perfil}</TituloSeccion>
-        <div className="mt-16 grid items-start gap-7 md:grid-cols-12">
-          <Feli pose="perfil" className="w-[78%] md:col-span-5 md:w-full" />
-          <div className="md:col-span-6 md:col-start-7">
+        <div className="mt-14 grid items-start gap-x-16 gap-y-12 md:grid-cols-12">
+          <div className="md:col-span-6">
             <p className="text-[18px] leading-[1.6]">{primero}</p>
             {resto.map((p) => (
               <p key={p.slice(0, 24)} className="cuerpo mt-5">
                 {p}
               </p>
             ))}
-            <dl className="mt-9 flex flex-col gap-2 border-t border-linea pt-6">
+          </div>
+          <div className="md:col-span-5 md:col-start-8">
+            <h3 className="etiqueta">{t.perfil.stack}</h3>
+            <dl className="mt-4 flex flex-col gap-2 border-t border-linea pt-5">
               {categorias.map((c) => (
                 <Dato key={c} etiqueta={t.categoriasStack[c] ?? c} ancho="150px">
                   {perfil.stack

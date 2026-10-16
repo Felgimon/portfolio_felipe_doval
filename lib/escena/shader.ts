@@ -30,7 +30,8 @@ precision highp float;
 out vec4 o;
 uniform vec2 uRes;
 uniform float uS, uT, uQ;
-uniform sampler2D uP0, uP1, uP2, uF0, uF1, uK0, uK1;
+uniform sampler2D uP0, uP1, uP2, uF0, uF1, uK0, uK1, uPapel;
+uniform float uGrano; // 0 hasta que carga el papel
 uniform vec4 uPR0, uPR1, uPR2, uFR0, uFR1, uKR0, uKR1;
 uniform vec3 uC;
 uniform float uR;
@@ -51,6 +52,11 @@ vec3 estudio(vec2 p){
   vec3 col = mix(COB, NOCHE, smoothstep(0., .9, d));
   col = mix(col, vec3(.32, .52, 1.), smoothstep(.4, 0., d) * .13);
   col *= 1. - .22 * smoothstep(.7, 1., q.y);
+  // EL PAPEL (v8.1): el estudio es un pliego de papel cianotipo. El grano fino
+  // y, mucho más grande, la exposición despareja del sol (la misma textura)
+  float grano = texture(uPapel, p / 620.).r - .5;
+  float mancha = texture(uPapel, p / 2600. + .37).r - .5;
+  col *= 1. + uGrano * (grano * .32 + mancha * .24);
   return col;
 }
 

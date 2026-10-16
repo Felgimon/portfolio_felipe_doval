@@ -10,6 +10,66 @@ dependencias y bugs). Se actualiza en cada fase.
 
 ---
 
+## v8.1 — Una sola foto, el papel de fondo y los objetos donde hay aire
+
+### El pedido
+Algunos cianotipos estaban bien ubicados y otros no (Trabajo mal, Enfoque sin
+nada): no alcanza con la opacidad, importa dónde caen los objetos. Probar el
+sitio sin fotos de Felipe salvo en la portada, y usar como fondo el papel azul
+granulado de los cianotipos. Sonido sólo con el ícono y más evidente cuando
+está en silencio. Fuera el panel "Ahora" de la portada.
+
+### Los objetos van donde hay aire
+- **Regla:** cada sección pone su fila de objetos en un lugar vacío, al lado
+  del título o en la columna libre, nunca debajo de un párrafo. Así se leen
+  como un bodegón que acompaña al título y el texto queda limpio.
+- Para eso se rehicieron como **filas compactas** en knolling (mismo estilo y
+  papel, con las anteriores como referencia), con aire alrededor, que se
+  ubican sin recortar: Perfil (lupa, lápiz, protoboard, lamparita) y Trabajo
+  (libreta, anteojos, cable, teclas) a la derecha del título; Enfoque, nuevo
+  (regla, escuadra, compás, lápiz, libreta: planear antes de tocar código), al
+  lado del título y la bajada; Recorrido (zapatillas, llaves, tarjeta, la de
+  básquet) en la columna libre a la derecha de la línea de tiempo; Contacto
+  (dos tazas en espejo) debajo del final del título, a la derecha.
+- La portada (auriculares, vinilo, casete) queda como estaba, porque le gustó.
+  El 404 sigue con el mapa y la brújula. Proyectos no lleva: ya tiene capturas
+  grandes y un objeto ahí competiría.
+- En el celular, las filas asoman arriba de cada título, en el aire entre
+  secciones.
+- Bug encontrado al probar: la regla base `.cianotipo` estaba fuera de las
+  capas de CSS y le ganaba a las clases de cada sección (todas las filas caían
+  a ancho completo, debajo del texto). Pasó a `@layer components`.
+
+### Una sola foto
+Felipe sólo aparece en la portada. Perfil se rearmó a dos columnas (la bio;
+con qué construye y Así soy), Recorrido y Contacto quedan con la columna de la
+derecha para sus objetos, y el 404 con el mapa. La sesión de fotos pasa a
+necesitar una sola pose.
+
+### El papel
+El estudio cobalto ahora es un pliego de papel cianotipo: una textura del
+papel vacío (generada con el mismo estilo, `brand/papel.jpg` →
+`scripts/gen-papel.mjs` → `public/assets/papel.webp`, sólo el grano en gris)
+se repite en espejo, sin costuras, en dos escalas: el grano fino y, grande, la
+exposición despareja del sol. El color lo sigue poniendo el shader. Sin
+WebGL, el mismo grano va sobre el póster CSS (`soft-light`).
+
+### Sonido y portada
+- El botón es sólo el ícono (un círculo de vidrio). Prendido, el ecualizador
+  se mueve; apagado, las barras quedan quietas, apagadas y tachadas. El nombre
+  accesible es fijo ("Sonido") con `aria-pressed`, y el tooltip dice qué pasa
+  al tocarlo. En el menú del celular va con el estado escrito.
+- Sin el panel "Ahora": la portada es nombre, rol, bajada y dos botones.
+
+### Verificación
+`gate` 0 errores · `audit` 47/47 (cambian: una sola foto, en la portada; la
+escena pinta los objetos de Perfil con movimiento reducido; el cianotipo de
+Enfoque está) · `idioma` (ahora chequea Así soy en vez del panel Ahora),
+`touch`, `anim`, `smoke` en verde. Capturas de cada sección en escritorio y
+celular, y del botón de sonido en sus dos estados.
+
+---
+
 ## v8 — Más yo: los cianotipos de lo cotidiano, el sonido y Así soy
 
 ### El pedido

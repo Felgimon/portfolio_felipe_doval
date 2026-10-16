@@ -15,7 +15,7 @@ import type { IdParada } from "@/content/ui";
  * La NAV: el nombre a la izquierda (vuelve al inicio), una píldora de vidrio
  * con las secciones en el centro y "Hablemos" sólido a la derecha.
  *
- * A la derecha, "Sonido" (v8): prendido, cada link toca una nota de un acorde
+ * A la derecha, el botón de sonido (v8, sólo el ícono): prendido, cada link toca una nota de un acorde
  * al pasar el mouse o el foco, y recorrer la nav es un arpegio (lib/sonido.ts).
  *
  * El hover es la GOTA: con el mouse (o el foco del teclado) sobre un link, la
@@ -126,7 +126,7 @@ export function Nav() {
         )}
 
         <div className="flex items-center gap-2 justify-self-end">
-          <BotonSonido className="hidden min-h-[44px] lg:inline-flex" />
+          <BotonSonido className="hidden lg:inline-flex" />
           {!enHome && (
             <Link href={volverA} data-vidrio className="boton vidrio vidrio-pildora boton-vidrio min-h-[44px] px-[18px] text-[14px] lg:hidden">
               <span aria-hidden className="flecha flecha-izq">←</span> {t.nav.volver}
@@ -178,7 +178,7 @@ export function Nav() {
                 </li>
               ))}
             </ul>
-            <BotonSonido className="mt-2 w-full justify-center" />
+            <BotonSonido variante="fila" className="mt-1" />
           </div>
         )}
       </nav>

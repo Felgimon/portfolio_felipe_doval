@@ -7,7 +7,8 @@ import { TituloSeccion } from "./comun";
 /**
  * TRABAJO. Lo que Felipe está construyendo hoy para una empresa real
  * (Superlum). Va separado de los proyectos a propósito: es trabajo, no un
- * ejercicio.
+ * ejercicio. Al lado del título, el oficio en fila: una libreta, los anteojos,
+ * un cable enrollado y unas teclas.
  */
 export function Trabajo() {
   const { proyectos, t } = useIdioma();
@@ -21,8 +22,8 @@ export function Trabajo() {
       data-gota="0.6 0.5 0.085"
       data-gota-m="0.62 0.5 0.085"
     >
-      <Cianotipo nombre="herramientas" />
-      <div className="contenedor">
+      <div className="contenedor relative">
+        <Cianotipo nombre="herramientas" className="max-md:top-[-92px] max-md:w-[80%] md:top-[-76px] md:w-[40%]" />
         <TituloSeccion id="trabajo-titulo">{t.paradas.trabajo}</TituloSeccion>
         {superlum && <Pieza p={superlum} etiqueta={t.trabajo.enProgreso} enCurso prioridad />}
       </div>

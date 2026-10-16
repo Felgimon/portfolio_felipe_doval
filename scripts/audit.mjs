@@ -10,7 +10,7 @@
  *     el HTML.
  *  5. "Volver" desde un caso.
  *  6. REDUCIR MOVIMIENTO: la navegación no se congela (regresión v5.17.2): la
- *     escena sigue pintando a Feli al llegar a cada sección.
+ *     escena sigue pintando los objetos (cianotipos) al llegar a cada sección.
  *  7. Reglas de texto de Felipe: cero rayas en el texto visible y nunca la
  *     palabra de la herramienta de workspace que no se nombra.
  *  8. v7: Feli sólo en fotos (sin globos), UNA sola fuente en todo el sitio y
@@ -179,7 +179,7 @@ try {
 
     // v8: los cianotipos (el fondo de cada sección) están y la escena los pinta
     const cianos = await p.evaluate(() => [...document.querySelectorAll("[data-cianotipo]")].map((e) => e.dataset.cianotipo));
-    check(cianos.join() === "musica,curiosidad,herramientas,movimiento,gente", `cianotipos en sus secciones (${cianos.join()})`);
+    check(cianos.join() === "musica,curiosidad,enfoque,herramientas,movimiento,gente", `cianotipos en sus secciones (${cianos.join()})`);
     const pintado = await p.evaluate(() => ({
       escena: document.documentElement.dataset.escena,
       gente: document.querySelector('[data-cianotipo="gente"]')?.dataset.pintado !== undefined,
@@ -192,7 +192,8 @@ try {
       ocultas: [...document.querySelectorAll("[data-feli]")].every((x) => x.getAttribute("aria-hidden") === "true"),
       globos: document.querySelectorAll(".globo, .cartel-vuelvo, [data-globo]").length,
     }));
-    check(feli.fotos >= 4 && feli.ocultas, `Feli: ${feli.fotos} fotos decorativas (aria-hidden)`);
+    // v8.1: una sola foto de Felipe, en la portada; el resto del recorrido son sus objetos
+    check(feli.fotos === 1 && feli.ocultas, `Feli: una sola foto, en la portada (${feli.fotos}, aria-hidden)`);
     check(feli.globos === 0, `Feli: sin globos ni comentarios (${feli.globos})`);
 
     // una sola fuente en todo el sitio
@@ -234,12 +235,12 @@ try {
     const r = await p.evaluate(() => ({
       escena: document.documentElement.dataset.escena,
       activo: document.querySelector("nav [aria-current=location]")?.textContent?.trim(),
-      pintado: document.querySelector("#perfil [data-feli]")?.hasAttribute("data-pintado"),
+      pintado: document.querySelector('#perfil [data-cianotipo]')?.hasAttribute("data-pintado"),
     }));
     check(r.activo === "Perfil", `reduced-motion: la nav sigue al scroll (${r.activo})`);
     check(
       r.escena !== "lista" || r.pintado,
-      `reduced-motion: la escena pinta a Feli al llegar a la sección (${r.escena}, ${r.pintado})`,
+      `reduced-motion: la escena pinta los objetos al llegar a la sección (${r.escena}, ${r.pintado})`,
     );
     await ctx.close();
   }

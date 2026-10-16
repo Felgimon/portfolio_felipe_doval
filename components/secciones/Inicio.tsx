@@ -7,8 +7,7 @@ import { CopiarMail } from "@/components/ui/CopiarMail";
 
 /**
  * INICIO. En 10 segundos: quién es (el nombre, enorme), qué hace (rol y
- * bajada), qué está haciendo ahora (Superlum, en el panel ámbar) y cómo
- * escribirle. La gota se apoya entre la O y la V de "Doval" y sigue al mouse
+ * bajada) y cómo escribirle. Es la única sección con una foto de Felipe (v8.1). La gota se apoya entre la O y la V de "Doval" y sigue al mouse
  * de lejos.
  */
 export function Inicio() {
@@ -23,7 +22,7 @@ export function Inicio() {
       data-gota="0.41 0.7 0.115"
       data-gota-m="0.4 0.66 0.085"
     >
-      <Cianotipo nombre="musica" />
+      <Cianotipo nombre="musica" className="max-md:w-[200%]" />
       <h1
         id="inicio-titulo"
         data-placa
@@ -58,17 +57,6 @@ export function Inicio() {
           </a>
           <CopiarMail ficha="derecha" />
         </div>
-      </div>
-
-      <div
-        data-vidrio
-        className="vidrio relative order-3 -mt-24 mb-8 p-[18px_20px] md:absolute md:right-[var(--margen)] md:bottom-14 md:m-0 md:w-[300px]"
-      >
-        <p className="etiqueta">
-          <span className="punto" aria-hidden />
-          {t.hero.ahora}
-        </p>
-        <p className="mt-2 text-[16px] leading-[1.42]">{t.hero.ahoraTexto}</p>
       </div>
     </section>
   );

@@ -8,11 +8,11 @@ Formato: `[ ]` pendiente · `[x]` hecho.
 
 ## 🔴 La sesión de fotos (lo más importante)
 
-En la v7 Feli **no habla**: tus fotos te acompañan mientras se navega, una
-por sección (Inicio, Perfil, Recorrido, Contacto y el 404). Hoy usa los 4
-recortes viejos como interinos, y por eso el 404 repite la de Recorrido.
+Desde la v8.1 hay **una sola foto tuya**, en la portada (el resto del
+recorrido lo cuentan tus objetos en cianotipo). Hoy usa un recorte viejo como
+interino.
 
-- [ ] **Hacer la sesión de fotos** siguiendo el guion:
+- [ ] **Hacer la sesión de fotos** (alcanza con la pose `inicio`) siguiendo el guion:
   `obsidian/Portfolio/la-sesion-de-fotos-es-un-guion-no-un-book.md`
   (actualizado para la v7). Resumen:
   1. **Luz desde la izquierda de la foto** (la luz de todo el sitio).

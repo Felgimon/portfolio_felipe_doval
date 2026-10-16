@@ -1,10 +1,13 @@
 "use client";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
+import { Cianotipo } from "@/components/escena/Cianotipo";
 import { TituloSeccion } from "./comun";
 
 /**
  * ENFOQUE. Cómo trabaja, en cuatro principios sobre vidrio ahumado. Sin
  * numeración: el orden no es real (regla de Felipe: nada de 01/02 decorativo).
+ * Al lado del título y la bajada, sus herramientas de planear: una regla, una
+ * escuadra, un compás, un lápiz y una libreta (entender antes de tocar código).
  */
 export function Enfoque() {
   const { perfil, t } = useIdioma();
@@ -17,7 +20,8 @@ export function Enfoque() {
       data-gota="0.84 0.5 0.085"
       data-gota-m="0.88 0.5 0.085"
     >
-      <div className="contenedor">
+      <div className="contenedor relative">
+        <Cianotipo nombre="enfoque" className="max-md:top-[-100px] max-md:w-[46%] md:top-[-78px] md:w-[30%]" />
         <TituloSeccion id="enfoque-titulo">{t.paradas.enfoque}</TituloSeccion>
         <p className="lead mt-8 max-w-[56ch]">{perfil.enfoque.resumen}</p>
         <ul className="mt-12 grid gap-5 md:grid-cols-2 md:gap-7">
