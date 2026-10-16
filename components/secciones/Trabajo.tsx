@@ -1,5 +1,6 @@
 "use client";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
+import { Cianotipo } from "@/components/escena/Cianotipo";
 import { Pieza } from "./Pieza";
 import { TituloSeccion } from "./comun";
 
@@ -20,6 +21,7 @@ export function Trabajo() {
       data-gota="0.6 0.5 0.085"
       data-gota-m="0.62 0.5 0.085"
     >
+      <Cianotipo nombre="herramientas" />
       <div className="contenedor">
         <TituloSeccion id="trabajo-titulo">{t.paradas.trabajo}</TituloSeccion>
         {superlum && <Pieza p={superlum} etiqueta={t.trabajo.enProgreso} enCurso prioridad />}

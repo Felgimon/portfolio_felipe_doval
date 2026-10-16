@@ -647,6 +647,94 @@ html[data-escena="poster"] .escena {
   }
 }
 
+/* ============================================================================
+   v8: LOS CIANOTIPOS (el fondo de cada sección) y EL SONIDO
+   ========================================================================== */
+
+/* La caja del cianotipo: 16:9 arriba de la sección. La pinta la escena; el
+   fondo CSS es sólo el respaldo sin escena (por eso no se carga antes). */
+.cianotipo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  z-index: -1;
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .cianotipo {
+    width: 200%;
+  }
+}
+html[data-escena="poster"] .cianotipo {
+  background: var(--cianotipo) center / cover no-repeat;
+  opacity: 0.12;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+}
+@media (prefers-contrast: more), (forced-colors: active) {
+  html[data-escena="poster"] .cianotipo {
+    display: none;
+  }
+}
+
+/* El ecualizador del botón Sonido: tres barras quietas; suenan si está prendido */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.eq span {
+  width: 2px;
+  height: 5px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: height 0.3s var(--ease-salida);
+}
+.eq span:nth-child(2) {
+  height: 9px;
+}
+.sonido[aria-pressed="true"] .eq span {
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+.sonido[aria-pressed="true"] .eq span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.sonido[aria-pressed="true"] .eq span:nth-child(3) {
+  animation-delay: -0.6s;
+}
+.sonido[aria-pressed="false"] {
+  color: var(--crema-2);
+}
+@keyframes eq {
+  from {
+    height: 3px;
+  }
+  to {
+    height: 12px;
+  }
+}
+
+/* "Prender el sonido", debajo de la frase de Música en Así soy */
+.sonido-texto {
+  display: block;
+  width: fit-content;
+  margin-top: 4px;
+  color: var(--crema);
+  text-decoration: underline;
+  text-decoration-color: var(--linea);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.3s var(--ease-salida);
+}
+@media (hover: hover) {
+  .sonido-texto:hover {
+    text-decoration-color: var(--crema);
+  }
+}
+
 /* Movimiento reducido: se apaga lo gratuito (transiciones de la UI). La gota
    igual acompaña el scroll, pero sin ondular. */
 @media (prefers-reduced-motion: reduce) {

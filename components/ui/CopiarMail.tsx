@@ -2,11 +2,13 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
+import { armarMail } from "@/lib/mail";
+import { listo } from "@/lib/sonido";
 
 /**
  * "Copiar mi mail". La dirección NO está en el HTML ni en el contenido: se
- * arma recién en el clic, desde partes sueltas (anti-scraping, pedido de
- * Felipe). Recién después de que la persona la copió, se muestra.
+ * arma recién en el clic (lib/mail.ts). Recién después de que la persona la
+ * copió, se muestra.
  *
  * Que se lea como lo que es: el ícono de copiar (dos hojas) en una insignia; al
  * pasar el mouse las hojas se separan. Al copiar:
@@ -17,8 +19,6 @@ import { useIdioma } from "@/components/idioma/IdiomaProvider";
  *     que leerse aunque tenga texto detrás).
  * Si el portapapeles falla, la ficha muestra la dirección para copiarla a mano.
  */
-const PARTES = [["felipe", "ferrari", "doval"], ["gmail", "com"]] as const;
-const armar = () => `${PARTES[0].join("")}@${PARTES[1].join(".")}`;
 
 export function CopiarMail({
   className,
@@ -41,11 +41,12 @@ export function CopiarMail({
   useEffect(() => () => window.clearTimeout(reloj.current), []);
 
   const copiar = async () => {
-    const m = armar();
+    const m = armarMail();
     setMail(m);
     // la respuesta es inmediata (optimista): el portapapeles casi nunca falla,
     // y si falla se pasa al estado de error con la dirección a la vista
     setEstado("ok");
+    listo();
     if (boton.current) {
       const r = boton.current.getBoundingClientRect();
       window.dispatchEvent(new CustomEvent("vidrio:onda", { detail: { x: r.left + r.width / 2, y: r.top + r.height / 2 } }));

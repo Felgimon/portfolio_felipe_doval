@@ -82,6 +82,15 @@ export const perfil: Perfil = {
     { nombre: "n8n", categoria: "Automatización" },
   ],
 
+  // Así soy: los cuatro rasgos que contó Felipe, con sus palabras (v8). Nada
+  // más que eso: si se agrega algo, que lo diga él.
+  rasgos: [
+    { titulo: "Música", texto: "Me gusta la música, y este sitio también suena.", accion: "sonido" },
+    { titulo: "La gente", texto: "Respeto a la gente y me preocupo por ella." },
+    { titulo: "Lo nuevo", texto: "Soy curioso por lo nuevo." },
+    { titulo: "Charlar", texto: "Soy dinámico y me gusta hablar con la gente y conocerla." },
+  ],
+
   // El orden codifica la secuencia del recorrido. TODO(FELI): confirmá orden
   // exacto y fechas (ver TODO-FELI.md). NASA Space Apps y Premios Sadosky se
   // sacaron por completo (cards en v4.3, bio larga en v5.17.5): Felipe nunca

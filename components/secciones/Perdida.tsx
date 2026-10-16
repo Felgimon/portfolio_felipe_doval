@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Feli } from "@/components/guia/Feli";
+import { Cianotipo } from "@/components/escena/Cianotipo";
 
 /** La página que no existe (404): un título directo, Feli y una salida. */
 export function Perdida() {
@@ -13,6 +14,7 @@ export function Perdida() {
       data-gota="0.78 0.5 0.11"
       data-gota-m="0.8 0.5 0.1"
     >
+      <Cianotipo nombre="mapa" />
       <div className="contenedor grid items-end gap-8 md:grid-cols-12">
         <div className="pb-16 md:col-span-8">
           <p className="etiqueta">404</p>

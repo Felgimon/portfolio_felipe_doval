@@ -7,11 +7,16 @@ import { paradas } from "@/lib/navigation";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
+import { BotonSonido } from "@/components/ui/BotonSonido";
+import { NOTAS, nota } from "@/lib/sonido";
 import type { IdParada } from "@/content/ui";
 
 /**
  * La NAV: el nombre a la izquierda (vuelve al inicio), una píldora de vidrio
  * con las secciones en el centro y "Hablemos" sólido a la derecha.
+ *
+ * A la derecha, "Sonido" (v8): prendido, cada link toca una nota de un acorde
+ * al pasar el mouse o el foco, y recorrer la nav es un arpegio (lib/sonido.ts).
  *
  * El hover es la GOTA: con el mouse (o el foco del teclado) sobre un link, la
  * gota de vidrio grande que flota sobre los títulos vuela hasta ahí y se achica
@@ -87,14 +92,21 @@ export function Nav() {
             }}
             className="vidrio vidrio-pildora relative hidden items-center gap-0.5 p-[5px] lg:flex"
           >
-            {enNav.map((id) => (
+            {enNav.map((id, i) => (
               <li key={id} className="relative">
                 <a
                   href={href(id)}
                   data-id={id}
                   onClick={(e) => ir(e, id)}
-                  onPointerEnter={(e) => e.pointerType === "mouse" && setSobre(id)}
-                  onFocus={() => setSobre(id)}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType !== "mouse") return;
+                    setSobre(id);
+                    nota(NOTAS[i]);
+                  }}
+                  onFocus={() => {
+                    setSobre(id);
+                    nota(NOTAS[i]);
+                  }}
                   aria-current={activa === id ? "location" : undefined}
                   data-gota-aqui={sobre === id ? "" : undefined}
                   className={cn(
@@ -114,6 +126,7 @@ export function Nav() {
         )}
 
         <div className="flex items-center gap-2 justify-self-end">
+          <BotonSonido className="hidden min-h-[44px] lg:inline-flex" />
           {!enHome && (
             <Link href={volverA} data-vidrio className="boton vidrio vidrio-pildora boton-vidrio min-h-[44px] px-[18px] text-[14px] lg:hidden">
               <span aria-hidden className="flecha flecha-izq">←</span> {t.nav.volver}
@@ -165,6 +178,7 @@ export function Nav() {
                 </li>
               ))}
             </ul>
+            <BotonSonido className="mt-2 w-full justify-center" />
           </div>
         )}
       </nav>

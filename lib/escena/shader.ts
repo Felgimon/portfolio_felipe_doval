@@ -30,8 +30,8 @@ precision highp float;
 out vec4 o;
 uniform vec2 uRes;
 uniform float uS, uT, uQ;
-uniform sampler2D uP0, uP1, uP2, uF0, uF1;
-uniform vec4 uPR0, uPR1, uPR2, uFR0, uFR1;
+uniform sampler2D uP0, uP1, uP2, uF0, uF1, uK0, uK1;
+uniform vec4 uPR0, uPR1, uPR2, uFR0, uFR1, uKR0, uKR1;
 uniform vec3 uC;
 uniform float uR;
 uniform vec4 uV[${MAX_VIDRIOS}];
@@ -60,8 +60,24 @@ vec4 tx(sampler2D s, vec4 r, vec2 p){
   return texture(s, q);
 }
 
+// un cianotipo: luz celeste donde estaban los objetos (alfa), que se funde en
+// los bordes de su caja para no cortar en seco contra la sección vecina
+vec4 ciano(sampler2D s, vec4 r, vec2 p){
+  vec2 q = (p - r.xy) / r.zw;
+  if (r.z < 1. || q.x < 0. || q.x > 1. || q.y < 0. || q.y > 1.) return vec4(0);
+  vec4 c = texture(s, q);
+  c.a *= smoothstep(0., .12, q.y) * smoothstep(1., .82, q.y) * smoothstep(0., .03, q.x) * smoothstep(1., .97, q.x);
+  return c;
+}
+
 vec3 fondo(vec2 p){
   vec3 col = estudio(p);
+  // EL FONDO DE LA SECCIÓN: los objetos de todos los días, como luz baja sobre
+  // el estudio (que se lea el título); la gota encima los agranda
+  vec4 k = ciano(uK0, uKR0, p);
+  col = mix(col, k.rgb, k.a * .12);
+  k = ciano(uK1, uKR1, p);
+  col = mix(col, k.rgb, k.a * .12);
   vec4 f = tx(uF0, uFR0, p);
   f.a *= smoothstep(1., .8, (p.y - uFR0.y) / max(uFR0.w, 1.));
   col = mix(col, f.rgb, f.a);

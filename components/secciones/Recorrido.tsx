@@ -1,6 +1,7 @@
 "use client";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Feli } from "@/components/guia/Feli";
+import { Cianotipo } from "@/components/escena/Cianotipo";
 import { TituloSeccion } from "./comun";
 
 /**
@@ -19,6 +20,7 @@ export function Recorrido() {
       data-gota="0.97 0.5 0.085"
       data-gota-m="0.94 0.5 0.085"
     >
+      <Cianotipo nombre="movimiento" />
       <div className="contenedor">
         <TituloSeccion id="recorrido-titulo">{t.paradas.recorrido}</TituloSeccion>
         <div className="mt-16 grid items-start gap-7 md:grid-cols-12">

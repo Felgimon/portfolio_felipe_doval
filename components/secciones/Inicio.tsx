@@ -2,6 +2,7 @@
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import { Feli } from "@/components/guia/Feli";
+import { Cianotipo } from "@/components/escena/Cianotipo";
 import { CopiarMail } from "@/components/ui/CopiarMail";
 
 /**
@@ -22,6 +23,7 @@ export function Inicio() {
       data-gota="0.41 0.7 0.115"
       data-gota-m="0.4 0.66 0.085"
     >
+      <Cianotipo nombre="musica" />
       <h1
         id="inicio-titulo"
         data-placa

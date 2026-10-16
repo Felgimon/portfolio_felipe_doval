@@ -155,6 +155,37 @@ try {
     check(dice.estado === "ok", `el botón confirma que se copió (${dice.estado})`);
     check(dice.ficha === MAIL, "la ficha muestra la dirección recién después de copiar");
 
+    // v8: ¿De qué charlamos? abre el mail con asunto (sin dejar la dirección en el DOM)
+    await p.evaluate(() => {
+      window.__mailto = [];
+      HTMLAnchorElement.prototype.click = function () {
+        window.__mailto.push(this.href);
+      };
+    });
+    await p.locator("#contacto button", { hasText: /^Música$/ }).click();
+    const mailto = decodeURIComponent((await p.evaluate(() => window.__mailto[0])) ?? "");
+    check(mailto.startsWith(`mailto:${MAIL}?subject=Hablemos de música`), `un tema abre el mail con su asunto (${mailto.slice(0, 60)})`);
+    check(!(await p.evaluate(() => document.documentElement.innerHTML)).includes(`mailto:${MAIL}`), "el link del mail no queda en el DOM");
+
+    // v8: el sonido se prende, se recuerda y la nav lo muestra
+    await p.locator("#perfil .sonido-texto").click();
+    const sonido = await p.evaluate(() => ({
+      nav: document.querySelector("header button.sonido")?.getAttribute("aria-pressed"),
+      guardado: localStorage.getItem("sonido"),
+    }));
+    check(sonido.nav === "true" && sonido.guardado === "1", `sonido: se prende desde Así soy y la nav lo muestra (${JSON.stringify(sonido)})`);
+    await p.locator("header button.sonido").first().click();
+    check((await p.evaluate(() => localStorage.getItem("sonido"))) === "0", "sonido: se apaga desde la nav");
+
+    // v8: los cianotipos (el fondo de cada sección) están y la escena los pinta
+    const cianos = await p.evaluate(() => [...document.querySelectorAll("[data-cianotipo]")].map((e) => e.dataset.cianotipo));
+    check(cianos.join() === "musica,curiosidad,herramientas,movimiento,gente", `cianotipos en sus secciones (${cianos.join()})`);
+    const pintado = await p.evaluate(() => ({
+      escena: document.documentElement.dataset.escena,
+      gente: document.querySelector('[data-cianotipo="gente"]')?.dataset.pintado !== undefined,
+    }));
+    check(pintado.escena !== "lista" || pintado.gente, `la escena pinta el cianotipo de la sección a la vista (${JSON.stringify(pintado)})`);
+
     // Feli acompaña en fotos, no habla (v7): nada de globos ni frases
     const feli = await p.evaluate(() => ({
       fotos: document.querySelectorAll("[data-feli]").length,

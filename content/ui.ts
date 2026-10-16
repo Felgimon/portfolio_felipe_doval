@@ -24,9 +24,10 @@ export type IdParada =
 export type TextosUI = {
   paradas: Record<IdParada, string>;
   nav: { aria: string; menu: string; cerrar: string; volver: string; hablemos: string; inicio: string };
+  sonido: { boton: string; prender: string; apagar: string };
   saltar: string;
   hero: { verTrabajo: string; copiarMail: string; ahora: string; ahoraTexto: string };
-  perfil: { stack: string };
+  perfil: { stack: string; asiSoy: string };
   trabajo: {
     enProgreso: string;
     anterior: string;
@@ -45,6 +46,10 @@ export type TextosUI = {
     noCopiado: string;
     enPortapapeles: string;
     copialoAMano: string;
+    temasTitulo: string;
+    temasAyuda: string;
+    saludo: string;
+    temas: { etiqueta: string; asunto: string }[];
   };
   categoriasStack: Record<string, string>;
   detalle: {
@@ -82,6 +87,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       hablemos: "Hablemos",
       inicio: "Felipe Doval, inicio",
     },
+    sonido: { boton: "Sonido", prender: "Prender el sonido", apagar: "Apagar el sonido" },
     saltar: "Saltar al contenido",
     hero: {
       verTrabajo: "Ver el trabajo",
@@ -89,7 +95,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       ahora: "Ahora",
       ahoraTexto: "Construyendo Superlum, un workspace operativo a medida para una empresa real.",
     },
-    perfil: { stack: "Con qué construyo" },
+    perfil: { stack: "Con qué construyo", asiSoy: "Así soy" },
     trabajo: {
       enProgreso: "En progreso",
       anterior: "Proyecto anterior",
@@ -111,6 +117,15 @@ export const textosUI: Record<Idioma, TextosUI> = {
       noCopiado: "No se pudo copiar",
       enPortapapeles: "En tu portapapeles",
       copialoAMano: "Copialo a mano",
+      temasTitulo: "¿De qué charlamos?",
+      temasAyuda: "Elegí uno y se abre tu mail con el asunto listo.",
+      saludo: "Hola, Felipe:",
+      temas: [
+        { etiqueta: "Un proyecto", asunto: "Hablemos de un proyecto" },
+        { etiqueta: "Un laburo", asunto: "Una propuesta de laburo" },
+        { etiqueta: "Música", asunto: "Hablemos de música" },
+        { etiqueta: "Algo nuevo", asunto: "Vi algo nuevo y pensé en vos" },
+      ],
     },
     categoriasStack: {
       Frontend: "Frontend",
@@ -153,6 +168,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       hablemos: "Let's talk",
       inicio: "Felipe Doval, home",
     },
+    sonido: { boton: "Sound", prender: "Turn the sound on", apagar: "Turn the sound off" },
     saltar: "Skip to content",
     hero: {
       verTrabajo: "See the work",
@@ -160,7 +176,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       ahora: "Now",
       ahoraTexto: "Building Superlum, a custom operations workspace for a real company.",
     },
-    perfil: { stack: "What I build with" },
+    perfil: { stack: "What I build with", asiSoy: "This is me" },
     trabajo: {
       enProgreso: "In progress",
       anterior: "Previous project",
@@ -182,6 +198,15 @@ export const textosUI: Record<Idioma, TextosUI> = {
       noCopiado: "Couldn't copy it",
       enPortapapeles: "On your clipboard",
       copialoAMano: "Copy it by hand",
+      temasTitulo: "What shall we talk about?",
+      temasAyuda: "Pick one and your email opens with the subject ready.",
+      saludo: "Hi Felipe,",
+      temas: [
+        { etiqueta: "A project", asunto: "Let's talk about a project" },
+        { etiqueta: "A job", asunto: "A job opportunity" },
+        { etiqueta: "Music", asunto: "Let's talk about music" },
+        { etiqueta: "Something new", asunto: "I saw something new and thought of you" },
+      ],
     },
     categoriasStack: {
       Frontend: "Frontend",

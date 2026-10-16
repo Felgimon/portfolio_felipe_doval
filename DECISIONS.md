@@ -3,10 +3,75 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> Las secciones **v7.x** son las vigentes (rediseño «Vidrio y cobalto»).
+> Las secciones **v8** y **v7.x** son las vigentes (rediseño «Vidrio y cobalto» y lo que lo hace más de Felipe).
 > Debajo queda toda la historia: v6 (la visita guiada en líquido verde), v5.x
 > (el sol en el estudio blanco), v4, v3, v2 y v1. Las notas también están en
 > `obsidian/Portfolio/`.
+
+---
+
+## v8 — Más yo: los cianotipos de lo cotidiano, el sonido y Así soy
+
+### El pedido
+Que el portfolio sea más Felipe. Contó cómo es: le gusta la música, respeta a
+la gente y se preocupa por ella, es curioso por lo nuevo, es dinámico y le
+gusta hablar con la gente y conocerla. Buscar referencias de la vida
+cotidiana, sumar funciones o cambiar el diseño, y elegir un fondo que lo
+personalice (pueden ser varias imágenes). Primero en el Figma, después a main.
+
+### La idea: cada sección, una mesa
+- **El fondo son cianotipos.** El cianotipo es un fotograma sin cámara:
+  objetos apoyados sobre papel sensibilizado al sol; lo que tapan queda claro y
+  el resto, azul de Prusia. Es el mismo azul del sitio: el fondo no cambia de
+  paleta, cambia de historia. Seis, uno por sección: Inicio (música:
+  auriculares, un vinilo, un casete), Perfil (lo nuevo: una lupa, un lápiz,
+  una protoboard, una lamparita), Trabajo (el oficio: teclas, un cable,
+  anteojos, una libreta), Recorrido (moverse: zapatillas, llaves, una tarjeta,
+  la de básquet), Contacto (la gente: dos tazas, una frente a la otra) y el 404
+  (perdido: un mapa y una brújula).
+- **Ordenados.** La primera tanda tenía cables tirados y zapatillas desatadas;
+  Felipe es ordenado (y así quiere que lo vean): se rehicieron en *knolling*
+  (todo a 90°, con la misma separación, cables enrollados, cordones atados),
+  con el mismo estilo y color (las primeras como referencia).
+- **Bajo, sin robar foco.** Se pintan en el shader como luz sobre el estudio
+  (12%), debajo de Feli y de los títulos, con los bordes fundidos. De lejos son
+  textura; la gota, al pasar, los agranda (la curiosidad tiene premio). Con
+  contraste alto no se pintan.
+- **Sin WebGL**, el mismo archivo (un mapa de luz: celeste con la luz en el
+  alfa) va de fondo CSS con la misma intensidad; sólo se descarga en ese modo.
+
+### Funciones nuevas
+- **Sonido** (música). Botón en la nav (y en el menú del celular), apagado de
+  entrada y recordado. Prendido, cada link de la nav toca una nota de un
+  acorde de do mayor con novena: recorrer la nav es un arpegio. Copiar el mail
+  y elegir un tema suenan a "listo". Todo sintetizado con Web Audio, una nota
+  de vidrio (fundamental más dos parciales inarmónicos): cero archivos.
+- **Así soy** (en Perfil, debajo del stack): los cuatro rasgos, con sus
+  palabras y nada más. En el de Música, "Prender el sonido".
+- **¿De qué charlamos?** (Contacto): un proyecto, un laburo, música o algo
+  nuevo; cada uno abre el mail con asunto y saludo listos. La dirección sigue
+  armándose recién en el clic (ahora en `lib/mail.ts`) y el link no queda en
+  el DOM.
+
+### Descartado
+- "Escuchando ahora" de Spotify en vivo: necesita un servidor con su token y,
+  si no está escuchando nada, queda vacío.
+- Fotos de stock de gente en el sitio: no es su gente. Los objetos pueden ser
+  de cualquiera; las caras no.
+- Muro de logos de bandas o íconos de hobbies: infantil (la crítica de la v6).
+
+### Autocrítica en el camino
+- En el Figma, la primera prueba con el cianotipo al 42% competía con el
+  título: se bajó a 16% (Figma) y 12% (sitio), en 16:9 sin estirar.
+- "Prender el sonido" quedaba cortado con sangría al final de la frase: va en
+  su propia línea.
+
+### Verificación
+`gate` 0 errores · `audit` **47/47** (suma: un tema abre el mail con su
+asunto, el link no queda en el DOM, el sonido se prende desde Así soy y se
+apaga desde la nav, los cianotipos están en sus secciones y la escena pinta el
+de la vista) · `idioma`, `touch`, `anim`, `smoke` en verde. Capturas de cada
+sección en escritorio, celular y sin WebGL.
 
 ---
 

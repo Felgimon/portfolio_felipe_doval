@@ -117,4 +117,13 @@ export interface Perfil {
   };
   stack: ItemStack[];
   timeline: ItemTimeline[];
+  /** Así soy: cómo es, en sus palabras (Perfil, debajo del stack) */
+  rasgos: Rasgo[];
+}
+
+export interface Rasgo {
+  titulo: string;
+  texto: string;
+  /** un control al final de la frase (hoy: prender el sonido) */
+  accion?: "sonido";
 }

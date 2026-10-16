@@ -54,6 +54,13 @@ export const perfilEN: Perfil = {
 
   metaDescripcion: base.metaDescripcion,
 
+  rasgos: [
+    { titulo: "Music", texto: "I love music, and this site makes sound too.", accion: "sonido" },
+    { titulo: "People", texto: "I respect people and I care about them." },
+    { titulo: "New things", texto: "I'm curious about what's new." },
+    { titulo: "Talking", texto: "I'm dynamic, and I like talking to people and getting to know them." },
+  ],
+
   timeline: [
     {
       orden: 1,

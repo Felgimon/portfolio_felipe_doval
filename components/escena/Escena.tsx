@@ -18,6 +18,9 @@ import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/li
  *                       con su misma fuente; el texto del DOM queda transparente
  *                       (data-placa-lista) pero sigue ahí para leer y copiar
  *   data-feli           una foto de Feli (data-pose-src = la foto)
+ *   data-cianotipo      el fondo de una sección: objetos de todos los días en
+ *                       cianotipo (data-src = el mapa de luz). Se pinta como
+ *                       luz baja sobre el estudio, debajo de Feli y los títulos
  *   data-vidrio         un panel de vidrio ahumado. Si se puede tocar (a,
  *                       button), reacciona al mouse: lente, reflejo y canto.
  *                       ="claro": vidrio casi sin ahumar, como una gota.
@@ -129,6 +132,7 @@ export function Escena() {
     let vw = 0, vh = 0, escala = 1;
     let vidrios: Vidrio[] = [];
     let felis: HTMLElement[] = [];
+    let cianos: HTMLElement[] = [];
     let secciones: Seccion[] = [];
     const placas = new Map<HTMLElement, Placa>();
 
@@ -154,6 +158,10 @@ export function Escena() {
         };
       });
       felis = [...document.querySelectorAll<HTMLElement>("[data-feli]")];
+      // con contraste alto, el fondo queda liso (los objetos le restan contraste al texto)
+      cianos = window.matchMedia("(prefers-contrast: more)").matches
+        ? []
+        : [...document.querySelectorAll<HTMLElement>("[data-cianotipo]")];
       secciones = [...document.querySelectorAll<HTMLElement>("[data-gota]")].map((el) => ({
         el,
         d: leer(el.dataset.gota),
@@ -204,7 +212,7 @@ export function Escena() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-gota", "data-gota-m", "data-vidrio", "data-feli", "data-pose-src", "data-placa", "class"],
+      attributeFilter: ["data-gota", "data-gota-m", "data-vidrio", "data-feli", "data-pose-src", "data-placa", "data-cianotipo", "class"],
     });
 
     // --- puntero: en el inicio, la gota lo sigue de lejos ---
@@ -316,6 +324,21 @@ export function Escena() {
         feli.push({ rect: [r.left, r.top, r.width, r.height], src });
       }
 
+      // 2b. Los cianotipos: los 2 que más se ven
+      const cianotipos: Cuadro["cianotipos"] = [];
+      const enPantalla = cianos
+        .map((el) => ({ el, r: el.getBoundingClientRect() }))
+        .map((x) => ({ ...x, v: Math.min(x.r.bottom, vh) - Math.max(x.r.top, 0) }))
+        .filter((x) => x.v > 0 && x.r.width > 0)
+        .sort((a, b) => b.v - a.v)
+        .slice(0, 2);
+      for (const { el, r } of enPantalla) {
+        const src = el.dataset.src;
+        if (!src) continue;
+        if (motor.foto(src) && el.dataset.pintado === undefined) el.dataset.pintado = "";
+        cianotipos.push({ rect: [r.left, r.top, r.width, r.height], src });
+      }
+
       // 3. La gota: va a la sección activa y se apoya en una letra de su título.
       // Con el mouse (o el foco) sobre un link de la nav, vuela hasta ahí y se
       // vuelve una píldora de vidrio del tamaño del link.
@@ -395,6 +418,7 @@ export function Escena() {
         forma: [gp.hw.v, gp.hh.v, gp.m.v],
         placas: placasGPU,
         feli,
+        cianotipos,
         vidrios: vr,
         vidriosX: vx,
         nVidrios: nv,

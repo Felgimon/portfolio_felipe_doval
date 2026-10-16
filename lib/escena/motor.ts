@@ -2,7 +2,7 @@ import { FRAGMENT, MAX_VIDRIOS, VERTEX } from "./shader";
 
 /**
  * El MOTOR: WebGL 2 crudo, sin three.js. Compila, sube las texturas (fotos de
- * Feli y placas de los títulos) y los uniforms. Qué dibujar lo decide
+ * Feli, cianotipos del fondo y placas de los títulos) y los uniforms. Qué dibujar lo decide
  * components/escena/Escena.tsx.
  */
 
@@ -20,6 +20,7 @@ export type Cuadro = {
   gota: [number, number, number]; // x, y, radio (radio 0 = sin gota)
   placas: PlacaGPU[];
   feli: { rect: [number, number, number, number]; src: string }[];
+  cianotipos: { rect: [number, number, number, number]; src: string }[];
   vidrios: Float32Array; // MAX_VIDRIOS * 4
   vidriosX: Float32Array; // MAX_VIDRIOS * 4 (x radio, y hover, z presencia, w tipo)
   nVidrios: number;
@@ -31,6 +32,7 @@ export type Cuadro = {
 const NOMBRES = [
   "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda", "uForma",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
+  "uK0", "uK1", "uKR0", "uKR1",
 ] as const;
 const ARRAYS = new Set(["uV", "uVX"]);
 const CERO: [number, number, number, number] = [0, 0, 0, 0];
@@ -78,12 +80,14 @@ export class Motor {
     const u = {} as Motor["u"];
     for (const n of NOMBRES) u[n] = gl.getUniformLocation(programa, ARRAYS.has(n) ? `${n}[0]` : n);
     this.u = u;
-    // unidades fijas: placas 0..2, Feli 3..4
+    // unidades fijas: placas 0..2, Feli 3..4, cianotipos 5..6
     gl.uniform1i(u.uP0, 0);
     gl.uniform1i(u.uP1, 1);
     gl.uniform1i(u.uP2, 2);
     gl.uniform1i(u.uF0, 3);
     gl.uniform1i(u.uF1, 4);
+    gl.uniform1i(u.uK0, 5);
+    gl.uniform1i(u.uK1, 6);
 
     this.vacia = this.nuevaTextura();
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
@@ -175,16 +179,22 @@ export class Motor {
       const r = pl ? pl.rect : CERO;
       gl.uniform4f(rects[i], r[0], r[1], r[2], r[3]);
     }
-    const frects = [u.uFR0, u.uFR1];
-    for (let i = 0; i < 2; i++) {
-      const f = c.feli[i];
+    this.fotosGPU(c.feli, 3, [u.uFR0, u.uFR1]);
+    this.fotosGPU(c.cianotipos, 5, [u.uKR0, u.uKR1]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  /** Dos fotos (Feli o cianotipos) en sus unidades; sin foto lista, rect 0. */
+  private fotosGPU(lista: Cuadro["feli"], unidad: number, rects: (WebGLUniformLocation | null)[]) {
+    const gl = this.gl;
+    for (let i = 0; i < rects.length; i++) {
+      const f = lista[i];
       const e = f ? this.fotos.get(f.src) : undefined;
-      gl.activeTexture(gl.TEXTURE3 + i);
+      gl.activeTexture(gl.TEXTURE0 + unidad + i);
       gl.bindTexture(gl.TEXTURE_2D, e?.lista ? e.tex : this.vacia);
       const r = f && e?.lista ? f.rect : CERO;
-      gl.uniform4f(frects[i], r[0], r[1], r[2], r[3]);
+      gl.uniform4f(rects[i], r[0], r[1], r[2], r[3]);
     }
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
   perdido(): boolean {

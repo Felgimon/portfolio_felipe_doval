@@ -1,7 +1,7 @@
 # CREDITS: assets y licencias
 
-Todo lo que usa el sitio es propio de Felipe o de licencia libre (SIL OFL /
-ISC / CC0). No hay ningún asset CC-BY, así que no hay créditos obligatorios en
+Todo lo que usa el sitio es propio de Felipe, de licencia libre (SIL OFL /
+ISC / CC0) o generado para el sitio (los cianotipos del fondo, ver abajo). No hay ningún asset CC-BY, así que no hay créditos obligatorios en
 el footer; el origen de la tipografía queda documentado acá.
 
 ## Tipografía (self-hosted, `app/fonts/`)
@@ -35,6 +35,24 @@ rectángulo redondeado. Cero texturas de terceros, cero modelos.
   la v7, sin borde de sticker). Son interinas hasta la sesión de fotos.
 - Capturas de proyectos (`public/assets/proyectos/`): de los proyectos de
   Felipe.
+
+## Los cianotipos del fondo (v8)
+
+`brand/cianotipos/*.jpg` (originales) → `public/assets/cianotipos/*.webp` (mapas
+de luz, `scripts/gen-cianotipos.mjs`). Seis fotogramas en cianotipo de objetos
+de todos los días (auriculares, una lupa, teclas, zapatillas, dos tazas, un
+mapa), **generados con IA** para este sitio (GPT Image 2.5, vía Higgsfield, con
+la cuenta de Felipe). Son ilustrativos: no son fotos de objetos de Felipe. Si
+algún día hay fotos o cianotipos propios de sus cosas, se reemplazan con el
+mismo script.
+
+Las referencias del mood board (en el Figma, no en el sitio) son de dominio
+público o CC0 vía Openverse: los cianotipos de Anna Atkins (1843–1854) y fotos
+CC0 de rawpixel, StockSnap y Flickr.
+
+## Sonido (v8)
+
+Sin archivos: lo sintetiza el navegador con Web Audio (`lib/sonido.ts`).
 
 ## Íconos
 

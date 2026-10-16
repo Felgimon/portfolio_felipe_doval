@@ -31,6 +31,18 @@ recortes viejos como interinos, y por eso el 404 repite la de Recorrido.
   `node scripts/gen-guia.mjs` y en `content/guia.ts` cada pose apunta a su
   archivo.
 
+## 🟢 Los cianotipos del fondo (opcional)
+
+Los seis fondos (auriculares, lupa, teclas, zapatillas, tazas, mapa) están
+generados con IA: son objetos "de cualquiera". Si querés que sean tuyos:
+
+- [ ] Sacá fotos **cenitales** (desde arriba, a 90°) de tus cosas sobre una mesa
+  lisa, ordenadas como en los de ahora (todo alineado, cables enrollados), o
+  hacé cianotipos de verdad (un kit de papel cianotipo cuesta poco y es un
+  plan lindo). Dejalos como JPG en `brand/cianotipos/<nombre>.jpg` (mismos
+  nombres: musica, curiosidad, herramientas, movimiento, gente, mapa) y corré
+  `node scripts/gen-cianotipos.mjs`.
+
 ## 🟡 Ver las notas en Obsidian
 
 - [ ] En la Mac, desde la carpeta del repo (después de `git pull`):
