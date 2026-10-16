@@ -22,8 +22,9 @@ export function Recorrido() {
     >
       <div className="contenedor relative">
         <Cianotipo nombre="movimiento" className="top-[-116px] w-[78%] md:hidden" />
-        {/* lo de moverse, grande, en la columna libre de la derecha */}
-        <Cianotipo nombre="recorrido-grande" className="top-[150px] right-[1%] w-[38%] max-w-[560px] max-md:hidden" />
+        {/* lo de moverse, grande: el centro en la columna libre de la derecha y el
+            borde izquierdo que se mete un poco debajo de la línea de tiempo */}
+        <Cianotipo nombre="recorrido-grande" className="top-[96px] right-[-2%] w-[44%] max-w-[650px] max-md:hidden" />
         <TituloSeccion id="recorrido-titulo">{t.paradas.recorrido}</TituloSeccion>
         <div className="mt-16 grid items-start gap-7 md:grid-cols-12">
           <ol className="border-t border-linea md:col-span-8">

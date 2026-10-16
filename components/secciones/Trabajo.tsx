@@ -24,8 +24,9 @@ export function Trabajo() {
     >
       <div className="contenedor relative">
         <Cianotipo nombre="herramientas" className="top-[-116px] w-[78%] md:hidden" />
-        {/* el oficio, en una fila larga en el aire entre Superlum y Proyectos */}
-        <Cianotipo nombre="trabajo-grande" className="top-[calc(100%-36px)] right-[12%] w-[76%] max-md:hidden" />
+        {/* el oficio, en una fila larga: el centro en el aire entre Superlum y
+            Proyectos, y los objetos que rozan la captura de arriba */}
+        <Cianotipo nombre="trabajo-grande" className="top-[calc(100%-120px)] right-[6%] w-[88%] max-md:hidden" />
         <TituloSeccion id="trabajo-titulo">{t.paradas.trabajo}</TituloSeccion>
         {superlum && <Pieza p={superlum} etiqueta={t.trabajo.enProgreso} enCurso prioridad />}
       </div>

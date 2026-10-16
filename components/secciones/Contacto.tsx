@@ -24,8 +24,9 @@ export function Contacto() {
     >
       <div className="contenedor relative">
         <Cianotipo nombre="gente" className="top-[-116px] w-[78%] md:hidden" />
-        {/* las dos tazas, grandes, a la derecha del texto */}
-        <Cianotipo nombre="contacto-grande" className="top-[140px] right-[2%] w-[46%] max-w-[680px] max-md:hidden" />
+        {/* las dos tazas, grandes: el centro en el hueco de la derecha y los bordes
+            que rozan el final del título y los botones */}
+        <Cianotipo nombre="contacto-grande" className="top-[96px] right-[-2%] w-[54%] max-w-[800px] max-md:hidden" />
         <div className="md:max-w-[58%]">
           <TituloSeccion id="contacto-titulo">{t.paradas.contacto}</TituloSeccion>
           <p className="lead mt-10 max-w-[34ch]">{t.contacto.lead}</p>

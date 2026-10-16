@@ -32,6 +32,12 @@ vacío de cada sección:
 - **Recorrido:** 2x2 en la columna libre (zapatillas y pelota; llaves y
   tarjeta).
 - **Contacto:** las dos tazas en espejo, a la derecha del texto.
+- **La regla final** (idea de Felipe): un poco más grandes, con el CENTRO de
+  la composición en el hueco y los bordes que se meten un poco debajo del
+  texto (la escuadra bajo el final de "ENFOQUE" y el borde de las tarjetas, las
+  zapatillas bajo el final de la línea de tiempo, la libreta bajo la captura
+  de Superlum, las tazas rozando el final de "CONTACTO"). Así se sienten
+  apoyados en la misma mesa que el texto, no pegados al costado.
 - En el celular siguen las filas chicas arriba de cada título.
 - Los bordes sólo se funden en los que van a sangre (la portada y el 404): las
   composiciones ya traen su aire y fundirlas cortaba los objetos de abajo.

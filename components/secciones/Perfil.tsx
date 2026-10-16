@@ -35,8 +35,9 @@ export function Perfil() {
                 {p}
               </p>
             ))}
-            {/* los objetos de curioso, grandes, en el aire que queda debajo de la bio */}
-            <Cianotipo nombre="perfil-grande" className="relative mt-10 -ml-[6%] w-[112%] max-md:hidden" />
+            {/* los objetos de curioso, grandes: el centro en el aire debajo de la bio y
+                la parte de arriba que se mete un poco debajo del último párrafo */}
+            <Cianotipo nombre="perfil-grande" className="relative -mt-6 -ml-[8%] w-[124%] max-md:hidden" />
           </div>
           <div className="md:col-span-5 md:col-start-8">
             <h3 className="etiqueta">{t.perfil.stack}</h3>

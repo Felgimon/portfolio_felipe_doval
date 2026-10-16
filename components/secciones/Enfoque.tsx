@@ -22,8 +22,9 @@ export function Enfoque() {
     >
       <div className="contenedor relative">
         <Cianotipo nombre="enfoque" className="top-[-124px] w-[44%] md:hidden" />
-        {/* el juego de dibujo, grande, arriba a la derecha: al lado del título y la bajada, y apenas por detrás de las tarjetas de vidrio */}
-        <Cianotipo nombre="enfoque-grande" className="top-[-80px] right-[var(--margen)] w-[31%] max-w-[470px] max-md:hidden" />
+        {/* el juego de dibujo, grande: el centro en el hueco de arriba a la derecha y
+            los bordes que se meten un poco debajo del título y de las tarjetas */}
+        <Cianotipo nombre="enfoque-grande" className="top-[-96px] right-0 w-[40%] max-w-[620px] max-md:hidden" />
         <TituloSeccion id="enfoque-titulo">{t.paradas.enfoque}</TituloSeccion>
         <p className="lead mt-8 max-w-[56ch]">{perfil.enfoque.resumen}</p>
         <ul className="mt-12 grid gap-5 md:grid-cols-2 md:gap-7">
