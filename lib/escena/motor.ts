@@ -25,10 +25,11 @@ export type Cuadro = {
   nVidrios: number;
   puntero: [number, number];
   onda: [number, number, number, number]; // x, y, edad (s), fuerza
+  forma: [number, number, number]; // la gota hecha botón: medio ancho, medio alto, cuánto
 };
 
 const NOMBRES = [
-  "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda",
+  "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda", "uForma",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
 ] as const;
 const ARRAYS = new Set(["uV", "uVX"]);
@@ -164,6 +165,7 @@ export class Motor {
     gl.uniform1i(u.uNV, Math.min(c.nVidrios, MAX_VIDRIOS));
     gl.uniform2f(u.uM, c.puntero[0], c.puntero[1]);
     gl.uniform4f(u.uOnda, c.onda[0], c.onda[1], c.onda[2], c.onda[3]);
+    gl.uniform3f(u.uForma, c.forma[0], c.forma[1], c.forma[2]);
 
     const rects = [u.uPR0, u.uPR1, u.uPR2];
     for (let i = 0; i < MAX_PLACAS; i++) {

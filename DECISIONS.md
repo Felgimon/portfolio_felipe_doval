@@ -10,6 +10,52 @@ dependencias y bugs). Se actualiza en cada fase.
 
 ---
 
+## v7.2 — El hover de la nav es la gota
+
+### El pedido
+La cápsula de vidrio claro de la v7.1 no gustó: "horrible", "no parece un
+reflejo de burbuja". La idea de Felipe: que la burbuja grande que flota vaya
+hasta el botón y se achique tomando su forma, rápido.
+
+### Cómo es
+- Con el mouse (o el foco del teclado) sobre un link de la nav, ese link se
+  marca con `data-gota-aqui` y la **gota misma** vuela hasta él: se estira en
+  el viaje, llega con un pequeño rebote y queda como una **píldora de vidrio**
+  del tamaño del link. Entre links se desliza estirándose; al salir de la nav,
+  vuelve a apoyarse en su título.
+- Es la misma SDF: el huevo que ondula se mezcla con una caja redondeada
+  (`uForma`: medio ancho, medio alto y cuánto es botón). La ondulación y la
+  gotita satélite se apagan a medida que se vuelve botón. Nada se superpone ni
+  se cambia de golpe: es un solo objeto.
+- Los resortes (x, y, radio, ancho, alto, forma) son más duros mientras va o
+  está en un botón (el viaje dura ~250 ms) y blandos en el resto, como antes.
+- Mientras es gota grande viaja **debajo** del vidrio de la UI; pasada la mitad
+  del cambio se pinta **encima** de la nav.
+- La píldora tiene su propio acabado: vista frontal (sin la perspectiva de la
+  gota grande, que a esa altura la torcía), el centro es una lente que aclara
+  (contra el ahumado de la nav), el canto es una línea de luz fuerte arriba a
+  la izquierda y suave abajo, un brillo arriba que se corre con el puntero y
+  una sombra corta sobre la nav. El borde se suaviza con la silueta 2D exacta.
+- La sección activa queda marcada con un punto debajo del link.
+- Sin escena, con poca potencia o con reducir movimiento: el hover es un fondo
+  más claro (CSS).
+
+### Bugs encontrados al probar
+- La primera píldora se veía como un aro de goma negra: con un vidrio tan
+  chico casi todo el canto es reflexión total interna y el entorno es oscuro.
+  En la píldora la luz "cruza" igual (se toma el fondo, aclarado).
+- Para ver el vuelo cuadro por cuadro en SwiftShader (lento), la escena acepta
+  un reloj manual: `window.__relojEscena` (en ms) reemplaza a
+  `performance.now()` si está definido. Sólo se usa en las pruebas.
+
+### Verificación
+`gate` 0 errores · `audit` **41/41** (cambian los chequeos de la nav: el link
+llama a la gota, la gota se vuelve píldora y al salir vuelve) · `idioma`,
+`touch`, `anim`, `smoke` en verde. Secuencias del vuelo cuadro por cuadro
+(0 a 600 ms) desde Perfil y desde Inicio, deslizándose entre links y de vuelta.
+
+---
+
 ## v7.1 — Los hovers son vidrio, y "Copiar mi mail" se entiende
 
 ### El pedido
@@ -31,7 +77,8 @@ como lo que es:
   mancha de luz que sigue al puntero (`Reflejos.tsx` pone `--mx/--my`).
 - **La nav:** una **cápsula de vidrio claro** (data-vidrio="claro", una gotita)
   marca la sección activa y se desliza con un resorte elástico de GSAP hasta el
-  link con el mouse o el foco del teclado; al salir, vuelve.
+  link con el mouse o el foco del teclado; al salir, vuelve. *(Reemplazada en
+  la v7.2: ahora es la gota la que vuela al link.)*
 - **Las filas de proyectos y "Siguiente caso":** data-vidrio="hover", una
   burbuja de vidrio que se forma debajo con el mouse, y el nombre se corre.
 - **Las flechas** acompañan (→ avanza, ↗ sube en diagonal, ← retrocede, ↓

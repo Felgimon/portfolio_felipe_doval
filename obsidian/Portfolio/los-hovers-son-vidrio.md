@@ -13,8 +13,10 @@ verdad**, no un brillo de CSS que lo imite.
   una **lente** agranda lo que está debajo del puntero, un **reflejo** lo sigue
   y el **canto** se enciende de ese lado. Al tocarlo, una **onda** lo recorre.
 - **Botones crema:** relieve de esmalte y una mancha de luz que sigue al mouse.
-- **La nav:** una **cápsula de vidrio claro** (una gotita) marca la sección
-  activa y se desliza con un resorte hasta el link donde está el mouse.
+- **La nav:** la **gota** grande que flota sobre los títulos vuela hasta el
+  link con el mouse encima y se achica tomando su forma, como una píldora de
+  vidrio. Entre links se desliza; al salir, vuelve a su título. (La primera
+  versión era una cápsula aparte y no gustó: no parecía una burbuja.)
 - **Las filas de proyectos y "Siguiente caso":** se forma una burbuja de vidrio
   debajo y el nombre se corre.
 - **Las flechas** se mueven hacia donde van; el press rebota.
@@ -25,4 +27,4 @@ pasar el mouse). Al tocarlo: las hojas se juntan en un tilde, el texto sube a
 dirección. Si falla el portapapeles, la ficha queda con la dirección para
 copiarla a mano.
 
-Detalle en `DECISIONS.md` (v7.1). Relacionado: [[la-gota-lee-los-titulos]].
+Detalle en `DECISIONS.md` (v7.1 y v7.2). Relacionado: [[la-gota-lee-los-titulos]].

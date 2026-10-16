@@ -37,7 +37,7 @@ AA aun sobre la zona más oscura del líquido.
 La refracción sólo se ve si atrás hay algo con bordes: sobre papel blanco liso
 el mejor vidrio del mundo no muestra nada. Por eso **cada vidrio declara gotas
 detrás** ([[las-gotas-se-declaran-en-el-dom]]): el globo de Feli, el botón
-principal, la nav (con su cápsula).
+principal, la nav (y la gota, cuando se posa en uno de sus links).
 
 Sin WebGL, el vidrio se vuelve **sólido** (papel con borde tinta), no un blur
 falso.

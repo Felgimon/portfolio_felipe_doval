@@ -20,13 +20,16 @@ import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/li
  *   data-feli           una foto de Feli (data-pose-src = la foto)
  *   data-vidrio         un panel de vidrio ahumado. Si se puede tocar (a,
  *                       button), reacciona al mouse: lente, reflejo y canto.
- *                       ="claro": vidrio casi sin ahumar (la cápsula de la
- *                       nav). ="hover": aparece sólo con el mouse encima (las
+ *                       ="claro": vidrio casi sin ahumar, como una gota.
+ *                       ="hover": aparece sólo con el mouse encima (las
  *                       filas de proyectos). Al tocarlo, una onda lo recorre.
  *   data-gota="fx fy r" en una sección: dónde se apoya la gota cuando esa
  *                       sección está activa, en fracciones de SU título
  *                       (data-placa) y r en fracción de la pantalla
  *   data-gota-m         lo mismo para pantallas angostas (< 768px)
+ *   data-gota-aqui      un link de la nav con el mouse o el foco encima: la
+ *                       gota vuela hasta ahí y se vuelve una píldora de su
+ *                       tamaño (html[data-gota-modo="boton"] mientras dura)
  *
  * Estado en <html data-escena>: "poster" (sin WebGL 2 o equipo que no llega:
  * el CSS muestra el estudio en gradiente, los títulos como texto, Feli como
@@ -249,7 +252,23 @@ export function Escena() {
     // --- el cuadro ---
     const vr = new Float32Array(MAX_VIDRIOS * 4);
     const vx = new Float32Array(MAX_VIDRIOS * 4);
-    const gp = { x: 0, y: 0, r: 0, lista: false };
+    // la gota: posición, radio, y su forma de botón (medio ancho, medio alto, cuánto)
+    // cada valor es un resorte (con un poco de rebote, como un líquido)
+    const resorte = (v: number) => ({ v, vel: 0 });
+    const gp = {
+      x: resorte(0), y: resorte(0), r: resorte(0), hw: resorte(0), hh: resorte(0), m: resorte(0),
+      lista: false,
+    };
+    const empujar = (s: { v: number; vel: number }, obj: number, k: number, c: number, dt: number) => {
+      // Euler semi-implícito en pasos chicos: estable aunque el cuadro tarde
+      let resto = dt;
+      while (resto > 0) {
+        const h = Math.min(resto, 1 / 120);
+        s.vel += ((obj - s.v) * k - s.vel * c) * h;
+        s.v += s.vel * h;
+        resto -= h;
+      }
+    };
     const t0 = performance.now();
     let ultimo = t0;
     let primero = true;
@@ -257,7 +276,9 @@ export function Escena() {
 
     function cuadro() {
       if (apagada || document.hidden) return;
-      const ahora = performance.now();
+      // __relojEscena: un reloj manual para los tests (avanza la animación de a
+      // pasos fijos, porque las capturas en una máquina sin GPU son lentas)
+      const ahora = (window as { __relojEscena?: number }).__relojEscena ?? performance.now();
       const dt = Math.min(100, ahora - ultimo);
       ultimo = ahora;
       if (motor.perdido()) return apagar();
@@ -295,30 +316,52 @@ export function Escena() {
         feli.push({ rect: [r.left, r.top, r.width, r.height], src });
       }
 
-      // 3. La gota: va a la sección activa y se apoya en una letra de su título
+      // 3. La gota: va a la sección activa y se apoya en una letra de su título.
+      // Con el mouse (o el foco) sobre un link de la nav, vuela hasta ahí y se
+      // vuelve una píldora de vidrio del tamaño del link.
       let activa: Seccion | undefined = secciones[0];
       for (const s of secciones) if (s.el.getBoundingClientRect().top < vh * 0.5) activa = s;
-      if (activa?.placa) {
-        const [fx = 0.5, fy = 0.5, fr = 0.09] = angosto ? activa.dm : activa.d;
-        const pa = activa.placa.getBoundingClientRect();
-        let tx = pa.left + pa.width * fx;
-        let ty = pa.top + pa.height * fy;
-        const tr = fr * Math.min(vw, vh, 960) * (angosto ? 1.25 : 1);
-        if (activa === secciones[0] && px >= 0 && fino.matches && !quieto) {
-          tx += (px - tx) * 0.18;
-          ty += (py - ty) * 0.12;
+      const boton = quieto ? null : document.querySelector<HTMLElement>("[data-gota-aqui]");
+      const rb = boton?.getBoundingClientRect();
+      if (activa?.placa || (rb && rb.width > 0)) {
+        let tx: number, ty: number, tr: number, thw: number, thh: number, tm: number;
+        if (rb && rb.width > 0) {
+          tx = rb.left + rb.width / 2;
+          ty = rb.top + rb.height / 2;
+          thw = rb.width / 2;
+          thh = rb.height / 2;
+          tr = thh;
+          tm = 1;
+        } else {
+          const [fx = 0.5, fy = 0.5, fr = 0.09] = angosto ? activa!.dm : activa!.d;
+          const pa = activa!.placa!.getBoundingClientRect();
+          tx = pa.left + pa.width * fx;
+          ty = pa.top + pa.height * fy;
+          tr = fr * Math.min(vw, vh, 960) * (angosto ? 1.25 : 1);
+          thw = thh = tr;
+          tm = 0;
+          if (activa === secciones[0] && px >= 0 && fino.matches && !quieto) {
+            tx += (px - tx) * 0.18;
+            ty += (py - ty) * 0.12;
+          }
         }
+        const objetivos = [tx, ty, tr, thw, thh, tm];
+        const res = [gp.x, gp.y, gp.r, gp.hw, gp.hh, gp.m];
         if (!gp.lista || quieto) {
-          gp.x = tx;
-          gp.y = ty;
-          gp.r = tr;
+          res.forEach((s, i) => {
+            s.v = objetivos[i];
+            s.vel = 0;
+          });
           gp.lista = true;
         } else {
-          const k = 1 - Math.exp(-dt / 260);
-          gp.x += (tx - gp.x) * k;
-          gp.y += (ty - gp.y) * k;
-          gp.r += (tr - gp.r) * k;
+          // hacia un botón: rápido y con un rebote corto; de vuelta a un título: lento
+          const [k, c] = tm > 0.5 || gp.m.v > 0.05 ? [340, 26] : [70, 17];
+          res.forEach((s, i) => empujar(s, objetivos[i], k, c, dt / 1000));
+          gp.m.v = Math.min(1, Math.max(0, gp.m.v));
+          if (Math.abs(gp.x.vel) + Math.abs(gp.y.vel) + Math.abs(gp.m.vel) > 0.5) actividad = ahora;
         }
+        if (gp.m.v > 0.5) html.dataset.gotaModo = "boton";
+        else delete html.dataset.gotaModo;
       }
 
       // 4. Vidrio: hover (mouse o foco de teclado) y presencia, con resorte
@@ -348,7 +391,8 @@ export function Escena() {
         escala,
         tiempo: t,
         calidad: nivel === "alto" ? 1 : 0,
-        gota: [gp.x, gp.y, gp.lista ? gp.r : 0],
+        gota: [gp.x.v, gp.y.v, gp.lista ? Math.max(gp.r.v, 1) : 0],
+        forma: [gp.hw.v, gp.hh.v, gp.m.v],
         placas: placasGPU,
         feli,
         vidrios: vr,

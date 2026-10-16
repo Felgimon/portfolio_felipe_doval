@@ -126,24 +126,21 @@ try {
     check(nav.foco === "trabajo-titulo", `teclado: el foco pasó al título de la sección (${nav.foco})`);
     check(p.url().endsWith("#trabajo"), `la URL quedó en #trabajo (${p.url()})`);
 
-    // la cápsula de vidrio de la nav sigue al mouse y vuelve a la activa
+    // el hover de la nav: la gota vuela al link y se vuelve una píldora; al salir, vuelve
     const enlace = await p.locator('header a[data-id="proyectos"]').boundingBox();
     await p.mouse.move(enlace.x + enlace.width / 2, enlace.y + enlace.height / 2, { steps: 4 });
     await p.waitForTimeout(1300);
-    const capsula = await p.evaluate(() => {
-      const c = document.querySelector(".capsula").getBoundingClientRect();
-      const a = document.querySelector('header a[data-id="proyectos"]').getBoundingClientRect();
-      return Math.abs(c.left - a.left) < 3 && Math.abs(c.width - a.width) < 3;
-    });
-    check(capsula, "nav: la cápsula de vidrio va al link con el mouse encima");
+    const sobre = await p.evaluate(() => ({
+      aqui: document.querySelector('header a[data-id="proyectos"]').hasAttribute("data-gota-aqui"),
+      escena: document.documentElement.dataset.escena,
+      modo: document.documentElement.dataset.gotaModo,
+    }));
+    check(sobre.aqui, "nav: el link con el mouse encima llama a la gota (data-gota-aqui)");
+    check(sobre.escena !== "lista" || sobre.modo === "boton", `nav: la gota se volvió píldora sobre el link (${sobre.escena}, ${sobre.modo})`);
     await p.mouse.move(5, 890);
     await p.waitForTimeout(1300);
-    const vuelve = await p.evaluate(() => {
-      const c = document.querySelector(".capsula").getBoundingClientRect();
-      const a = document.querySelector('header a[data-id="trabajo"]').getBoundingClientRect();
-      return Math.abs(c.left - a.left) < 3;
-    });
-    check(vuelve, "nav: al salir, la cápsula vuelve a la sección activa (Trabajo)");
+    const vuelve = await p.evaluate(() => !document.querySelector("[data-gota-aqui]") && !document.documentElement.dataset.gotaModo);
+    check(vuelve, "nav: al salir, la gota vuelve a su título");
 
     await p.evaluate(() => document.getElementById("contacto").scrollIntoView());
     await p.waitForTimeout(1200);

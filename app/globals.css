@@ -529,20 +529,32 @@ html[data-escena="poster"] .escena {
     }
   }
 
-  /* la cápsula de la nav: vidrio claro con la escena; sin escena, un fondo */
-  .capsula {
+  /* LA NAV. El hover lo hace la gota (Escena.tsx): vuela al link y se vuelve una
+     píldora de vidrio de su tamaño. La sección activa lleva un punto chico
+     debajo. Sin escena, o con reducir movimiento, el hover es un fondo. */
+  .nav-link[aria-current="location"]::after {
+    content: "";
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
-    border-radius: 9999px;
-    background: var(--activo);
-    pointer-events: none;
-    transform: scale(0);
+    left: 50%;
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: var(--crema);
   }
-  html[data-escena="lista"] .capsula {
-    background: transparent;
+  @media (hover: hover) {
+    html:not([data-escena="lista"]) .nav-link:hover {
+      background: var(--activo);
+    }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: reduce) {
+    .nav-link:hover {
+      background: var(--activo);
+    }
+  }
+  html:not([data-escena="lista"]) .nav-link:focus-visible {
+    background: var(--activo);
   }
 
   /* el nombre de la nav: al pasar, la letra se ensancha (el eje de ancho) */
