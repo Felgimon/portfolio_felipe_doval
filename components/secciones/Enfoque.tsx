@@ -17,15 +17,17 @@ export function Enfoque() {
       id="enfoque"
       aria-labelledby="enfoque-titulo"
       className="parada max-md:pt-[150px]"
-      data-gota="0.84 0.5 0.085"
-      data-gota-m="0.88 0.5 0.085"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="enfoque" className="top-[-124px] w-[44%] md:hidden" />
+        <Cianotipo nombre="enfoque" className="top-[-124px] w-[44%] md:hidden" burbujas="0.7 0.6 0.035" />
         {/* el juego de dibujo, grande: el centro en el hueco de arriba a la derecha y
             los bordes que se meten un poco debajo del título y de las tarjetas */}
-        <Cianotipo nombre="enfoque-grande" className="top-[-96px] right-0 w-[40%] max-w-[620px] max-md:hidden" />
-        <TituloSeccion id="enfoque-titulo">{t.paradas.enfoque}</TituloSeccion>
+        <Cianotipo
+          nombre="enfoque-grande"
+          className="top-[-96px] right-0 w-[40%] max-w-[620px] max-md:hidden"
+          burbujas="0.42 0.62 0.055; 0.9 0.07 0.026"
+        />
+        <TituloSeccion id="enfoque-titulo" burbujas="0.84 0.5 0.085" burbujasM="0.88 0.5 0.085">{t.paradas.enfoque}</TituloSeccion>
         <p className="lead mt-8 max-w-[56ch]">{perfil.enfoque.resumen}</p>
         <ul className="mt-12 grid gap-5 md:grid-cols-2 md:gap-7">
           {perfil.enfoque.principios.map((p) => (

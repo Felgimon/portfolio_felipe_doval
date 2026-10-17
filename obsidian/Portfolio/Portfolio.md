@@ -24,6 +24,8 @@ Figma, página *Diseño v7* ([[el-figma-son-capas-no-una-captura]]).
 - [[el-figma-son-capas-no-una-captura]]
 - [[los-hovers-son-vidrio]]
 - [[cada-seccion-una-mesa]]
+- [[el-sitio-tiene-su-cancion]]
+- [[las-burbujas-se-juntan]]
 
 ## v6 «Visita guiada» (historia)
 

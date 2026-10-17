@@ -8,15 +8,16 @@ import { useActiveSection } from "@/hooks/useActiveSection";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import { BotonSonido } from "@/components/ui/BotonSonido";
-import { NOTAS, nota } from "@/lib/sonido";
+import { tocar } from "@/lib/sonido";
 import type { IdParada } from "@/content/ui";
 
 /**
  * La NAV: el nombre a la izquierda (vuelve al inicio), una píldora de vidrio
  * con las secciones en el centro y "Hablemos" sólido a la derecha.
  *
- * A la derecha, el botón de sonido (v8, sólo el ícono): prendido, cada link toca una nota de un acorde
- * al pasar el mouse o el foco, y recorrer la nav es un arpegio (lib/sonido.ts).
+ * A la derecha, el botón de sonido (sólo el ícono): prendido, suena la canción
+ * del sitio y cada link toca una nota del acorde que está sonando al pasar el
+ * mouse o el foco: recorrer la nav es su arpegio (lib/sonido.ts).
  *
  * El hover es la GOTA: con el mouse (o el foco del teclado) sobre un link, la
  * gota de vidrio grande que flota sobre los títulos vuela hasta ahí y se achica
@@ -101,11 +102,11 @@ export function Nav() {
                   onPointerEnter={(e) => {
                     if (e.pointerType !== "mouse") return;
                     setSobre(id);
-                    nota(NOTAS[i]);
+                    tocar({ tipo: "nav", i });
                   }}
                   onFocus={() => {
                     setSobre(id);
-                    nota(NOTAS[i]);
+                    tocar({ tipo: "nav", i });
                   }}
                   aria-current={activa === id ? "location" : undefined}
                   data-gota-aqui={sobre === id ? "" : undefined}

@@ -10,10 +10,12 @@ Antes de cada push a `main` (que deploya a felipedoval.com):
 ```bash
 npm run gate                 # typecheck + lint + build
 npm run smoke                # abre las páginas y falla si hay errores de consola
-node scripts/audit.mjs       # la auditoría de riesgo (51 chequeos)
+node scripts/audit.mjs       # la auditoría de riesgo (56 chequeos)
 node scripts/idioma.mjs      # español/inglés automático, sin errores de hidratación
 node scripts/touch.mjs       # el celular de verdad (393×659)
 node scripts/anim.mjs        # la gota ondula (y no con reducir movimiento)
+npm run afinacion            # la canción y los hovers: ningún choque de notas
+npm run sonido               # renderiza un minuto y mide pico, volumen y tonalidad
 node scripts/perf.ts         # frame time por sección (sólo comparativo)
 ```
 

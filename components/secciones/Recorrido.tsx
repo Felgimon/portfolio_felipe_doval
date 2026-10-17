@@ -17,15 +17,17 @@ export function Recorrido() {
       id="recorrido"
       aria-labelledby="recorrido-titulo"
       className="parada max-md:pt-[150px]"
-      data-gota="0.97 0.5 0.085"
-      data-gota-m="0.94 0.5 0.085"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="movimiento" className="top-[-116px] w-[78%] md:hidden" />
+        <Cianotipo nombre="movimiento" className="top-[-116px] w-[78%] md:hidden" burbujas="0.8 0.5 0.035" />
         {/* lo de moverse, grande: el centro en la columna libre de la derecha y el
             borde izquierdo que se mete un poco debajo de la línea de tiempo */}
-        <Cianotipo nombre="recorrido-grande" className="top-[96px] right-[-2%] w-[44%] max-w-[650px] max-md:hidden" />
-        <TituloSeccion id="recorrido-titulo">{t.paradas.recorrido}</TituloSeccion>
+        <Cianotipo
+          nombre="recorrido-grande"
+          className="top-[96px] right-[-2%] w-[44%] max-w-[650px] max-md:hidden"
+          burbujas="0.78 0.3 0.05; 0.2 0.8 0.028"
+        />
+        <TituloSeccion id="recorrido-titulo" burbujas="0.97 0.5 0.085" burbujasM="0.94 0.5 0.085">{t.paradas.recorrido}</TituloSeccion>
         <div className="mt-16 grid items-start gap-7 md:grid-cols-12">
           <ol className="border-t border-linea md:col-span-8">
             {hitos.map((h) => (

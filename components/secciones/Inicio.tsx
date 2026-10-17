@@ -7,8 +7,9 @@ import { CopiarMail } from "@/components/ui/CopiarMail";
 
 /**
  * INICIO. En 10 segundos: quién es (el nombre, enorme), qué hace (rol y
- * bajada) y cómo escribirle. Es la única sección con una foto de Felipe (v8.1). La gota se apoya entre la O y la V de "Doval" y sigue al mouse
- * de lejos.
+ * bajada) y cómo escribirle. Es la única sección con una foto de Felipe (v8.1).
+ * Tres burbujas: la grande entre la O y la V de "Doval" (sigue al mouse de
+ * lejos) y dos más chicas en el aire de la portada.
  */
 export function Inicio() {
   const { perfil, t } = useIdioma();
@@ -19,13 +20,15 @@ export function Inicio() {
       id="inicio"
       aria-labelledby="inicio-titulo"
       className="relative flex flex-col px-4 pt-[104px] md:block md:h-[100svh] md:max-h-[1000px] md:min-h-[640px] md:p-0"
-      data-gota="0.41 0.7 0.115"
-      data-gota-m="0.4 0.66 0.085"
+      data-burbujas="0.58 0.24 0.05; 0.5 0.86 0.026"
+      data-burbujas-m="0.84 0.3 0.04"
     >
       <Cianotipo nombre="musica" className="max-md:w-[200%]" />
       <h1
         id="inicio-titulo"
         data-placa
+        data-burbujas="0.41 0.7 0.115 0.12"
+        data-burbujas-m="0.4 0.66 0.085 0"
         aria-label={perfil.nombre}
         className="placa nombre-hero outline-none md:absolute md:top-[17vh] md:left-[var(--margen)]"
       >

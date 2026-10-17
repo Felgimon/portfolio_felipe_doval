@@ -2,13 +2,13 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "@/lib/gsap";
 import { MAX_PLACAS, Motor, type Cuadro, type PlacaGPU } from "@/lib/escena/motor";
-import { MAX_VIDRIOS } from "@/lib/escena/shader";
+import { MAX_BURBUJAS, MAX_VIDRIOS } from "@/lib/escena/shader";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/lib/rendimiento";
 
 /**
- * LA ESCENA: el estudio cobalto, los títulos impresos en el fondo, Feli y la
- * gota de vidrio que los refracta.
+ * LA ESCENA: el estudio cobalto, los títulos impresos en el fondo, Feli y las
+ * burbujas de vidrio que los refractan.
  *
  * Un solo <canvas> fijo detrás de todo el contenido. El DOM declara qué hay
  * que pintar y la escena lo lee en cada cuadro con getBoundingClientRect (son
@@ -26,13 +26,20 @@ import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/li
  *                       ="claro": vidrio casi sin ahumar, como una gota.
  *                       ="hover": aparece sólo con el mouse encima (las
  *                       filas de proyectos). Al tocarlo, una onda lo recorre.
- *   data-gota="fx fy r" en una sección: dónde se apoya la gota cuando esa
- *                       sección está activa, en fracciones de SU título
- *                       (data-placa) y r en fracción de la pantalla
- *   data-gota-m         lo mismo para pantallas angostas (< 768px)
- *   data-gota-aqui      un link de la nav con el mouse o el foco encima: la
- *                       gota vuela hasta ahí y se vuelve una píldora de su
- *                       tamaño (html[data-gota-modo="boton"] mientras dura)
+ *   data-burbujas="fx fy r [p]; …"
+ *                       las burbujas de vidrio que viven en esa caja (un
+ *                       título, un cianotipo): dónde, en fracciones de la caja
+ *                       (pueden salirse: 1.2 es un poco a la derecha), su radio
+ *                       en fracción de la pantalla y, opcional, cuánto miran
+ *                       al mouse (0.04 si no se dice). Se mueven con la caja
+ *                       (se quedan en su sección) y flotan apenas
+ *   data-burbujas-m     lo mismo para pantallas angostas (< 768px). Una caja
+ *                       oculta (display: none) no tiene burbujas
+ *   data-gota-aqui      algo que se toca con el mouse o el foco encima: las
+ *                       burbujas que se ven vuelan hasta ahí, de la más cerca
+ *                       a la más lejos, se funden y se vuelven una sola
+ *                       píldora de su tamaño (html[data-gota-modo="boton"]
+ *                       mientras dura). Al salir, cada una vuelve a su lugar
  *
  * Estado en <html data-escena>: "poster" (sin WebGL 2 o equipo que no llega:
  * el CSS muestra el estudio en gradiente, los títulos como texto, Feli como
@@ -45,9 +52,44 @@ import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/li
 type Placa = { el: HTMLElement; tex: WebGLTexture; firma: string };
 /** h: hover animado · a: presencia animada (data-vidrio="hover" aparece sólo con el mouse encima) */
 type Vidrio = { el: HTMLElement; radio: number; h: number; a: number; tipo: string; vivo: boolean };
-type Seccion = { el: HTMLElement; d: number[]; dm: number[]; placa: HTMLElement | null };
+type Resorte = { v: number; vel: number };
+/** una burbuja: su lugar (en la caja que la declara) y sus resortes, relativos a ese lugar */
+type Burbuja = {
+  el: HTMLElement;
+  /** [fx, fy, r, paralaje] en escritorio y en el celular (null: ahí no hay) */
+  d: number[] | null;
+  dm: number[] | null;
+  fase: number;
+  ox: Resorte;
+  oy: Resorte;
+  r: Resorte;
+  hw: Resorte;
+  hh: Resorte;
+  m: Resorte;
+  lista: boolean;
+  viva: boolean;
+  /** su casa en este cuadro (x, y, radio) y dónde está de verdad */
+  cx: number;
+  cy: number;
+  cr: number;
+  x: number;
+  y: number;
+};
 
 const leer = (s: string | undefined) => (s ?? "").trim().split(/\s+/).map(Number).filter((n) => !Number.isNaN(n));
+/** "fx fy r; fx fy r" → [[fx, fy, r], …] */
+const leerLista = (s: string | undefined) =>
+  (s ?? "")
+    .split(";")
+    .map(leer)
+    .filter((v) => v.length >= 3);
+/** sólo en las pruebas (y para exportar al Figma): apagar capas de la escena */
+const capasOcultan = (capa: string) =>
+  (window as { __capasEscena?: Record<string, boolean> }).__capasEscena?.[capa] === false;
+const suave = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
 
 /** El ancho del eje (font-stretch) en la palabra que entiende el canvas 2D. */
 function anchoCanvas(stretch: string): CanvasFontStretch {
@@ -133,7 +175,7 @@ export function Escena() {
     let vidrios: Vidrio[] = [];
     let felis: HTMLElement[] = [];
     let cianos: HTMLElement[] = [];
-    let secciones: Seccion[] = [];
+    let burbujas: Burbuja[] = [];
     const placas = new Map<HTMLElement, Placa>();
 
     const medir = () => {
@@ -162,12 +204,31 @@ export function Escena() {
       cianos = window.matchMedia("(prefers-contrast: more)").matches
         ? []
         : [...document.querySelectorAll<HTMLElement>("[data-cianotipo]")];
-      secciones = [...document.querySelectorAll<HTMLElement>("[data-gota]")].map((el) => ({
-        el,
-        d: leer(el.dataset.gota),
-        dm: leer(el.dataset.gotaM ?? el.dataset.gota),
-        placa: el.querySelector<HTMLElement>("[data-placa]"),
-      }));
+      // las burbujas: las que ya estaban conservan sus resortes (no saltan)
+      const previas = new Map<HTMLElement, Burbuja[]>();
+      for (const b of burbujas) previas.set(b.el, [...(previas.get(b.el) ?? []), b]);
+      burbujas = [];
+      for (const el of document.querySelectorAll<HTMLElement>("[data-burbujas]")) {
+        const d = leerLista(el.dataset.burbujas);
+        const dm = el.dataset.burbujasM === undefined ? d : leerLista(el.dataset.burbujasM);
+        const antes = previas.get(el) ?? [];
+        for (let i = 0; i < Math.max(d.length, dm.length); i++) {
+          const resorte = () => ({ v: 0, vel: 0 });
+          const b: Burbuja = antes[i] ?? {
+            el,
+            d: null,
+            dm: null,
+            fase: burbujas.length * 2.39,
+            ox: resorte(), oy: resorte(), r: resorte(), hw: resorte(), hh: resorte(), m: resorte(),
+            lista: false,
+            viva: false,
+            cx: 0, cy: 0, cr: 0, x: 0, y: 0,
+          };
+          b.d = d[i] ?? null;
+          b.dm = dm[i] ?? null;
+          burbujas.push(b);
+        }
+      }
       // placas: se redibujan sólo si cambió la caja o la fuente
       const vivas = new Set<HTMLElement>();
       const texEscala = Math.min(window.devicePixelRatio || 1, 2);
@@ -213,10 +274,10 @@ export function Escena() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-gota", "data-gota-m", "data-vidrio", "data-feli", "data-pose-src", "data-placa", "data-cianotipo", "class"],
+      attributeFilter: ["data-burbujas", "data-burbujas-m", "data-vidrio", "data-feli", "data-pose-src", "data-placa", "data-cianotipo", "class"],
     });
 
-    // --- puntero: en el inicio, la gota lo sigue de lejos ---
+    // --- puntero: las burbujas lo miran de lejos ---
     let px = -1, py = -1;
     let actividad = performance.now();
     const mover = (e: PointerEvent) => {
@@ -261,15 +322,13 @@ export function Escena() {
     // --- el cuadro ---
     const vr = new Float32Array(MAX_VIDRIOS * 4);
     const vx = new Float32Array(MAX_VIDRIOS * 4);
-    // la gota: posición, radio, y su forma de botón (medio ancho, medio alto, cuánto)
-    // cada valor es un resorte (con un poco de rebote, como un líquido)
-    const resorte = (v: number) => ({ v, vel: 0 });
-    /** el elemento sobre el que está la gota (su propio hover de vidrio se apaga) */
+    const bu = new Float32Array(MAX_BURBUJAS * 4);
+    const bf = new Float32Array(MAX_BURBUJAS * 4);
+    /** el elemento sobre el que están las burbujas (su propio hover de vidrio se apaga) */
     let gotaEn: HTMLElement | null = null;
-    const gp = {
-      x: resorte(0), y: resorte(0), r: resorte(0), hw: resorte(0), hh: resorte(0), m: resorte(0),
-      lista: false,
-    };
+    /** las burbujas que van al botón, y cuándo sale cada una (de la más cerca a la más lejos) */
+    let juntadas = new Map<Burbuja, number>();
+    let arriba = 0;
     const empujar = (s: { v: number; vel: number }, obj: number, k: number, c: number, dt: number) => {
       // Euler semi-implícito en pasos chicos: estable aunque el cuadro tarde
       let resto = dt;
@@ -342,62 +401,148 @@ export function Escena() {
         cianotipos.push({ rect: [r.left, r.top, r.width, r.height], src, funde: el.dataset.funde !== undefined });
       }
 
-      // 3. La gota: va a la sección activa y se apoya en una letra de su título.
+      // 3. Las burbujas. Cada una vive en su caja (un título, un cianotipo) y
+      // se mueve con ella: flota apenas, a su ritmo, y mira un poco al mouse.
+      const unidad = Math.min(vw, vh, 960);
+      const rects = new Map<HTMLElement, DOMRect>();
+      for (const b of burbujas) {
+        const dd = angosto ? b.dm : b.d;
+        let r = rects.get(b.el);
+        if (!r) {
+          r = b.el.getBoundingClientRect();
+          rects.set(b.el, r);
+        }
+        b.viva = dd !== null && r.width > 0;
+        if (!dd || !b.viva) continue;
+        const [fx, fy, fr, mira = 0.04] = dd;
+        const cr = fr * unidad * (angosto ? 1.25 : 1);
+        let cx = r.left + r.width * fx;
+        let cy = r.top + r.height * fy;
+        if (!quieto) {
+          cx += Math.sin(t * 0.37 + b.fase) * cr * 0.05;
+          cy += Math.cos(t * 0.29 + b.fase * 1.3) * cr * 0.07;
+          if (px >= 0 && fino.matches) {
+            cx += (px - cx) * mira;
+            cy += (py - cy) * mira * 0.7;
+          }
+        }
+        // juntándose, vuelan en la pantalla: que la casa se mueva (el scroll) no las arrastra
+        if (juntadas.has(b) && b.lista) {
+          b.ox.v -= cx - b.cx;
+          b.oy.v -= cy - b.cy;
+        }
+        b.cx = cx;
+        b.cy = cy;
+        b.cr = cr;
+      }
+
       // Con el mouse (o el foco) sobre algo que se toca (data-gota-aqui: la nav,
-      // los botones, las filas), vuela hasta ahí y se vuelve una burbuja de
-      // vidrio con su forma, encima. Un poco más grande que el botón, para que
-      // su canto se vea alrededor; el ícono de sonido, un círculo.
-      let activa: Seccion | undefined = secciones[0];
-      for (const s of secciones) if (s.el.getBoundingClientRect().top < vh * 0.5) activa = s;
+      // los botones, las filas), las burbujas que se ven salen disparadas hacia
+      // ahí, de la más cerca a la más lejos; al llegar se funden y se vuelven
+      // una sola burbuja con su forma, encima. Un poco más grande que el botón,
+      // para que su canto se vea alrededor; el ícono de sonido, un círculo.
       let boton = quieto ? null : document.querySelector<HTMLElement>("[data-gota-aqui]");
       // si el scroll lo sacó de abajo del puntero, ya no es el objetivo
       if (boton && !boton.matches(":hover, :focus-visible")) boton = null;
-      gotaEn = boton;
       const rb = boton?.getBoundingClientRect();
-      if (activa?.placa || (rb && rb.width > 0)) {
-        let tx: number, ty: number, tr: number, thw: number, thh: number, tm: number;
-        if (boton && rb && rb.width > 0) {
-          const pad = boton.matches(".nav-link") ? 0 : boton.matches(".boton-solido") ? 5 : 3;
-          tx = rb.left + rb.width / 2;
-          ty = rb.top + rb.height / 2;
-          thh = Math.max(rb.height / 2 + pad, 18);
-          thw = rb.width / 2 + pad + (rb.height < 30 ? 12 : 0);
-          if (boton.matches(".sonido-icono")) thw = thh = Math.max(thw, thh);
-          tr = thh;
-          tm = 1;
-        } else {
-          const [fx = 0.5, fy = 0.5, fr = 0.09] = angosto ? activa!.dm : activa!.d;
-          const pa = activa!.placa!.getBoundingClientRect();
-          tx = pa.left + pa.width * fx;
-          ty = pa.top + pa.height * fy;
-          tr = fr * Math.min(vw, vh, 960) * (angosto ? 1.25 : 1);
-          thw = thh = tr;
-          tm = 0;
-          if (activa === secciones[0] && px >= 0 && fino.matches && !quieto) {
-            tx += (px - tx) * 0.18;
-            ty += (py - ty) * 0.12;
-          }
+      if (rb && rb.width <= 0) boton = null;
+      let tx = 0, ty = 0, thw = 0, thh = 0;
+      if (boton && rb) {
+        const pad = boton.matches(".nav-link") ? 0 : boton.matches(".boton-solido") ? 5 : 3;
+        tx = rb.left + rb.width / 2;
+        ty = rb.top + rb.height / 2;
+        thh = Math.max(rb.height / 2 + pad, 18);
+        thw = rb.width / 2 + pad + (rb.height < 30 ? 12 : 0);
+        if (boton.matches(".sonido-icono")) thw = thh = Math.max(thw, thh);
+      }
+      if (boton !== gotaEn) {
+        const antes = juntadas;
+        juntadas = new Map();
+        if (boton) {
+          const lejos = (b: Burbuja) => Math.hypot(b.cx + b.ox.v - tx, b.cy + b.oy.v - ty);
+          const vivas = burbujas.filter((b) => b.viva && b.lista);
+          let van = vivas.filter((b) => b.cy + b.cr > 0 && b.cy - b.cr < vh && b.cx + b.cr > 0 && b.cx - b.cr < vw);
+          // si en la pantalla no hay ninguna, vienen las dos más cercanas
+          if (!van.length) van = vivas.sort((a, b) => lejos(a) - lejos(b)).slice(0, 2);
+          van.sort((a, b) => lejos(a) - lejos(b));
+          // las que ya estaban juntas en otro botón se pasan enseguida
+          let orden = 0;
+          for (const b of van) juntadas.set(b, antes.has(b) && b.m.v > 0.2 ? ahora : ahora + 55 * orden++);
         }
-        const objetivos = [tx, ty, tr, thw, thh, tm];
-        const res = [gp.x, gp.y, gp.r, gp.hw, gp.hh, gp.m];
-        if (!gp.lista || quieto) {
-          res.forEach((s, i) => {
-            s.v = objetivos[i];
-            s.vel = 0;
-          });
-          gp.lista = true;
-        } else {
-          // hacia un botón: rápido y con un rebote corto; de vuelta a un título: lento
-          const [k, c] = tm > 0.5 || gp.m.v > 0.05 ? [340, 26] : [70, 17];
-          res.forEach((s, i) => empujar(s, objetivos[i], k, c, dt / 1000));
-          gp.m.v = Math.min(1, Math.max(0, gp.m.v));
-          if (Math.abs(gp.x.vel) + Math.abs(gp.y.vel) + Math.abs(gp.m.vel) > 0.5) actividad = ahora;
+        gotaEn = boton;
+      }
+
+      let quien: Burbuja | null = null;
+      for (const b of burbujas) {
+        if (!b.viva) continue;
+        const sale = juntadas.get(b);
+        const va = boton !== null && sale !== undefined && ahora >= sale;
+        let tox = 0, toy = 0, tr = b.cr, tw = b.cr, th = b.cr, tm = 0;
+        if (va) {
+          tox = tx - b.cx;
+          toy = ty - b.cy;
+          tw = thw;
+          th = thh;
+          // vuela con su tamaño (que se vea el viaje), se achica al llegar y
+          // recién ahí se vuelve botón
+          const falta = Math.hypot(b.cx + b.ox.v - tx, b.cy + b.oy.v - ty);
+          tr = thh + (Math.max(b.cr * 0.85, thh) - thh) * suave(thw + 30, thw + 320, falta);
+          tm = 1 - suave(thw * 0.6 + 6, thw + 90, falta);
         }
-        if (gp.m.v > 0.5) html.dataset.gotaModo = "boton";
-        else delete html.dataset.gotaModo;
-        // sólo en las pruebas (con el reloj manual): dónde está la gota
-        const w = window as { __relojEscena?: number; __gota?: number[] };
-        if (w.__relojEscena !== undefined) w.__gota = [gp.x.v, gp.y.v, gp.hw.v, gp.hh.v, gp.m.v];
+        if (!b.lista || quieto) {
+          b.ox.v = tox;
+          b.oy.v = toy;
+          b.r.v = tr;
+          b.hw.v = tw;
+          b.hh.v = th;
+          b.m.v = tm;
+          for (const s of [b.ox, b.oy, b.r, b.hw, b.hh, b.m]) s.vel = 0;
+          b.lista = true;
+        } else {
+          const h = dt / 1000;
+          // la ida, disparada y con un rebote corto; la vuelta, lenta, como un líquido
+          const [k, c] = va ? [300, 23] : [60, 12];
+          empujar(b.ox, tox, k, c, h);
+          empujar(b.oy, toy, k, c, h);
+          const [k2, c2] = va ? [340, 26] : [90, 16];
+          empujar(b.r, tr, k2, c2, h);
+          empujar(b.hw, tw, k2, c2, h);
+          empujar(b.hh, th, k2, c2, h);
+          // al soltar, deja de ser botón enseguida (no vuelve volando como una píldora)
+          const [k3, c3] = va ? [260, 28] : [420, 41];
+          empujar(b.m, tm, k3, c3, h);
+          b.m.v = Math.min(1, Math.max(0, b.m.v));
+          b.r.v = Math.max(1, b.r.v);
+          if (Math.abs(b.ox.vel) + Math.abs(b.oy.vel) + Math.abs(b.m.vel) + Math.abs(b.r.vel) > 0.5) actividad = ahora;
+        }
+        b.x = b.cx + b.ox.v;
+        b.y = b.cy + b.oy.v;
+        if (!quien || b.m.v > quien.m.v) quien = b;
+      }
+
+      // a la GPU: las que se ven (primero las que van al botón, después las grandes)
+      const dibujadas = burbujas
+        .filter((b) => {
+          if (!b.viva || !b.lista) return false;
+          const e = Math.max(b.r.v * 1.8, b.hw.v * b.m.v * 1.3 + b.r.v * 1.2);
+          return b.x + e > 0 && b.x - e < vw && b.y + e > 0 && b.y - e < vh;
+        })
+        .sort((a, b) => Number(juntadas.has(b)) - Number(juntadas.has(a)) || b.r.v - a.r.v)
+        .slice(0, MAX_BURBUJAS);
+      arriba = 0;
+      dibujadas.forEach((b, i) => {
+        bu.set([b.x, b.y, capasOcultan("gota") ? 0 : b.r.v, b.m.v], i * 4);
+        bf.set([b.hw.v, b.hh.v, b.ox.vel, b.oy.vel], i * 4);
+        arriba = Math.max(arriba, b.m.v);
+      });
+      if (arriba > 0.5) html.dataset.gotaModo = "boton";
+      else delete html.dataset.gotaModo;
+      // sólo en las pruebas (con el reloj manual): dónde están las burbujas
+      const w = window as { __relojEscena?: number; __gota?: number[]; __burbujas?: number[][] };
+      if (w.__relojEscena !== undefined) {
+        const g = quien ?? dibujadas[0];
+        w.__gota = g ? [g.x, g.y, g.hw.v, g.hh.v, g.m.v] : [];
+        w.__burbujas = dibujadas.map((b) => [b.x, b.y, b.r.v, b.m.v]);
       }
 
       // 4. Vidrio: hover (mouse o foco de teclado) y presencia, con resorte
@@ -406,7 +551,7 @@ export function Escena() {
       let moviendo = false;
       for (const v of vidrios) {
         // con la gota encima, el vidrio propio no reacciona: la burbuja es el hover
-        const bajoGota = gotaEn !== null && gp.m.v > 0.05 && (v.el === gotaEn || v.el.contains(gotaEn));
+        const bajoGota = gotaEn !== null && arriba > 0.05 && (v.el === gotaEn || v.el.contains(gotaEn));
         const encima =
           !bajoGota && v.vivo && ((fino.matches && v.el.matches(":hover")) || v.el.matches(":focus-visible"));
         const objetivo = encima ? 1 : 0;
@@ -424,22 +569,22 @@ export function Escena() {
       const edad = (ahora - onda.t0) / 1000;
       if (edad < 1.2) actividad = ahora;
 
-      // sólo en las pruebas (y para exportar al Figma): apagar capas de la escena
-      const capas = (window as { __capasEscena?: Record<string, boolean> }).__capasEscena;
       motor.dibujar({
         vw,
         vh,
         escala,
         tiempo: t,
         calidad: nivel === "alto" ? 1 : 0,
-        gota: [gp.x.v, gp.y.v, gp.lista && capas?.gota !== false ? Math.max(gp.r.v, 1) : 0],
-        forma: [gp.hw.v, gp.hh.v, gp.m.v],
-        placas: capas?.placas === false ? [] : placasGPU,
-        feli: capas?.feli === false ? [] : feli,
+        burbujas: bu,
+        burbujasF: bf,
+        nBurbujas: dibujadas.length,
+        arriba,
+        placas: capasOcultan("placas") ? [] : placasGPU,
+        feli: capasOcultan("feli") ? [] : feli,
         cianotipos,
         vidrios: vr,
         vidriosX: vx,
-        nVidrios: capas?.vidrio === false ? 0 : nv,
+        nVidrios: capasOcultan("vidrio") ? 0 : nv,
         puntero: [px, py],
         onda: [onda.x, onda.y, edad, edad < 1.2 ? onda.fuerza : 0],
       });

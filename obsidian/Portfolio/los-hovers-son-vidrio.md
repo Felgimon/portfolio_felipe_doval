@@ -23,6 +23,10 @@ verdad**, no un brillo de CSS que lo imite.
   sonido y las filas: la gota vuela y se pone encima como una burbuja con su
   forma. En los botones crema, el canto se ve alrededor y el esmalte queda
   "bajo vidrio". El sonido es sólo el ícono (sin botón).
+- **v9: ya no es una gota, son varias** ([[las-burbujas-se-juntan]]): las
+  burbujas que se ven se juntan en el botón y son una sola con su forma. Y con
+  el sonido prendido, cada hover toca una nota de la canción
+  ([[el-sitio-tiene-su-cancion]]).
 - **Las flechas** se mueven hacia donde van; el press rebota.
 
 **Copiar mi mail** ahora tiene el ícono de copiar (dos hojas que se separan al

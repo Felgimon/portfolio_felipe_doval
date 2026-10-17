@@ -109,9 +109,33 @@ try {
       viewport: { width: 1440, height: 900 },
       permissions: ["clipboard-read", "clipboard-write"],
     });
+    // v9: cuenta los osciladores que crea el sonido (la canción y los hovers)
+    await ctx.addInitScript(() => {
+      window.__osciladores = 0;
+      const crear = AudioContext.prototype.createOscillator;
+      AudioContext.prototype.createOscillator = function () {
+        window.__osciladores++;
+        return crear.call(this);
+      };
+    });
     const p = await ctx.newPage();
     await p.goto(`${BASE}/`, { waitUntil: "load", timeout: 45000 });
     await p.waitForTimeout(2500);
+
+    // v9: varias burbujas por sección, de distintos tamaños
+    const porSeccion = await p.evaluate(() =>
+      ["inicio", "perfil", "enfoque", "trabajo", "proyectos", "recorrido", "contacto"].map((id) => {
+        const sec = document.getElementById(id);
+        const radios = [sec, ...sec.querySelectorAll("[data-burbujas]")]
+          .filter((el) => el.dataset.burbujas && el.getBoundingClientRect().width > 0)
+          .flatMap((el) => el.dataset.burbujas.split(";").map((t) => Number(t.trim().split(/\s+/)[2])));
+        return [id, radios.length, new Set(radios).size];
+      }),
+    );
+    check(
+      porSeccion.every(([, n, distintos]) => n >= 2 && distintos >= 2),
+      `burbujas: cada sección tiene al menos dos, de tamaños distintos (${porSeccion.map(([id, n]) => `${id} ${n}`).join(", ")})`,
+    );
 
     const llego = await p.evaluate(() => {
       const a = [...document.querySelectorAll("nav[aria-label] a")].find((x) => x.textContent.trim() === "Trabajo");
@@ -140,7 +164,64 @@ try {
     await p.mouse.move(5, 890);
     await p.waitForTimeout(1300);
     const vuelve = await p.evaluate(() => !document.querySelector("[data-gota-aqui]") && !document.documentElement.dataset.gotaModo);
-    check(vuelve, "nav: al salir, la gota vuelve a su título");
+    check(vuelve, "nav: al salir, las burbujas vuelven a su lugar");
+
+    // v9: con el mouse sobre un botón, TODAS las burbujas que se ven se juntan en
+    // él y son una sola (el reloj de la escena a mano expone dónde está cada una)
+    {
+      await p.evaluate(() => window.scrollTo(0, document.getElementById("proyectos").offsetTop));
+      await p.waitForTimeout(900);
+      await p.evaluate(() => {
+        window.__relojEscena = performance.now();
+        window.__tic = setInterval(() => (window.__relojEscena = performance.now()), 16);
+      });
+      await p.waitForTimeout(500);
+      const antes = await p.evaluate(() => (window.__burbujas ?? []).length);
+      const caja = await p.locator("#proyectos a.boton-solido").first().boundingBox();
+      await p.mouse.move(caja.x + caja.width / 2, caja.y + caja.height / 2, { steps: 3 });
+      // sin GPU cada cuadro tarda y el resorte avanza a lo sumo 100 ms por cuadro:
+      // se espera a que lleguen (o a que pase el tiempo)
+      await p
+        .waitForFunction(
+          (c) => (window.__burbujas ?? []).every((b) => Math.hypot(b[0] - c.x - c.width / 2, b[1] - c.y - c.height / 2) < 6 && b[3] > 0.9),
+          caja,
+          { timeout: 40000, polling: 250 },
+        )
+        .catch(() => {});
+      const juntas = await p.evaluate((c) => {
+        const bs = window.__burbujas ?? [];
+        const cx = c.x + c.width / 2, cy = c.y + c.height / 2;
+        return {
+          n: bs.length,
+          enElBoton: bs.filter((b) => Math.hypot(b[0] - cx, b[1] - cy) < 6 && b[3] > 0.9).length,
+          escena: document.documentElement.dataset.escena,
+        };
+      }, caja);
+      check(
+        juntas.escena !== "lista" || (antes >= 2 && juntas.enElBoton === juntas.n),
+        `burbujas: las ${antes} que se ven se juntan en el botón y son una (${juntas.enElBoton}/${juntas.n} encima, ${juntas.escena})`,
+      );
+      await p.mouse.move(5, 890);
+      await p
+        .waitForFunction(() => (window.__burbujas ?? []).every((b) => b[3] < 0.05), null, { timeout: 40000, polling: 250 })
+        .catch(() => {});
+      await p.waitForTimeout(600);
+      const separadas = await p.evaluate(() => {
+        const bs = window.__burbujas ?? [];
+        let lejos = Infinity;
+        for (let i = 0; i < bs.length; i++)
+          for (let j = i + 1; j < bs.length; j++) lejos = Math.min(lejos, Math.hypot(bs[i][0] - bs[j][0], bs[i][1] - bs[j][1]));
+        return { n: bs.length, lejos, m: Math.max(0, ...bs.map((b) => b[3])) };
+      });
+      check(
+        juntas.escena !== "lista" || (separadas.lejos > 20 && separadas.m < 0.05),
+        `burbujas: al salir, cada una vuelve a su lugar (la distancia mínima entre dos: ${Math.round(separadas.lejos)} px)`,
+      );
+      await p.evaluate(() => {
+        clearInterval(window.__tic);
+        delete window.__relojEscena;
+      });
+    }
 
     // v8.2: la burbuja es el hover de TODO lo que se toca (no sólo la nav)
     for (const [sel, nombre] of [
@@ -200,6 +281,19 @@ try {
       guardado: localStorage.getItem("sonido"),
     }));
     check(sonido.nav === "true" && sonido.guardado === "1", `sonido: se prende desde Así soy y la nav lo muestra (${JSON.stringify(sonido)})`);
+    // v9: prendido, suena la canción y cada hover toca su nota
+    await p.waitForTimeout(1500);
+    const cancion = await p.evaluate(() => window.__osciladores);
+    await p.mouse.move(5, 5);
+    await p.evaluate(() => document.getElementById("contacto").scrollIntoView());
+    await p.waitForTimeout(600);
+    const tema = await p.locator("#contacto button.tema").first().boundingBox();
+    const antesHover = await p.evaluate(() => window.__osciladores);
+    await p.mouse.move(tema.x + tema.width / 2, tema.y + tema.height / 2, { steps: 2 });
+    await p.waitForTimeout(150);
+    const despuesHover = await p.evaluate(() => window.__osciladores);
+    check(cancion > 20, `sonido: al prenderlo arranca la canción (${cancion} osciladores en 1,5 s)`);
+    check(despuesHover - antesHover >= 2, `sonido: el hover de un botón suena (${despuesHover - antesHover} osciladores nuevos)`);
     await p.locator("header button.sonido").first().click();
     check((await p.evaluate(() => localStorage.getItem("sonido"))) === "0", "sonido: se apaga desde la nav");
 

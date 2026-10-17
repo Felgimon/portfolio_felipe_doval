@@ -18,11 +18,13 @@ export function Proyectos() {
       id="proyectos"
       aria-labelledby="proyectos-titulo"
       className="parada"
-      data-gota="0.92 0.5 0.085"
-      data-gota-m="0.94 0.5 0.085"
     >
       <div className="contenedor">
-        <TituloSeccion id="proyectos-titulo">{t.paradas.proyectos}</TituloSeccion>
+        <TituloSeccion
+          id="proyectos-titulo"
+          burbujas="0.92 0.5 0.085; 0.36 2.3 0.04; 1.12 0.1 0.024"
+          burbujasM="0.94 0.5 0.085; 0.2 1.6 0.03"
+        >{t.paradas.proyectos}</TituloSeccion>
         {destacados.map((p) => (
           <Pieza key={p.slug} p={p} etiqueta={t.trabajo.anterior} invertida />
         ))}

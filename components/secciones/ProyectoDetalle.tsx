@@ -29,13 +29,18 @@ export function ProyectoDetalle({ slug }: { slug: string }) {
   const [principal, ...resto] = p.capturas;
 
   return (
-    <main id="contenido" className="capa pt-32 pb-16 md:pt-40" data-gota="0.97 0.5 0.1" data-gota-m="0.95 0.5 0.1">
+    <main id="contenido" className="capa pt-32 pb-16 md:pt-40">
       <div className="contenedor">
         <p className="etiqueta">
           {enCurso && <span className="punto" aria-hidden />}
           {enCurso ? t.trabajo.enProgreso : t.trabajo.anterior}
         </p>
-        <h1 data-placa className="placa titulo-caso mt-4 outline-none">
+        <h1
+          data-placa
+          data-burbujas="0.97 0.5 0.1; 1.35 1.7 0.035"
+          data-burbujas-m="0.95 0.5 0.1"
+          className="placa titulo-caso mt-4 outline-none"
+        >
           <span>{p.nombre}</span>
         </h1>
         <p className="lead mt-8 max-w-[50ch]">{p.unaLinea}</p>

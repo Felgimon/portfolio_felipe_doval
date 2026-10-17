@@ -54,9 +54,12 @@ Las referencias del mood board (en el Figma, no en el sitio) son de dominio
 público o CC0 vía Openverse: los cianotipos de Anna Atkins (1843–1854) y fotos
 CC0 de rawpixel, StockSnap y Flickr.
 
-## Sonido (v8)
+## Sonido (v8, la canción en v9)
 
-Sin archivos: lo sintetiza el navegador con Web Audio (`lib/sonido.ts`).
+Sin archivos: la canción y los sonidos de la interfaz los sintetiza el
+navegador con Web Audio (`lib/sonido.ts`), sobre una partitura original
+(`lib/musica.ts`). La sala (reverb) es una respuesta al impulso generada en el
+momento.
 
 ## Íconos
 

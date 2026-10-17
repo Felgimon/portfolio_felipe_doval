@@ -19,16 +19,18 @@ export function Contacto() {
       id="contacto"
       aria-labelledby="contacto-titulo"
       className="parada !pb-10 max-md:pt-[150px]"
-      data-gota="0.9 0.5 0.09"
-      data-gota-m="0.9 0.5 0.09"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="gente" className="top-[-116px] w-[78%] md:hidden" />
+        <Cianotipo nombre="gente" className="top-[-116px] w-[78%] md:hidden" burbujas="0.25 0.5 0.035" />
         {/* las dos tazas, grandes: el centro en el hueco de la derecha y los bordes
             que rozan el final del título y los botones */}
-        <Cianotipo nombre="contacto-grande" className="top-[96px] right-[-2%] w-[54%] max-w-[800px] max-md:hidden" />
+        <Cianotipo
+          nombre="contacto-grande"
+          className="top-[96px] right-[-2%] w-[54%] max-w-[800px] max-md:hidden"
+          burbujas="0.8 0.5 0.055; 0.5 0.45 0.026"
+        />
         <div className="md:max-w-[58%]">
-          <TituloSeccion id="contacto-titulo">{t.paradas.contacto}</TituloSeccion>
+          <TituloSeccion id="contacto-titulo" burbujas="0.9 0.5 0.09" burbujasM="0.9 0.5 0.09">{t.paradas.contacto}</TituloSeccion>
           <p className="lead mt-10 max-w-[34ch]">{t.contacto.lead}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <CopiarMail variante="solido" />

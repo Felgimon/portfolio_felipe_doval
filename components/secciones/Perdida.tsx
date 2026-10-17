@@ -10,14 +10,19 @@ export function Perdida() {
     <main
       id="contenido"
       className="capa flex min-h-dvh items-end pt-28"
-      data-gota="0.78 0.5 0.11"
-      data-gota-m="0.8 0.5 0.1"
+      data-burbujas="0.7 0.25 0.045; 0.35 0.3 0.026"
+      data-burbujas-m="0.75 0.3 0.04"
     >
       <Cianotipo nombre="mapa" className="max-md:w-[200%]" />
       <div className="contenedor grid items-end gap-8 md:grid-cols-12">
         <div className="pb-16 md:col-span-8">
           <p className="etiqueta">404</p>
-          <h1 data-placa className="placa titulo-seccion mt-4 outline-none">
+          <h1
+            data-placa
+            data-burbujas="0.78 0.5 0.11"
+            data-burbujas-m="0.8 0.5 0.1"
+            className="placa titulo-seccion mt-4 outline-none"
+          >
             <span>{t.perdida.titulo}</span>
           </h1>
           <Link href="/" className="boton boton-solido mt-10">

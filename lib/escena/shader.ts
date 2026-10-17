@@ -5,12 +5,14 @@
  *  1. ESTUDIO: la luz cobalto que cae a azul noche, con grano.
  *  2. LO IMPRESO EN EL FONDO: las placas (los títulos, dibujados una vez en una
  *     textura con Doval Grotesk) y las fotos de Feli con el pie fundido.
- *  3. LA GOTA: una gota de vidrio claro hecha con raymarching de una SDF (un
- *     huevo con una ondulación lenta y una gotita satélite unida con smin).
- *     Con el mouse sobre un link de la nav, vuela hasta ahí y se transforma en
- *     una píldora del tamaño del link (mezcla de SDFs: huevo → caja redondeada).
- *     Refracta lo impreso con dispersión por canal (IOR 1,47 a 1,515), refleja
- *     un estudio con softbox y dos tiras de luz, y tiene un brillo duro.
+ *  3. LAS BURBUJAS (v9): varias gotas de vidrio claro por sección, hechas con
+ *     raymarching de una sola SDF (cada una un huevo que ondula lento, todas
+ *     unidas con smin: si se acercan, se funden como líquido). Con el mouse
+ *     sobre algo que se toca, las de la pantalla vuelan hasta ahí, se juntan y
+ *     se vuelven una sola píldora del tamaño del botón (mezcla de SDFs: huevo
+ *     → caja redondeada); al volar se estiran en la dirección en la que van.
+ *     Refractan lo impreso con dispersión por canal (IOR 1,47 a 1,515),
+ *     reflejan un estudio con softbox y dos tiras de luz, y tienen un brillo duro.
  *  4. VIDRIO AHUMADO: los paneles de la UI (data-vidrio) refractan lo que tienen
  *     detrás con un bisel, se ahuman hacia Noche y llevan un canto de luz. Con
  *     el mouse encima: una lente bajo el puntero, un reflejo que lo sigue y el
@@ -20,6 +22,7 @@
  */
 
 export const MAX_VIDRIOS = 12;
+export const MAX_BURBUJAS = 8;
 
 export const VERTEX = `#version 300 es
 in vec2 a;
@@ -34,14 +37,15 @@ uniform sampler2D uP0, uP1, uP2, uF0, uF1, uK0, uK1, uPapel;
 uniform float uGrano; // 0 hasta que carga el papel
 uniform vec4 uPR0, uPR1, uPR2, uFR0, uFR1, uKR0, uKR1;
 uniform vec2 uKF; // cuánto se funden los bordes de cada cianotipo (1 los que van a sangre)
-uniform vec3 uC;
-uniform float uR;
+uniform vec4 uB[${MAX_BURBUJAS}];  // cada burbuja: x, y, radio, cuánto es botón (0..1)
+uniform vec4 uBF[${MAX_BURBUJAS}]; // su forma de botón (medio ancho, medio alto) y su velocidad (px/s)
+uniform int uNB;
+uniform float uArriba; // 1 cuando las burbujas son un botón: van encima del vidrio de la UI
 uniform vec4 uV[${MAX_VIDRIOS}];
 uniform vec4 uVX[${MAX_VIDRIOS}];
 uniform int uNV;
 uniform vec2 uM;   // el puntero (px)
 uniform vec4 uOnda; // la onda al tocar: x, y, edad (s), fuerza
-uniform vec3 uForma; // la gota hecha botón: medio ancho, medio alto, cuánto (0 gota, 1 botón)
 
 const vec3 NOCHE = vec3(.027, .078, .28);
 const vec3 COB = vec3(.085, .2, .72);
@@ -111,21 +115,43 @@ float sdCaja(vec3 q, vec3 b, float r){
   return length(max(d, 0.)) + min(max(d.x, max(d.y, d.z)), 0.) - r;
 }
 
-float mapa(vec3 p){
-  p -= uC;
-  float t = uT * .4, m = uForma.z;
-  // la gota: un huevo que ondula lento
-  float d = length(p / vec3(1., 1.18, 1.)) - uR;
-  d += uR * .035 * (1. - .6 * m) * sin(p.x / uR * 3.1 + t) * sin(p.y / uR * 2.7 - t * .8) * sin(p.z / uR * 2.3 + t * .6);
-  // la gota hecha botón: una píldora de vidrio del tamaño del link
-  if (m > .001) {
-    float hy = max(uForma.y, 1.);
-    float pil = sdCaja(p, vec3(max(uForma.x, hy), hy, hy * .85), hy * .98);
-    d = mix(d, pil, m);
+// las burbujas cerca del píxel que se está pintando (las demás no se evalúan)
+int cerca[${MAX_BURBUJAS}];
+int nCerca;
+
+// una burbuja sola
+float burbuja(vec3 p, int i){
+  vec4 B = uB[i], F = uBF[i];
+  vec3 q = p - vec3(B.xy, 0.);
+  float r = B.z, m = B.w;
+  // volando, se estira en la dirección en la que va (como una gota que cae)
+  float v = length(F.zw);
+  if (v > 1.) {
+    vec2 u = F.zw / v;
+    float s = min(v / 1800., .45) * (1. - m);
+    q.xy -= u * dot(q.xy, u) * (s / (1. + s));
   }
-  // la gotita satélite se reabsorbe cuando la gota se vuelve botón
-  vec3 g = vec3(uR * .95, -uR * .95 + uR * .12 * sin(t * .7), uR * .15);
-  if (m < .99) d = smin(d, length(p - g) - uR * .16 * (1. - m), uR * .22 * (1. - m) + .01);
+  float t = uT * .4 + float(i) * 1.7;
+  // un huevo que ondula lento (cada una a su ritmo)
+  float d = length(q / vec3(1., 1.18, 1.)) - r;
+  d += r * .035 * (1. - .6 * m) * sin(q.x / r * 3.1 + t) * sin(q.y / r * 2.7 - t * .8) * sin(q.z / r * 2.3 + t * .6);
+  // hecha botón: una píldora de vidrio de su tamaño
+  if (m > .001) {
+    float hy = max(F.y, 1.);
+    d = mix(d, sdCaja(q, vec3(max(F.x, hy), hy, hy * .85), hy * .98), m);
+  }
+  return d;
+}
+
+// todas juntas: smin las funde cuando se tocan; hechas botón, la unión es exacta
+float mapa(vec3 p){
+  float d = 1e5;
+  for (int j = 0; j < ${MAX_BURBUJAS}; j++) {
+    if (j >= nCerca) break;
+    int i = cerca[j];
+    float e = burbuja(p, i);
+    d = j == 0 ? e : smin(d, e, uB[i].z * .6 * (1. - uB[i].w) + 1.);
+  }
   return d * .85;
 }
 
@@ -151,12 +177,26 @@ float sdRR(vec2 p, vec2 b, float r){
 }
 
 vec3 gota(vec2 p, vec3 col){
-  if (uR < 2. || length(p - uC.xy) > max(uR * 1.8, uForma.x * uForma.z * 1.3 + uR * 1.2)) return col;
-  float m = uForma.z;
+  // cuáles están cerca de este píxel (con margen para el puente que hace smin)
+  nCerca = 0;
+  float rmax = 0., mmax = 0.;
+  for (int i = 0; i < ${MAX_BURBUJAS}; i++) {
+    if (i >= uNB) break;
+    vec4 B = uB[i], F = uBF[i];
+    float s = min(length(F.zw) / 1800., .45) * (1. - B.w);
+    float ext = mix(B.z * 1.2 * (1. + s), max(F.x, F.y) * 1.05, B.w) + B.z * .6 * (1. - B.w) + 6.;
+    if (B.z > 1. && length(p - B.xy) < ext) {
+      cerca[nCerca] = i;
+      nCerca++;
+      rmax = max(rmax, max(B.z, F.y));
+      mmax = max(mmax, B.w);
+    }
+  }
+  if (nCerca == 0) return col;
   // hecha botón, la vista es frontal (sin perspectiva): una píldora tan chica
   // y tan arriba se vería torcida
-  vec3 ro = vec3(p, uR * 3.), rd = normalize(vec3((p - uRes * .5) * .00035 * (1. - m), -1.));
-  float t = uR * 1.2;
+  vec3 ro = vec3(p, rmax * 3.), rd = normalize(vec3((p - uRes * .5) * .00035 * (1. - mmax), -1.));
+  float t = rmax * 1.2;
   bool hit = false;
   vec3 pos;
   int pasos = uQ > .5 ? 80 : 44;
@@ -166,9 +206,21 @@ vec3 gota(vec2 p, vec3 col){
     float d = mapa(pos);
     if (d < .4) { hit = true; break; }
     t += d;
-    if (t > uR * 5.) break;
+    if (t > rmax * 5.) break;
   }
   if (!hit) return col;
+  // la burbuja que manda en este punto (para su brillo y su canto de botón)
+  int h = cerca[0];
+  float mejor = 1e5;
+  for (int j = 0; j < ${MAX_BURBUJAS}; j++) {
+    if (j >= nCerca) break;
+    float e = burbuja(pos, cerca[j]);
+    if (e < mejor) { mejor = e; h = cerca[j]; }
+  }
+  vec2 C = uB[h].xy;
+  float R = uB[h].z;
+  vec3 forma = vec3(uBF[h].xy, uB[h].w);
+  float m = forma.z;
   vec3 n = nrm(pos);
   float fr = .04 + .96 * pow(1. - max(dot(-rd, n), 0.), 4.);
   vec3 refl = entorno(reflect(rd, n));
@@ -190,7 +242,7 @@ vec3 gota(vec2 p, vec3 col){
     // reflexión total: en la gota grande, el entorno; en la píldora, que es
     // finita, la luz igual cruza (sin esto el canto se ve como goma negra)
     if (dot(rd3, rd3) < .01) v = mix(entorno(reflect(rd2, n2)), fondo(q.xy) * 1.35 + .05, m);
-    else { float s = (-uR * .55 - q.z) / rd3.z; v = fondo(q.xy + rd3.xy * s); }
+    else { float s = (-R * .55 - q.z) / rd3.z; v = fondo(q.xy + rd3.xy * s); }
     rgb[k] = v[k];
   }
   rgb *= exp(-ti * vec3(.0005, .00025, .0001));
@@ -202,7 +254,7 @@ vec3 gota(vec2 p, vec3 col){
     // una línea de luz (fuerte arriba a la izquierda, de donde viene la luz; más
     // suave abajo, donde la luz que la cruzó se junta) y arriba tiene un brillo
     // que se corre con el puntero, como un reflejo de verdad.
-    vec2 rel = (pos.xy - uC.xy) / vec2(max(uForma.x, 1.), max(uForma.y, 1.));
+    vec2 rel = (pos.xy - C.xy) / vec2(max(forma.x, 1.), max(forma.y, 1.));
     float borde = 1. - clamp(n.z, 0., 1.);
     vec2 nd = n.xy / max(length(n.xy), 1e-4);
     float luz = dot(nd, normalize(vec2(-.55, -.83)));
@@ -211,88 +263,124 @@ vec3 gota(vec2 p, vec3 col){
     // el espesor: justo antes del canto el vidrio se ve un poco más oscuro
     pil *= 1. - .14 * smoothstep(.12, .45, borde) * (1. - canto);
     pil = mix(pil, CREMA, canto * (.85 * smoothstep(-.2, .9, luz) + .32 * smoothstep(.1, -.9, luz)));
-    float bx = clamp((uM.x - uC.x) / max(uForma.x, 1.), -.7, .7) * .55 - .2;
+    float bx = clamp((uM.x - C.x) / max(forma.x, 1.), -.7, .7) * .55 - .2;
     float brillo = exp(-pow((rel.x - bx) * 1.9, 2.)) * smoothstep(-.3, -.62, rel.y) * smoothstep(.05, .3, borde) * (1. - canto * .7);
     pil = mix(pil, CREMA, brillo * .62);
     g = mix(g, pil, m);
     // el borde, suavizado con la silueta exacta (el raymarching lo deja dentado)
-    float d2 = sdRR(p - uC.xy, vec2(max(uForma.x, uForma.y), uForma.y), uForma.y);
+    float d2 = sdRR(p - C.xy, vec2(max(forma.x, forma.y), forma.y), forma.y);
     g = mix(col, g, mix(1., clamp(.5 - d2, 0., 1.), m));
   }
   return g;
 }
 
+// EL VIDRIO de la UI, una vez que se sabe qué tiene detrás (v): el ahumado,
+// la cúpula, el reflejo, el canto y, si las burbujas están encima, su sombra
+vec4 vR, vX;
+vec2 vC, vHB, vG;
+float vMejor, vOnda;
+vec3 cristal(vec3 v, vec2 p, bool encima){
+  float h = vX.y, claro = vX.w, chico = min(vR.z, vR.w);
+  vec2 dm = p - uM;
+  // la píldora flota apenas sobre la nav: deja una sombra corta debajo
+  if (encima) {
+    for (int i = 0; i < ${MAX_BURBUJAS}; i++) {
+      if (i >= uNB) break;
+      vec4 B = uB[i], F = uBF[i];
+      if (B.w < .05) continue;
+      float ds = sdRR(p - B.xy - vec2(0., 3.), vec2(max(F.x, F.y), F.y), F.y);
+      v *= 1. - .38 * B.w * smoothstep(7., -3., ds);
+    }
+  }
+  // el ahumado se aclara con el hover (el vidrio "se enciende"); el claro casi no ahúma
+  v = mix(v, NOCHE, .42 - .3 * claro - .2 * h);
+  // con el hover el panel toma volumen de cúpula: más luz arriba, menos abajo
+  v *= 1. + .1 * h * clamp(-(p.y - vC.y) / max(vHB.y, 1.), -1., 1.);
+  // el reflejo: una mancha de luz que sigue al puntero, corrida hacia la luz
+  vec2 qb = (dm + vec2(.12, .28) * chico) / vec2(max(vR.w * 1.5, 56.), max(vR.w * .62, 26.));
+  v = mix(v, CREMA, h * exp(-dot(qb, qb)) * .26);
+  // el canto: la luz de arriba a la izquierda, más el lado que mira al puntero;
+  // con el hover se engrosa
+  float luz = dot(vG, normalize(vec2(-.6, -.8)));
+  float canto = smoothstep(1.6 + 1.4 * h, 0., -vMejor);
+  float lado = h * smoothstep(0., 1., dot(vG, normalize(uM - vC + vec2(1e-3))));
+  v = mix(v, CREMA, canto * (smoothstep(-.2, .8, luz) * .55 + lado * .4 + vOnda * .4));
+  // el vidrio claro tiene además el aro interno de una burbuja
+  float aro = smoothstep(5., 1.5, -vMejor) * (1. - canto);
+  return mix(v, CREMA, aro * claro * smoothstep(.1, .9, luz) * .3);
+}
+
 void main(){
   vec2 p = vec2(gl_FragCoord.x, uRes.y * uS - gl_FragCoord.y) / uS;
   vec3 col = fondo(p);
-  // la sombra suave que la gota deja en el estudio
-  float sh = uR < 2. ? 0. : smoothstep(uR * 1.6, uR * .3, length((p - (uC.xy + vec2(uR * .3, uR * .25))) * vec2(.7, .9)));
-  col *= 1. - .22 * sh * (1. - uForma.z);
-  // la gota va debajo del vidrio de la UI... salvo cuando se vuelve botón: ahí
-  // se apoya ENCIMA de la nav, como una píldora de vidrio sobre el link
-  bool encima = uForma.z > .5;
-  if (!encima) col = gota(p, col);
+  // la sombra suave que cada burbuja deja en el estudio
+  float sh = 0.;
+  for (int i = 0; i < ${MAX_BURBUJAS}; i++) {
+    if (i >= uNB) break;
+    vec4 B = uB[i];
+    if (B.z < 2.) continue;
+    sh = max(sh, (1. - B.w) * smoothstep(B.z * 1.6, B.z * .3, length((p - (B.xy + vec2(B.z * .3, B.z * .25))) * vec2(.7, .9))));
+  }
+  col *= 1. - .22 * sh;
 
   // VIDRIO de la UI. Por panel (uVX): x radio, y hover (0..1), z presencia
   // (0..1: las filas se vuelven vidrio al pasar el mouse), w tipo (0 ahumado,
   // 1 claro, como una gota). Si hay paneles anidados gana el último del DOM.
-  float mejor = 1e5;
-  vec4 R = vec4(0), X = vec4(0);
+  vMejor = 1e5;
+  vR = vec4(0);
+  vX = vec4(0);
   for (int i = 0; i < ${MAX_VIDRIOS}; i++) {
     if (i >= uNV) break;
     vec4 r = uV[i];
     float rad = min(uVX[i].x, min(r.z, r.w) * .5);
     float d = sdRR(p - r.xy - r.zw * .5, r.zw * .5, rad);
-    if (d < 0.) { mejor = d; R = r; X = uVX[i]; X.x = rad; }
+    if (d < 0.) { vMejor = d; vR = r; vX = uVX[i]; vX.x = rad; }
   }
-  if (mejor < 0.) {
-    vec2 c = R.xy + R.zw * .5, hb = R.zw * .5;
-    vec2 g = vec2(
-      sdRR(p - c + vec2(1, 0), hb, X.x) - sdRR(p - c - vec2(1, 0), hb, X.x),
-      sdRR(p - c + vec2(0, 1), hb, X.x) - sdRR(p - c - vec2(0, 1), hb, X.x));
-    g /= max(length(g), 1e-4);
-    float h = X.y, claro = X.w, chico = min(R.z, R.w);
+  bool enVidrio = vMejor < 0.;
+  vec3 v = col;
+  vec2 detras = p;
+  if (enVidrio) {
+    vC = vR.xy + vR.zw * .5;
+    vHB = vR.zw * .5;
+    vG = vec2(
+      sdRR(p - vC + vec2(1, 0), vHB, vX.x) - sdRR(p - vC - vec2(1, 0), vHB, vX.x),
+      sdRR(p - vC + vec2(0, 1), vHB, vX.x) - sdRR(p - vC - vec2(0, 1), vHB, vX.x));
+    vG /= max(length(vG), 1e-4);
+    float h = vX.y, claro = vX.w, chico = min(vR.z, vR.w);
     float W = min(18., chico * .3);
-    float bis = pow(1. - clamp(-mejor / W, 0., 1.), 2.2);
-    vec2 o2 = g * ((30. + 14. * claro) * bis);
+    float bis = pow(1. - clamp(-vMejor / W, 0., 1.), 2.2);
+    vec2 o2 = vG * ((30. + 14. * claro) * bis);
     // la lente: con el mouse encima, lo que está debajo del puntero se agranda
     vec2 dm = p - uM;
     float rl = max(chico * .9, 34.);
     float lente = h * exp(-dot(dm, dm) / (rl * rl));
-    vec2 base = c + (p - c) * (.94 - .05 * claro) - dm * .16 * lente;
+    vec2 base = vC + (p - vC) * (.94 - .05 * claro) - dm * .16 * lente;
     // la onda al tocar: un frente circular que dobla el vidrio
     vec2 dr = p - uOnda.xy;
     float rr = length(dr);
-    float onda = uOnda.w * exp(-uOnda.z * 2.8) * exp(-pow((rr - uOnda.z * 520.) / 24., 2.));
-    o2 += dr / max(rr, 1.) * onda * 16.;
-    vec3 v;
-    if (uQ > .5) v = vec3(fondo(base + o2 * .94).r, fondo(base + o2).g, fondo(base + o2 * 1.08).b);
-    else v = fondo(base + o2);
-    if (!encima) v = gota(base + o2, v);
-    // la píldora flota apenas sobre la nav: deja una sombra corta debajo
-    else {
-      float ds = sdRR(p - uC.xy - vec2(0., 3.), vec2(max(uForma.x, uForma.y), uForma.y), uForma.y);
-      v *= 1. - .38 * uForma.z * smoothstep(7., -3., ds);
+    vOnda = uOnda.w * exp(-uOnda.z * 2.8) * exp(-pow((rr - uOnda.z * 520.) / 24., 2.));
+    o2 += dr / max(rr, 1.) * vOnda * 16.;
+    detras = base + o2;
+    // lo de atrás, con dispersión (un canal por vez: un solo fondo() en el código)
+    int canales = uQ > .5 ? 3 : 1;
+    for (int k = 0; k < 3; k++) {
+      if (k >= canales) break;
+      vec3 f = fondo(base + o2 * (canales == 1 ? 1. : .94 + .07 * float(k)));
+      if (canales == 1) v = f;
+      else v[k] = f[k];
     }
-    // el ahumado se aclara con el hover (el vidrio "se enciende"); el claro casi no ahúma
-    v = mix(v, NOCHE, .42 - .3 * claro - .2 * h);
-    // con el hover el panel toma volumen de cúpula: más luz arriba, menos abajo
-    v *= 1. + .1 * h * clamp(-(p.y - c.y) / max(hb.y, 1.), -1., 1.);
-    // el reflejo: una mancha de luz que sigue al puntero, corrida hacia la luz
-    vec2 qb = (dm + vec2(.12, .28) * chico) / vec2(max(R.w * 1.5, 56.), max(R.w * .62, 26.));
-    v = mix(v, CREMA, h * exp(-dot(qb, qb)) * .26);
-    // el canto: la luz de arriba a la izquierda, más el lado que mira al puntero;
-    // con el hover se engrosa
-    float luz = dot(g, normalize(vec2(-.6, -.8)));
-    float canto = smoothstep(1.6 + 1.4 * h, 0., -mejor);
-    float lado = h * smoothstep(0., 1., dot(g, normalize(uM - c + vec2(1e-3))));
-    v = mix(v, CREMA, canto * (smoothstep(-.2, .8, luz) * .55 + lado * .4 + onda * .4));
-    // el vidrio claro tiene además el aro interno de una burbuja
-    float aro = smoothstep(5., 1.5, -mejor) * (1. - canto);
-    v = mix(v, CREMA, aro * claro * smoothstep(.1, .9, luz) * .3);
-    col = mix(col, v, X.z);
   }
-  if (encima) col = gota(p, col);
+
+  // LAS BURBUJAS van debajo del vidrio de la UI (y el vidrio las refracta)...
+  // salvo cuando se vuelven un botón: ahí se apoyan ENCIMA, como una píldora de
+  // vidrio sobre el link. Una sola llamada a gota() por píxel: cada llamada se
+  // compila entera y una GPU por software la paga en toda la pantalla.
+  bool encima = uArriba > .5;
+  bool debajo = !encima && enVidrio;
+  if (encima && enVidrio) col = mix(col, cristal(v, p, true), vX.z);
+  vec3 sale = gota(debajo ? detras : p, debajo ? v : col);
+  col = debajo ? mix(col, cristal(sale, p, false), vX.z) : sale;
+
   float gr = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
   col += (gr - .5) * .028;
   o = vec4(col, 1.);

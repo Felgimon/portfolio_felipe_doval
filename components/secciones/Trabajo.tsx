@@ -19,15 +19,17 @@ export function Trabajo() {
       id="trabajo"
       aria-labelledby="trabajo-titulo"
       className="parada max-md:pt-[150px]"
-      data-gota="0.6 0.5 0.085"
-      data-gota-m="0.62 0.5 0.085"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="herramientas" className="top-[-116px] w-[78%] md:hidden" />
+        <Cianotipo nombre="herramientas" className="top-[-116px] w-[78%] md:hidden" burbujas="0.8 0.5 0.035" />
         {/* el oficio, en una fila larga: el centro en el aire entre Superlum y
             Proyectos, y los objetos que rozan la captura de arriba */}
-        <Cianotipo nombre="trabajo-grande" className="top-[calc(100%-120px)] right-[6%] w-[88%] max-md:hidden" />
-        <TituloSeccion id="trabajo-titulo">{t.paradas.trabajo}</TituloSeccion>
+        <Cianotipo
+          nombre="trabajo-grande"
+          className="top-[calc(100%-120px)] right-[6%] w-[88%] max-md:hidden"
+          burbujas="0.43 0.55 0.05; 0.9 0.5 0.03"
+        />
+        <TituloSeccion id="trabajo-titulo" burbujas="0.6 0.5 0.085" burbujasM="0.62 0.5 0.085">{t.paradas.trabajo}</TituloSeccion>
         {superlum && <Pieza p={superlum} etiqueta={t.trabajo.enProgreso} enCurso prioridad />}
       </div>
     </section>

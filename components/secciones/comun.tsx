@@ -10,9 +10,28 @@ import { cn } from "@/lib/utils";
  * construí"), en Doval Grotesk extendida y negra. Es una PLACA: con la escena
  * lista se imprime en el fondo y la gota la refracta (ver Escena.tsx).
  */
-export function TituloSeccion({ id, children, className }: { id: string; children: string; className?: string }) {
+export function TituloSeccion({
+  id,
+  children,
+  className,
+  burbujas,
+  burbujasM,
+}: {
+  id: string;
+  children: string;
+  className?: string;
+  /** las burbujas que viven en el título (Escena.tsx: data-burbujas) */
+  burbujas?: string;
+  burbujasM?: string;
+}) {
   return (
-    <h2 id={id} data-placa className={cn("placa titulo-seccion outline-none", className)}>
+    <h2
+      id={id}
+      data-placa
+      data-burbujas={burbujas}
+      data-burbujas-m={burbujasM}
+      className={cn("placa titulo-seccion outline-none", className)}
+    >
       <span>{children}</span>
     </h2>
   );

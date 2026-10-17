@@ -1,4 +1,4 @@
-import { FRAGMENT, MAX_VIDRIOS, VERTEX } from "./shader";
+import { FRAGMENT, MAX_BURBUJAS, MAX_VIDRIOS, VERTEX } from "./shader";
 
 /**
  * El MOTOR: WebGL 2 crudo, sin three.js. Compila, sube las texturas (fotos de
@@ -17,7 +17,11 @@ export type Cuadro = {
   escala: number;
   tiempo: number;
   calidad: 0 | 1;
-  gota: [number, number, number]; // x, y, radio (radio 0 = sin gota)
+  burbujas: Float32Array; // MAX_BURBUJAS * 4: x, y, radio, cuánto es botón
+  burbujasF: Float32Array; // MAX_BURBUJAS * 4: medio ancho, medio alto, velocidad x, y
+  nBurbujas: number;
+  /** 1 cuando las burbujas son un botón (van encima del vidrio) */
+  arriba: number;
   placas: PlacaGPU[];
   feli: { rect: [number, number, number, number]; src: string }[];
   cianotipos: { rect: [number, number, number, number]; src: string; funde: boolean }[];
@@ -26,15 +30,14 @@ export type Cuadro = {
   nVidrios: number;
   puntero: [number, number];
   onda: [number, number, number, number]; // x, y, edad (s), fuerza
-  forma: [number, number, number]; // la gota hecha botón: medio ancho, medio alto, cuánto
 };
 
 const NOMBRES = [
-  "uRes", "uS", "uT", "uQ", "uC", "uR", "uV", "uVX", "uNV", "uM", "uOnda", "uForma",
+  "uRes", "uS", "uT", "uQ", "uB", "uBF", "uNB", "uArriba", "uV", "uVX", "uNV", "uM", "uOnda",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
   "uK0", "uK1", "uKR0", "uKR1", "uPapel", "uGrano", "uKF",
 ] as const;
-const ARRAYS = new Set(["uV", "uVX"]);
+const ARRAYS = new Set(["uV", "uVX", "uB", "uBF"]);
 const CERO: [number, number, number, number] = [0, 0, 0, 0];
 
 export class Motor {
@@ -188,14 +191,15 @@ export class Motor {
     gl.uniform1f(u.uS, c.escala);
     gl.uniform1f(u.uT, c.tiempo);
     gl.uniform1f(u.uQ, c.calidad);
-    gl.uniform3f(u.uC, c.gota[0], c.gota[1], 0);
-    gl.uniform1f(u.uR, c.gota[2]);
+    gl.uniform4fv(u.uB, c.burbujas);
+    gl.uniform4fv(u.uBF, c.burbujasF);
+    gl.uniform1i(u.uNB, Math.min(c.nBurbujas, MAX_BURBUJAS));
+    gl.uniform1f(u.uArriba, c.arriba);
     gl.uniform4fv(u.uV, c.vidrios);
     gl.uniform4fv(u.uVX, c.vidriosX);
     gl.uniform1i(u.uNV, Math.min(c.nVidrios, MAX_VIDRIOS));
     gl.uniform2f(u.uM, c.puntero[0], c.puntero[1]);
     gl.uniform4f(u.uOnda, c.onda[0], c.onda[1], c.onda[2], c.onda[3]);
-    gl.uniform3f(u.uForma, c.forma[0], c.forma[1], c.forma[2]);
 
     const rects = [u.uPR0, u.uPR1, u.uPR2];
     for (let i = 0; i < MAX_PLACAS; i++) {

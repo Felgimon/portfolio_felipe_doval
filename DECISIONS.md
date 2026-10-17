@@ -3,10 +3,100 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> Las secciones **v8** y **v7.x** son las vigentes (rediseño «Vidrio y cobalto» y lo que lo hace más de Felipe).
+> Las secciones **v9**, **v8** y **v7.x** son las vigentes (rediseño «Vidrio y cobalto», lo que lo hace más de Felipe y su canción).
 > Debajo queda toda la historia: v6 (la visita guiada en líquido verde), v5.x
 > (el sol en el estudio blanco), v4, v3, v2 y v1. Las notas también están en
 > `obsidian/Portfolio/`.
+
+---
+
+## v9 — La canción del sitio y las burbujas que se juntan
+
+### El pedido
+El sonido tenía potencial: que no suenen sólo los links de la nav sino todos
+los botones, sobre una canción en loop, serena, innovadora pero simple, que
+transmita lo que es el sitio y esté siempre sonando (con el sonido prendido).
+Todas las notas de la interfaz en la tonalidad de la canción, verificado. Y en
+vez de una sola gota que te sigue, varias burbujas por sección, de distintos
+tamaños, que se quedan en su sección; con el mouse sobre un botón, todas las de
+la sección se juntan en él y son una sola con su forma.
+
+### La canción (lib/musica.ts: la partitura; lib/sonido.ts: las voces)
+- **Re mayor, 72 negras por minuto, cuatro acordes de dos compases** (un loop
+  de 26,7 s): D6/9, Bm11, Gmaj9, Em9 (I, vi, IV, ii). Se eligieron acordes de
+  sexta y novena, sin medios tonos adentro: son los más quietos que hay.
+- **Un fa# arriba que no se mueve en los cuatro acordes**: la nota fija, como
+  el azul del cianotipo. Las voces del colchón se mueven por grado conjunto.
+- **Las voces**: el colchón (seno y triángulo apenas desafinados, entra en
+  1,8 s y respira con un filtro que se abre muy lento), el bajo (re, si, sol,
+  mi), una cajita de música con una figura de cuatro notas por acorde y, en la
+  segunda vuelta, una melodía de vidrio. Todo por una sala (reverb de
+  convolución con una respuesta generada, sin archivos) y un compresor suave.
+- **Que no canse**: cada vuelta varía un poco (una nota de la cajita que falta,
+  otra una octava arriba, la fuerza de cada una, a veces una corchea de levare),
+  siempre con notas del acorde.
+- Se pausa con la pestaña en segundo plano y retoma la misma corchea. Al
+  apagarla se va en medio segundo; lo que quedaba sonando se va con su bus.
+
+### La regla que hace que nada desafine
+Lo que toca la interfaz sale siempre de la **pentatónica de re** (re mi fa# la
+si). En estos cuatro acordes ninguna de esas notas queda a medio tono por
+encima ni a un tritono de una nota del acorde: no hay choque posible, toque
+cuando toque. Dentro de eso, cada acorde elige sus cinco notas (su arpegio), y
+faltando menos de un segundo para el cambio se usa el que viene (la nota se
+anticipa, como haría un músico).
+- **La nav**: notas de vidrio simples. Cada link es una nota del acorde que
+  suena: recorrerla es su arpegio, y el mismo recorrido suena distinto en cada
+  acorde.
+- **Los botones**: una burbuja (un glissando de 70 ms que sube y se apoya en
+  la nota) con un brillo dos notas más arriba. Como las de verdad, **cuanto más
+  grande el botón, más grave**.
+- **Las filas de una lista**: una cajita una octava abajo; bajar el mouse por
+  la lista es una escala que baja.
+- **El nombre**: el acorde entero. **Copiar el mail o elegir un tema**: dos
+  notas que suben.
+
+### Cómo se verificó
+- `npm run afinacion` recorre la canción dos vueltas con cuatro semillas, con
+  las colas de cada voz, y en cada instante prueba todo lo que podría tocar la
+  interfaz: 1.077.087 pares de notas sin un choque. Se probó que el chequeo
+  muerde: con un do# en la cajita de Bm falla 1.345 veces. (Así se sacó el do#
+  de la primera versión: chocaba con el re de los hovers.)
+- `npm run sonido` renderiza un minuto en Chromium (OfflineAudioContext, las
+  mismas voces) con hovers encima y mide el audio de verdad: pico −8 dBFS, la
+  canción sola a −23,5 dBFS RMS (de fondo), y un cromagrama: **99,7% de la
+  energía en notas de re mayor**. El primer render tenía demasiado grave (el
+  bajo en mi1); se subió a mi2 y se bajó el bajo.
+
+### Las burbujas (Escena.tsx, shader.ts)
+- **Se declaran en el DOM**: `data-burbujas="fx fy r; …"` en una caja (un
+  título, un cianotipo, la portada): dónde, en fracciones de la caja, y el
+  radio en fracción de la pantalla. Tres por sección, de tres tamaños: la
+  grande sobre una letra del título (la de siempre) y dos más chicas en el aire
+  o sobre un objeto (la lamparita, el compás, la pelota, una taza), que así se
+  agranda. En el celular, la del título y una sobre la fila de objetos.
+- **Se quedan en su sección**: su posición es su caja más un resorte relativo
+  a ella, así el scroll no las arrastra ni las deja atrás. Flotan apenas, cada
+  una a su ritmo, y miran un poco al mouse (la grande de la portada, más).
+- **El hover**: las que se ven salen disparadas hacia el botón, de la más
+  cerca a la más lejos (55 ms entre una y otra). Vuelan con su tamaño y
+  estiradas en la dirección en la que van; se achican al llegar, se funden
+  (smin: se unen como líquido) y recién ahí se vuelven la píldora del botón. La
+  más cerca llega en ~250 ms; todas son una a los ~560 ms. Al salir, cada una
+  vuelve a su lugar, más lento, y deja de ser píldora enseguida.
+- **Una sola SDF**: el shader evalúa sólo las burbujas cerca de cada píxel y
+  las une con smin (con la k en cero cuando ya son botón, así la unión de
+  píldoras iguales es exacta).
+
+### El bug de rendimiento (y lo que dejó)
+La primera versión tardaba el doble por cuadro **aunque no hubiera ninguna
+burbuja en pantalla**. Un banco de pruebas del shader aislado (variantes
+medidas una por una) mostró que no eran las burbujas: era que `gota()` se
+llamaba en tres lugares, y cada llamada se compila entera; una GPU por
+software (y cualquier GPU con ramas divergentes) la paga en toda la pantalla.
+Ahora hay **una sola llamada por píxel** (y una sola de `fondo()` para la
+dispersión del vidrio): el shader nuevo, con cinco burbujas, es más rápido que
+el de la v8.3 con una (254 ms contra 309 por cuadro en SwiftShader).
 
 ---
 
