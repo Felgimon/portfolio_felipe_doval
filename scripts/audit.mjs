@@ -300,7 +300,7 @@ try {
     // v8: los cianotipos (el fondo de cada sección) están y la escena los pinta
     const cianos = await p.evaluate(() => [...document.querySelectorAll("[data-cianotipo]")].map((e) => e.dataset.cianotipo));
     check(
-      cianos.join() === "musica,curiosidad,perfil-grande,enfoque,enfoque-grande,herramientas,trabajo-grande,movimiento,recorrido-grande,gente,contacto-grande",
+      cianos.join() === "musica-grande,musica-m,perfil-m,perfil-grande,enfoque-m,enfoque-grande,trabajo-m,trabajo-grande,recorrido-m,recorrido-grande,contacto-m,contacto-grande",
       `cianotipos en sus secciones, grandes en escritorio y en fila en el celular (${cianos.join()})`,
     );
     const pintado = await p.evaluate(() => ({
@@ -340,6 +340,25 @@ try {
     await volver.click();
     await p.waitForURL(/#trabajo$/, { timeout: 15000 }).catch(() => {});
     check(p.url().includes("/#trabajo"), `volver navegó a /#trabajo (${p.url()})`);
+    await ctx.close();
+  }
+
+  // ---- 9. El 404: una pantalla justa, con el footer, sin scroll ----
+  for (const [w, h, loc, titulo] of [[1440, 900, "es-AR", "Página no encontrada"], [393, 659, "en-US", "Page not found"]]) {
+    const ctx = await b.newContext({ locale: loc, viewport: { width: w, height: h } });
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/una-ruta-que-no-existe`, { waitUntil: "load", timeout: 45000 });
+    await p.waitForTimeout(1200);
+    const r = await p.evaluate(() => ({
+      sobra: document.documentElement.scrollHeight - innerHeight,
+      etiqueta: document.querySelector("main .etiqueta")?.textContent,
+      titulo: document.querySelector("h1")?.getAttribute("aria-label"),
+      pie: !!document.querySelector("footer") && document.querySelector("footer").getBoundingClientRect().bottom <= innerHeight + 1,
+    }));
+    check(
+      r.sobra <= 0 && r.pie && r.etiqueta === "Error 404" && r.titulo === titulo,
+      `404 (${w}×${h}, ${loc}): una pantalla con el footer, sin scroll, "Error 404" y "${titulo}" (${JSON.stringify(r)})`,
+    );
     await ctx.close();
   }
 

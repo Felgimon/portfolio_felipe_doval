@@ -21,13 +21,13 @@ export function Trabajo() {
       className="parada max-md:pt-[150px]"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="herramientas" className="top-[-116px] w-[78%] md:hidden" burbujas="0.8 0.5 0.035" />
+        <Cianotipo nombre="trabajo-m" className="top-[-130px] w-full md:hidden" burbujas="0.52 0.56 0.035" />
         {/* el oficio, en una fila larga: el centro en el aire entre Superlum y
             Proyectos, y los objetos que rozan la captura de arriba */}
         <Cianotipo
           nombre="trabajo-grande"
-          className="top-[calc(100%-120px)] right-[6%] w-[88%] max-md:hidden"
-          burbujas="0.43 0.55 0.05; 0.9 0.5 0.03"
+          className="top-[calc(100%-150px)] right-0 w-full max-md:hidden"
+          burbujas="0.48 0.5 0.05; 0.9 0.58 0.03"
         />
         <TituloSeccion id="trabajo-titulo" burbujas="0.6 0.5 0.085" burbujasM="0.62 0.5 0.085">{t.paradas.trabajo}</TituloSeccion>
         {superlum && <Pieza p={superlum} etiqueta={t.trabajo.enProgreso} enCurso prioridad />}

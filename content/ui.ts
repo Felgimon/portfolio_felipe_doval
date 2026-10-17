@@ -63,7 +63,7 @@ export type TextosUI = {
     aprendizajes: string;
     siguiente: string;
   };
-  perdida: { titulo: string; volver: string };
+  perdida: { etiqueta: string; titulo: string[]; volver: string };
   falta: string;
   footer: { ubicacion: string };
 };
@@ -150,7 +150,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       aprendizajes: "Lo que aprendí",
       siguiente: "Siguiente caso",
     },
-    perdida: { titulo: "No está", volver: "Volver al inicio" },
+    perdida: { etiqueta: "Error 404", titulo: ["Página no", "encontrada"], volver: "Volver al inicio" },
     falta: "FALTA",
     footer: { ubicacion: "Buenos Aires" },
   },
@@ -235,7 +235,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       aprendizajes: "What I learned",
       siguiente: "Next case",
     },
-    perdida: { titulo: "Not here", volver: "Back to the start" },
+    perdida: { etiqueta: "Error 404", titulo: ["Page", "not found"], volver: "Back to the start" },
     falta: "MISSING",
     footer: { ubicacion: "Buenos Aires" },
   },

@@ -24,6 +24,8 @@
 
   --ancho: 1296px;
   --margen: clamp(16px, 5vw, 72px);
+  /* el alto del footer (SiteFooter): el 404 es una pantalla justa con él */
+  --pie: 84px;
   --radio-vidrio: 22px;
 
   --ease-salida: cubic-bezier(0.3, 0.7, 0.4, 1);
@@ -179,6 +181,19 @@ html[data-escena="poster"] .escena {
        entra entero sin achicarse */
     .titulo-seccion {
       font-size: 14.4vw;
+      font-stretch: 100%;
+    }
+  }
+
+  /* el 404: dos líneas ("Página no / encontrada") que entran en una pantalla */
+  .titulo-perdida {
+    font-size: clamp(48px, min(8vw, 13vh), 132px);
+    line-height: 0.9;
+    font-weight: 850;
+  }
+  @media (max-width: 767px) {
+    .titulo-perdida {
+      font-size: 12vw;
       font-stretch: 100%;
     }
   }

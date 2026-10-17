@@ -3,27 +3,36 @@ import Link from "next/link";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Cianotipo } from "@/components/escena/Cianotipo";
 
-/** La página que no existe (404): un título directo, una salida y, de fondo, un mapa con su brújula. */
+/**
+ * La página que no existe (404): "Error 404", el título directo, una salida y,
+ * de fondo, un mapa con su brújula. Es UNA pantalla sin scroll: el alto es el de
+ * la ventana menos el del footer (--pie, el mismo que usa SiteFooter).
+ */
 export function Perdida() {
   const { t } = useIdioma();
   return (
     <main
       id="contenido"
-      className="capa flex min-h-dvh items-end pt-28"
+      className="capa relative flex h-[calc(100svh-var(--pie))] min-h-[520px] items-end overflow-hidden pt-28"
       data-burbujas="0.7 0.25 0.045; 0.35 0.3 0.026"
       data-burbujas-m="0.75 0.3 0.04"
     >
       <Cianotipo nombre="mapa" className="max-md:w-[200%]" />
-      <div className="contenedor grid items-end gap-8 md:grid-cols-12">
-        <div className="pb-16 md:col-span-8">
-          <p className="etiqueta">404</p>
+      <div className="contenedor">
+        <div className="pb-10 md:pb-14">
+          <p className="etiqueta">{t.perdida.etiqueta}</p>
           <h1
             data-placa
             data-burbujas="0.78 0.5 0.11"
             data-burbujas-m="0.8 0.5 0.1"
-            className="placa titulo-seccion mt-4 outline-none"
+            aria-label={t.perdida.titulo.join(" ")}
+            className="placa titulo-perdida mt-4 outline-none"
           >
-            <span>{t.perdida.titulo}</span>
+            {t.perdida.titulo.map((l) => (
+              <span key={l} aria-hidden>
+                {l}
+              </span>
+            ))}
           </h1>
           <Link href="/" className="boton boton-solido mt-10">
             <span aria-hidden className="flecha flecha-izq">←</span> {t.perdida.volver}

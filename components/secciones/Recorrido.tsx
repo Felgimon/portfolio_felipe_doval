@@ -19,13 +19,13 @@ export function Recorrido() {
       className="parada max-md:pt-[150px]"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="movimiento" className="top-[-116px] w-[78%] md:hidden" burbujas="0.8 0.5 0.035" />
+        <Cianotipo nombre="recorrido-m" className="top-[-130px] w-full md:hidden" burbujas="0.6 0.48 0.035" />
         {/* lo de moverse, grande: el centro en la columna libre de la derecha y el
             borde izquierdo que se mete un poco debajo de la línea de tiempo */}
         <Cianotipo
           nombre="recorrido-grande"
-          className="top-[96px] right-[-2%] w-[44%] max-w-[650px] max-md:hidden"
-          burbujas="0.78 0.3 0.05; 0.2 0.8 0.028"
+          className="top-[40px] right-[-3%] w-[48%] max-w-[720px] max-md:hidden"
+          burbujas="0.75 0.22 0.05; 0.2 0.64 0.028"
         />
         <TituloSeccion id="recorrido-titulo" burbujas="0.97 0.5 0.085" burbujasM="0.94 0.5 0.085">{t.paradas.recorrido}</TituloSeccion>
         <div className="mt-16 grid items-start gap-7 md:grid-cols-12">

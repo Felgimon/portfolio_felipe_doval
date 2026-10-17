@@ -19,7 +19,10 @@ const DESTINO = "public/assets/cianotipos";
 const ANCHO = 1600; // el alto sale de la proporción de cada original
 const LUZ = [168, 191, 255]; // #a8bfff, el celeste de un cianotipo lavado
 
-for (const archivo of (await readdir(ORIGEN)).filter((f) => f.endsWith(".jpg"))) {
+// desde la v9.1 sólo el mapa del 404 va entero (a sangre): las secciones usan
+// composiciones de objetos sueltos (scripts/componer-cianotipos.py)
+const A_SANGRE = ["mapa.jpg"];
+for (const archivo of (await readdir(ORIGEN)).filter((f) => A_SANGRE.includes(f))) {
   const nombre = path.basename(archivo, ".jpg");
   const { data, info } = await sharp(path.join(ORIGEN, archivo))
     .resize({ width: ANCHO })

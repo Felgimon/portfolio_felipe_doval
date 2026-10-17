@@ -20,10 +20,12 @@ export function Inicio() {
       id="inicio"
       aria-labelledby="inicio-titulo"
       className="relative flex flex-col px-4 pt-[104px] md:block md:h-[100svh] md:max-h-[1000px] md:min-h-[640px] md:p-0"
-      data-burbujas="0.58 0.24 0.05; 0.5 0.86 0.026"
+      data-burbujas="0.66 0.12 0.045; 0.465 0.87 0.026"
       data-burbujas-m="0.84 0.3 0.04"
     >
-      <Cianotipo nombre="musica" className="max-md:w-[200%]" />
+      {/* la música: el piano de cola en el hueco entre el nombre y la foto */}
+      <Cianotipo nombre="musica-grande" className="max-md:hidden" />
+      <Cianotipo nombre="musica-m" className="top-[56px] w-full md:hidden" />
       <h1
         id="inicio-titulo"
         data-placa

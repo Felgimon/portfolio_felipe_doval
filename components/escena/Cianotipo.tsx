@@ -2,30 +2,34 @@ import { cn } from "@/lib/utils";
 
 /** Cada cianotipo con su proporción (la del archivo: la escena no lo estira). */
 const MEDIDAS = {
-  // a sangre (se funden los bordes)
-  musica: [1600, 905],
+  // a sangre (se funden los bordes): el 404
   mapa: [1600, 905],
-  // filas compactas (el celular)
-  curiosidad: [1600, 686],
-  enfoque: [1600, 1194],
-  herramientas: [1600, 686],
-  movimiento: [1600, 686],
-  gente: [1600, 686],
-  // composiciones grandes (escritorio): scripts/componer-cianotipos.py
-  "perfil-grande": [1398, 696],
-  "enfoque-grande": [1338, 998],
-  "trabajo-grande": [2030, 628],
-  "recorrido-grande": [1020, 928],
-  "contacto-grande": [1068, 560],
+  // v9.1, escritorio: los objetos dispersos (scripts/componer-cianotipos.py)
+  "musica-grande": [1600, 1000],
+  "perfil-grande": [1800, 767],
+  "enfoque-grande": [1800, 1600],
+  "trabajo-grande": [1800, 562],
+  "recorrido-grande": [1500, 1600],
+  "contacto-grande": [1800, 1000],
+  // el celular: una franja arriba de cada título, con menos objetos
+  "musica-m": [1600, 900],
+  "perfil-m": [1600, 760],
+  "enfoque-m": [1600, 760],
+  "trabajo-m": [1600, 760],
+  "recorrido-m": [1600, 760],
+  "contacto-m": [1600, 760],
 } as const;
 
-const A_SANGRE = new Set<string>(["musica", "mapa"]);
+const A_SANGRE = new Set<string>(["mapa"]);
 
 export type NombreCianotipo = keyof typeof MEDIDAS;
 
 /**
- * LOS OBJETOS DE UNA SECCIÓN (v8): un cianotipo de cosas de todos los días,
- * ordenadas (Felipe es ordenado y el fondo lo dice). El archivo es un mapa de
+ * LOS OBJETOS DE UNA SECCIÓN (v8): un cianotipo de cosas de todos los días.
+ * Desde la v9.1, orden adentro y desorden afuera: cada objeto impecable (el
+ * cable enrollado y atado, los lápices derechos) pero tirados en la mesa, cada
+ * uno girado a su manera. Felipe es las dos cosas: estricto con algunas cosas,
+ * y con las ideas todavía sin acomodar. El archivo es un mapa de
  * luz (scripts/gen-cianotipos.mjs): la escena lo pinta como luz baja sobre el
  * papel, debajo de los títulos, y las burbujas que flotan encima lo agrandan.
  *

@@ -21,13 +21,13 @@ export function Contacto() {
       className="parada !pb-10 max-md:pt-[150px]"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="gente" className="top-[-116px] w-[78%] md:hidden" burbujas="0.25 0.5 0.035" />
+        <Cianotipo nombre="contacto-m" className="top-[-130px] w-full md:hidden" burbujas="0.82 0.48 0.035" />
         {/* las dos tazas, grandes: el centro en el hueco de la derecha y los bordes
             que rozan el final del título y los botones */}
         <Cianotipo
           nombre="contacto-grande"
-          className="top-[96px] right-[-2%] w-[54%] max-w-[800px] max-md:hidden"
-          burbujas="0.8 0.5 0.055; 0.5 0.45 0.026"
+          className="top-[60px] right-[-3%] w-[58%] max-w-[880px] max-md:hidden"
+          burbujas="0.58 0.62 0.055; 0.86 0.36 0.026"
         />
         <div className="md:max-w-[58%]">
           <TituloSeccion id="contacto-titulo" burbujas="0.9 0.5 0.09" burbujasM="0.9 0.5 0.09">{t.paradas.contacto}</TituloSeccion>

@@ -47,6 +47,13 @@ la cuenta de Felipe). Son ilustrativos: no son fotos de objetos de Felipe. Si
 algún día hay fotos o cianotipos propios de sus cosas, se reemplazan con el
 mismo script.
 
+En la v9.1 se sumaron, con el mismo estilo y la misma referencia, un piano de
+cola, libros, una pelota de fútbol, un mate, un cubo de Rubik, una laptop, un
+metrónomo y la música separada en objetos sueltos (`brand/cianotipos/nuevos/`).
+Desde entonces las secciones no usan los fotogramas enteros: cada objeto se
+recorta y se vuelve a acomodar, disperso y girado (`*-grande.webp` en
+escritorio, `*-m.webp` en el celular). Sólo el mapa del 404 va entero.
+
 El papel del fondo (`brand/papel.jpg` → `public/assets/papel.webp`, v8.1)
 también está generado para el sitio, con el mismo estilo.
 

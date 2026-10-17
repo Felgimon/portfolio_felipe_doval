@@ -3,10 +3,59 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> Las secciones **v9**, **v8** y **v7.x** son las vigentes (rediseño «Vidrio y cobalto», lo que lo hace más de Felipe y su canción).
+> Las secciones **v9.x**, **v8** y **v7.x** son las vigentes (rediseño «Vidrio y cobalto», lo que lo hace más de Felipe y su canción).
 > Debajo queda toda la historia: v6 (la visita guiada en líquido verde), v5.x
 > (el sol en el estudio blanco), v4, v3, v2 y v1. Las notas también están en
 > `obsidian/Portfolio/`.
+
+---
+
+## v9.1 — Orden adentro, desorden afuera (y el 404 en una pantalla)
+
+### El pedido
+El 404 pasaba de 100vh (no contaba el footer) y tenía scroll: que sea una
+pantalla justa, con el footer. "Page not found" (en español, "Página no
+encontrada") y arriba "Error 404". Y los objetos, más grandes, y con una idea:
+cada objeto ordenado en sí (el cable enrollado y atado, los lápices derechos),
+pero distribuidos de forma desordenada, porque Felipe es las dos cosas: estricto
+y recto con algunas cosas, y con las ideas desordenadas y poco articuladas.
+Objetos nuevos que lo representen: un piano de cola, libros y otros.
+
+### El 404
+- El footer tiene un alto fijo, `--pie` (84 px, lo que ya medía), y el 404 mide
+  `100svh - var(--pie)`: con el footer, una pantalla justa, sin scroll, en
+  escritorio, 720p y el celular. El audit lo prueba en dos tamaños e idiomas.
+- "Error 404" arriba; el título en dos líneas ("Página no / encontrada", "Page /
+  not found") con su propio tamaño (`.titulo-perdida`), porque en una línea no
+  entraba.
+
+### Los objetos
+- **No hizo falta regenerar los que estaban**: cada objeto ya era prolijo en sí
+  (el cable con su tira, los lápices alineados). Lo que cambia es la mesa:
+  `dispersar()` en `scripts/componer-cianotipos.py` recorta cada objeto y lo
+  vuelve a acomodar donde "cayó", girado a su manera (de −52° a 78°), a veces
+  tocando al de al lado. Las posiciones están a mano, no al azar: desorden
+  pensado, que se lea como mesa y no como error.
+- **Objetos nuevos** con Higgsfield (el mismo modelo, la misma imagen de
+  referencia, el mismo papel y color): un piano de cola con su banqueta, una
+  pila de libros, un libro abierto, una pelota de fútbol, un mate, un cubo de
+  Rubik resuelto (el orden más estricto), una laptop y un metrónomo. Y la
+  música rehecha en objetos sueltos (en el original estaban pegados entre sí y
+  al borde y no se podían recortar).
+- **Dónde va cada cosa**: la portada, la música (el piano acostado en el aire
+  entre "Doval" y la bajada, los auriculares y el vinilo alrededor de la foto,
+  el metrónomo abajo); Perfil, lo de curioso más los libros y el cubo, a lo
+  ancho debajo de la bio y de Así soy; Enfoque, el juego de dibujo; Trabajo, la
+  libreta, los anteojos, la laptop, el cable y las teclas; Recorrido, las
+  zapatillas, las llaves, la tarjeta y las dos pelotas; Contacto, las dos tazas
+  (ya no en espejo) y el mate.
+- **Más grandes**: entre 10% y 30% más de ancho en pantalla, y en el celular
+  una composición propia por sección (`*-m.webp`, menos objetos y más grandes)
+  en vez de las filas de antes.
+- Las burbujas de cada sección se movieron para quedar sobre un objeto (la
+  lamparita, el compás, la laptop, la pelota, la taza, los auriculares).
+- Peso: las composiciones se guardan a lo sumo a 1800 px de ancho con el alfa
+  comprimido; todo el fondo pesa 1,8 MB, lo mismo que antes con menos objetos.
 
 ---
 

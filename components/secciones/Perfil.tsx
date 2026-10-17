@@ -23,9 +23,16 @@ export function Perfil() {
       className="parada max-md:pt-[150px]"
     >
       <div className="contenedor relative">
-        <Cianotipo nombre="curiosidad" className="top-[-116px] w-[78%] md:hidden" burbujas="0.86 0.45 0.035" />
+        <Cianotipo nombre="perfil-m" className="top-[-130px] w-full md:hidden" burbujas="0.83 0.5 0.035" />
         <TituloSeccion id="perfil-titulo" burbujas="0.93 0.5 0.085" burbujasM="0.9 0.5 0.085">{t.paradas.perfil}</TituloSeccion>
-        <div className="mt-14 grid items-start gap-x-16 gap-y-12 md:grid-cols-12">
+        {/* lo de curioso, grande y tirado en la mesa a lo ancho, debajo de la bio y de
+            Así soy: el centro en el aire y la parte de arriba bajo el último texto */}
+        <Cianotipo
+          nombre="perfil-grande"
+          className="top-auto bottom-[-90px] left-[-4%] w-[108%] max-md:hidden"
+          burbujas="0.77 0.48 0.05; 0.08 0.46 0.03"
+        />
+        <div className="mt-14 grid items-start gap-x-16 gap-y-12 md:grid-cols-12 md:pb-[360px]">
           <div className="md:col-span-6">
             <p className="text-[18px] leading-[1.6]">{primero}</p>
             {resto.map((p) => (
@@ -33,13 +40,6 @@ export function Perfil() {
                 {p}
               </p>
             ))}
-            {/* los objetos de curioso, grandes: el centro en el aire debajo de la bio y
-                la parte de arriba que se mete un poco debajo del último párrafo */}
-            <Cianotipo
-              nombre="perfil-grande"
-              className="relative -mt-6 -ml-[8%] w-[124%] max-md:hidden"
-              burbujas="0.885 0.45 0.05; 0.1 0.42 0.03"
-            />
           </div>
           <div className="md:col-span-5 md:col-start-8">
             <h3 className="etiqueta">{t.perfil.stack}</h3>

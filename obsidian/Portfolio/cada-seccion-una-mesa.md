@@ -40,3 +40,11 @@ cianotipos de verdad de mis objetos, se cambian con
 `node scripts/gen-cianotipos.mjs`. En el Figma: página **Diseño v8 · Más yo**.
 
 Detalle en `DECISIONS.md` (v8). Relacionado: [[los-hovers-son-vidrio]].
+
+**v9.1: orden adentro, desorden afuera.** Soy organizado y desorganizado a la
+vez: con algunas cosas soy estricto y recto, y mis ideas son desordenadas.
+Cada objeto sigue impecable (el cable enrollado y atado, los lápices
+derechos), pero tirados en la mesa, cada uno girado a su manera. Y se sumaron
+cosas mías: un piano de cola, libros, una pelota de fútbol, un mate, un cubo
+de Rubik, una laptop y un metrónomo. Ver [[las-burbujas-se-juntan]].
+
