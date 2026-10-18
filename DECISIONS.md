@@ -10,6 +10,71 @@ dependencias y bugs). Se actualiza en cada fase.
 
 ---
 
+## v9.2 — Carga sin congelarse, burbujas en cualquier equipo, el sonido a la primera y la preview
+
+### El pedido
+Al entrar, la página tardaba ~6 s en dejar scrollear y en mostrar las burbujas
+(sin pantalla de carga si se podía evitar; si no, una mínima con burbujas que
+explotan). En algunos dispositivos las burbujas no se veían. Con el sonido
+recordado como prendido, la música no sonaba hasta apagarlo y prenderlo. Y la
+preview al compartir el link mostraba el panel viejo de "Ahora: Superlum".
+
+### Por qué tardaba
+Se midió la carga: el primer pintado es rápido (~0,3 s), pero al hidratar, el
+constructor del motor WebGL CONGELABA el hilo principal (en esta máquina
+650 ms, antes del primer pintado). Ahí se crea el contexto y se pregunta si el
+shader linkeó; esa pregunta espera a que la GPU termine de compilar. En una
+placa real, sobre todo con ANGLE sobre D3D en Windows, compilar un raymarcher
+así tarda SEGUNDOS: esos eran los ~6 s sin scroll.
+
+### La carga (sin pantalla de carga: no hizo falta)
+- **Compilación en paralelo**: con `KHR_parallel_shader_compile` el motor ya
+  no pregunta si el shader compiló; `preparado()` lo consulta en cada cuadro sin
+  esperar. Ni `compilar()` pregunta por el estado (también bloqueaba).
+- **Arranque diferido**: la escena se monta después del evento load, un cuadro
+  pintado y el primer rato libre (`requestIdleCallback`). La hidratación y el
+  primer scroll no compiten con la GPU.
+- **Burbujas desde el primer pintado**: `BurbujasCss` las dibuja en CSS, en el
+  HTML del servidor, en el mismo lugar que las de la escena (mismas fracciones,
+  mismo radio). Los objetos del fondo también se ven ya, en CSS. Cuando la
+  escena está lista, las burbujas de CSS se funden con las de verdad. Mientras
+  tanto la página se puede leer, scrollear y tocar.
+- Resultado medido: primer pintado ~0,3 s con las burbujas, la página usable
+  desde ahí, y la escena lista ~1,5 s en una GPU por software. Sin la
+  extensión (la GPU por software de los tests no la tiene) queda una tarea de
+  ~300 ms, pero ya después de la carga. Con la extensión (Chrome, Edge, Firefox
+  y Safari recientes con GPU) la compilación no bloquea nada. Por eso no hizo
+  falta la pantalla de carga.
+
+### Burbujas en cualquier equipo
+- La causa más probable de que no se vieran: el vigilante de rendimiento, si
+  el equipo no llegaba, bajaba la calidad dos veces y en la segunda APAGABA la
+  escena (y sin escena no había burbujas). Ahora el nivel mínimo baja la
+  resolución (0,42) y dibuja a la mitad de cuadros, pero la escena sigue.
+- Sin WebGL 2 (o si la escena se cae), quedan las burbujas de CSS: un vidrio
+  con canto de luz, brillo, espesor y sombra, y con el mouse sobre un botón se
+  juntan en él y toman su forma (`JuntarBurbujasCss`), como las de la escena.
+- `html` también recorta lo que asoma de costado (`overflow-x: clip`): una
+  burbuja de un título no puede ensanchar la página en el celular.
+
+### El sonido a la primera
+- El bug: con el sonido recordado, la canción esperaba el primer gesto. Si ese
+  gesto era un clic en el ícono, el pointerdown la arrancaba y el click la
+  apagaba antes de que sonara: había que tocar dos veces. Y en el celular
+  apoyar el dedo no habilita el audio (soltarlo sí), así que nunca arrancaba.
+- Ahora el sonido tiene tres estados: apagado, ESPERANDO (prendido, sin permiso
+  todavía) y sonando. Esperando, el ícono queda quieto con una burbuja que late
+  ("Tocá para escuchar"), y tocarlo HACE sonar la canción. Cualquier gesto que
+  cuente la arranca: un clic, una tecla, soltar el dedo. Los oyentes se van
+  recién cuando suena de verdad.
+
+### La preview
+`node scripts/gen-og.mjs` sacó una captura nueva de la portada: el papel, las
+burbujas, el piano y la música de fondo, sin el panel de Superlum. El texto
+alternativo también se actualizó.
+
+---
+
 ## v9.1 — Orden adentro, desorden afuera (y el 404 en una pantalla)
 
 ### El pedido

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { BurbujasCss } from "@/components/escena/BurbujasCss";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Cianotipo } from "@/components/escena/Cianotipo";
 
@@ -17,6 +18,7 @@ export function Perdida() {
       data-burbujas="0.7 0.25 0.045; 0.35 0.3 0.026"
       data-burbujas-m="0.75 0.3 0.04"
     >
+      <BurbujasCss d="0.7 0.25 0.045; 0.35 0.3 0.026" m="0.75 0.3 0.04" />
       <Cianotipo nombre="mapa" className="max-md:w-[200%]" />
       <div className="contenedor">
         <div className="pb-10 md:pb-14">
@@ -33,6 +35,7 @@ export function Perdida() {
                 {l}
               </span>
             ))}
+            <BurbujasCss d="0.78 0.5 0.11" m="0.8 0.5 0.1" />
           </h1>
           <Link href="/" className="boton boton-solido mt-10">
             <span aria-hidden className="flecha flecha-izq">←</span> {t.perdida.volver}

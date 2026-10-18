@@ -49,6 +49,9 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: auto; /* el scroll suave lo maneja Lenis */
   background: var(--noche);
+  /* las burbujas de CSS de un título pueden asomar del borde: en el celular el
+     navegador agrandaría la página para mostrarlas (scroll horizontal) */
+  overflow-x: clip;
 }
 
 body {
@@ -153,7 +156,10 @@ html[data-escena="poster"] .escena {
     letter-spacing: -0.025em;
     color: var(--crema);
   }
-  .placa > span {
+  .placa {
+    position: relative;
+  }
+  .placa > span:not(.burbuja-css) {
     display: block;
     white-space: nowrap;
   }
@@ -696,18 +702,85 @@ html[data-escena="poster"] .escena {
     pointer-events: none;
   }
 }
-html[data-escena="poster"] .cianotipo {
+/* Sin escena (y mientras carga, v9.2) los objetos van de fondo CSS, con la
+   misma intensidad; con la escena lista se apagan y los pinta el shader. En un
+   pseudo-elemento: así las burbujas de CSS que viven adentro no se apagan con él. */
+.cianotipo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: var(--cianotipo) center / cover no-repeat;
   opacity: 0.24;
+  transition: opacity 0.6s var(--ease-salida);
 }
-html[data-escena="poster"] .cianotipo[data-funde] {
+html[data-escena="lista"] .cianotipo::before {
+  opacity: 0;
+}
+.cianotipo[data-funde]::before {
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
 }
 @media (prefers-contrast: more), (forced-colors: active) {
-  html[data-escena="poster"] .cianotipo {
+  .cianotipo::before {
     display: none;
   }
+}
+
+/* LAS BURBUJAS DE CSS (v9.2, BurbujasCss.tsx): las mismas de la escena, en el
+   mismo lugar, desde el primer pintado. Un vidrio claro: canto de luz arriba a
+   la izquierda, el brillo duro, el espesor abajo a la derecha, la sombra sobre
+   el papel y lo de atrás un poco más claro (backdrop-filter). Cuando la escena
+   está lista se funden con las de verdad; sin escena, se quedan. */
+.burbuja-css {
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--x) * 100%);
+  top: calc(var(--y) * 100%);
+  width: calc(var(--r) * min(100vw, 100vh, 960px) * 2);
+  aspect-ratio: 1 / 1.18;
+  translate: -50% -50%;
+  border-radius: 999px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 20% 13% at 33% 21%, color-mix(in srgb, var(--crema) 92%, transparent), transparent),
+    radial-gradient(ellipse 9% 6% at 70% 80%, color-mix(in srgb, var(--crema) 45%, transparent), transparent),
+    radial-gradient(closest-side, transparent 64%, color-mix(in srgb, var(--noche) 34%, transparent) 90%, color-mix(in srgb, var(--crema) 40%, transparent) 97%, transparent);
+  box-shadow:
+    inset 2px 3px 0 -1px color-mix(in srgb, var(--crema) 90%, transparent),
+    inset -2px -3px 0 -1px color-mix(in srgb, var(--crema) 38%, transparent),
+    inset -6px -9px 16px color-mix(in srgb, var(--noche) 30%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--crema) 34%, transparent),
+    14px 18px 34px -10px color-mix(in srgb, var(--noche) 62%, transparent);
+  -webkit-backdrop-filter: brightness(1.12) contrast(1.06) blur(0.3px);
+  backdrop-filter: brightness(1.12) contrast(1.06) blur(0.3px);
+  transition:
+    opacity 0.6s var(--ease-salida),
+    translate 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.12),
+    width 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.12),
+    height 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.12);
+}
+.burbuja-css[data-sin-d] {
+  display: none;
+}
+@media (max-width: 767px) {
+  .burbuja-css {
+    left: calc(var(--xm) * 100%);
+    top: calc(var(--ym) * 100%);
+    width: calc(var(--rm) * min(100vw, 100vh, 960px) * 2.5);
+  }
+  .burbuja-css[data-sin-d]:not([data-sin-m]) {
+    display: block;
+  }
+  .burbuja-css[data-sin-m] {
+    display: none;
+  }
+}
+html[data-escena="lista"] .burbuja-css {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.6s var(--ease-salida),
+    visibility 0s 0.6s;
 }
 
 /* EL BOTÓN SONIDO: sólo el ícono, un ecualizador de tres barras.
@@ -767,13 +840,13 @@ html:not([data-escena="lista"]) .sonido-icono:focus-visible {
 .eq span:nth-child(3) {
   height: 9px;
 }
-.sonido[aria-pressed="true"] .eq span {
+.sonido[data-estado="sonando"] .eq span {
   animation: eq 0.9s ease-in-out infinite alternate;
 }
-.sonido[aria-pressed="true"] .eq span:nth-child(2) {
+.sonido[data-estado="sonando"] .eq span:nth-child(2) {
   animation-delay: -0.3s;
 }
-.sonido[aria-pressed="true"] .eq span:nth-child(3) {
+.sonido[data-estado="sonando"] .eq span:nth-child(3) {
   animation-delay: -0.6s;
 }
 .sonido[aria-pressed="false"] {
@@ -796,6 +869,30 @@ html:not([data-escena="lista"]) .sonido-icono:focus-visible {
   box-shadow: 0 0 0 1.5px var(--vidrio-solido);
   rotate: -42deg;
 }
+/* ESPERANDO (v9.2): prendido, pero el navegador todavía no dejó sonar. Las
+   barras quietas y, alrededor, una burbuja que late: "tocame y suena". */
+.sonido[data-estado="esperando"] .eq::before {
+  content: "";
+  position: absolute;
+  inset: -9px -8px;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 1px var(--crema),
+    0 0 0 1px var(--linea);
+  opacity: 0;
+  animation: esperando 2.2s var(--ease-salida) infinite;
+}
+@keyframes esperando {
+  0% {
+    opacity: 0.9;
+    scale: 0.7;
+  }
+  70%,
+  100% {
+    opacity: 0;
+    scale: 1.35;
+  }
+}
 @keyframes eq {
   from {
     height: 4px;
@@ -808,6 +905,10 @@ html:not([data-escena="lista"]) .sonido-icono:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .sonido[aria-pressed="true"] .eq span {
     height: 13px;
+  }
+  .sonido[data-estado="esperando"] .eq::before {
+    animation: none;
+    opacity: 0.6;
   }
 }
 

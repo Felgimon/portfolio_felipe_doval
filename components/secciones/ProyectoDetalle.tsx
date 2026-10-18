@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { BurbujasCss } from "@/components/escena/BurbujasCss";
 import Link from "next/link";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
 import { Placeholder } from "@/components/ui/Placeholder";
@@ -42,6 +43,7 @@ export function ProyectoDetalle({ slug }: { slug: string }) {
           className="placa titulo-caso mt-4 outline-none"
         >
           <span>{p.nombre}</span>
+          <BurbujasCss d="0.97 0.5 0.1; 1.35 1.7 0.035" m="0.95 0.5 0.1" />
         </h1>
         <p className="lead mt-8 max-w-[50ch]">{p.unaLinea}</p>
 

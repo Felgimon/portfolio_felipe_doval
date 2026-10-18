@@ -24,7 +24,7 @@ export type IdParada =
 export type TextosUI = {
   paradas: Record<IdParada, string>;
   nav: { aria: string; menu: string; cerrar: string; volver: string; hablemos: string; inicio: string };
-  sonido: { boton: string; prender: string; apagar: string; prendido: string; apagado: string };
+  sonido: { boton: string; prender: string; apagar: string; prendido: string; apagado: string; escuchar: string };
   saltar: string;
   hero: { verTrabajo: string; copiarMail: string };
   perfil: { stack: string; asiSoy: string };
@@ -93,6 +93,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       apagar: "Apagar el sonido",
       prendido: "Sonido prendido",
       apagado: "Sonido apagado",
+      escuchar: "Tocá para escuchar",
     },
     saltar: "Saltar al contenido",
     hero: {
@@ -178,6 +179,7 @@ export const textosUI: Record<Idioma, TextosUI> = {
       apagar: "Turn the sound off",
       prendido: "Sound on",
       apagado: "Sound off",
+      escuchar: "Tap to listen",
     },
     saltar: "Skip to content",
     hero: {

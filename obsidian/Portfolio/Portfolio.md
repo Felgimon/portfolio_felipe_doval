@@ -26,6 +26,7 @@ Figma, página *Diseño v7* ([[el-figma-son-capas-no-una-captura]]).
 - [[cada-seccion-una-mesa]]
 - [[el-sitio-tiene-su-cancion]]
 - [[las-burbujas-se-juntan]]
+- [[la-pagina-no-espera-a-la-gpu]]
 
 ## v6 «Visita guiada» (historia)
 

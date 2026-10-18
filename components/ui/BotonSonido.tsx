@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { alCambiar, alternar, estaPrendido } from "@/lib/sonido";
+import { alCambiar, alternar, estadoSonido } from "@/lib/sonido";
 
 /**
  * Prende o apaga el sonido del sitio (lib/sonido.ts).
@@ -16,15 +16,21 @@ import { alCambiar, alternar, estaPrendido } from "@/lib/sonido";
  *
  * Es un interruptor: el nombre accesible no cambia ("Sonido") y el estado va
  * en aria-pressed; el tooltip dice qué pasa al tocarlo.
+ *
+ * Tres estados (v9.2, data-estado): apagado (tachado), sonando (las barras se
+ * mueven) y ESPERANDO: venía prendido de otra visita pero el navegador todavía
+ * no dejó sonar. Ahí las barras quedan quietas y laten como una burbuja, y
+ * tocarlo hace sonar la canción (no la apaga).
  */
 export function BotonSonido({ variante = "icono", className }: { variante?: "icono" | "fila" | "texto"; className?: string }) {
   const { t } = useIdioma();
-  const prendido = useSyncExternalStore(alCambiar, estaPrendido, () => false);
-  const accion = prendido ? t.sonido.apagar : t.sonido.prender;
+  const estado = useSyncExternalStore(alCambiar, estadoSonido, () => "apagado" as const);
+  const prendido = estado !== "apagado";
+  const accion = estado === "esperando" ? t.sonido.escuchar : prendido ? t.sonido.apagar : t.sonido.prender;
 
   if (variante === "texto") {
     return (
-      <button type="button" onClick={alternar} aria-pressed={prendido} className={cn("sonido-texto", className)}>
+      <button type="button" onClick={alternar} aria-pressed={prendido} data-estado={estado} className={cn("sonido-texto", className)}>
         {accion}
       </button>
     );
@@ -42,10 +48,11 @@ export function BotonSonido({ variante = "icono", className }: { variante?: "ico
         type="button"
         onClick={alternar}
         aria-pressed={prendido}
+        data-estado={estado}
         className={cn("sonido sonido-fila flex min-h-[48px] w-full items-center gap-3 rounded-2xl px-4 text-[17px] font-medium", className)}
       >
         {eq}
-        {prendido ? t.sonido.prendido : t.sonido.apagado}
+        {estado === "esperando" ? t.sonido.escuchar : prendido ? t.sonido.prendido : t.sonido.apagado}
       </button>
     );
   }
@@ -54,6 +61,7 @@ export function BotonSonido({ variante = "icono", className }: { variante?: "ico
       type="button"
       onClick={alternar}
       aria-pressed={prendido}
+      data-estado={estado}
       aria-label={t.sonido.boton}
       title={accion}
       className={cn("sonido sonido-icono", className)}

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BurbujasCss } from "@/components/escena/BurbujasCss";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,6 +34,7 @@ export function TituloSeccion({
       className={cn("placa titulo-seccion outline-none", className)}
     >
       <span>{children}</span>
+      <BurbujasCss d={burbujas} m={burbujasM} />
     </h2>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JuntarBurbujasCss } from "@/components/escena/BurbujasCss";
 import { fontClassNames } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
 import { siteUrl } from "@/lib/site";
@@ -129,6 +130,7 @@ export default function RootLayout({
         </IdiomaProvider>
         <Reflejos />
         <Burbuja />
+        <JuntarBurbujasCss />
         <KonamiEasterEgg />
         <DevOverlay />
         {/* Vercel Web Analytics. Va ÚLTIMO y fuera de los providers a propósito:

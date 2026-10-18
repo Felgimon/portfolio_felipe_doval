@@ -1,5 +1,6 @@
 "use client";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
+import { BurbujasCss } from "@/components/escena/BurbujasCss";
 import { useSmoothScroll } from "@/components/motion/SmoothScroll";
 import { Feli } from "@/components/guia/Feli";
 import { Cianotipo } from "@/components/escena/Cianotipo";
@@ -24,6 +25,7 @@ export function Inicio() {
       data-burbujas-m="0.84 0.3 0.04"
     >
       {/* la música: el piano de cola en el hueco entre el nombre y la foto */}
+      <BurbujasCss d="0.66 0.12 0.045; 0.465 0.87 0.026" m="0.84 0.3 0.04" />
       <Cianotipo nombre="musica-grande" className="max-md:hidden" />
       <Cianotipo nombre="musica-m" className="top-[56px] w-full md:hidden" />
       <h1
@@ -36,6 +38,7 @@ export function Inicio() {
       >
         <span aria-hidden>Felipe</span>
         <span aria-hidden>Doval</span>
+        <BurbujasCss d="0.41 0.7 0.115 0.12" m="0.4 0.66 0.085 0" />
       </h1>
 
       <Feli

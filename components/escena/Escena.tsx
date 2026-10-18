@@ -117,7 +117,9 @@ function dibujarPlaca(el: HTMLElement, escala: number): HTMLCanvasElement {
   x.textBaseline = "alphabetic";
   const mayus = cs.textTransform === "uppercase";
   const lh = parseFloat(cs.lineHeight);
-  const lineas = el.children.length ? [...el.children] : [el];
+  // las líneas son los span del título (no las burbujas de CSS que viven adentro)
+  const hijos = [...el.children].filter((c) => !c.classList.contains("burbuja-css"));
+  const lineas = hijos.length ? hijos : [el];
   for (const sp of lineas) {
     const sr = sp.getBoundingClientRect();
     const txt = mayus ? (sp.textContent ?? "").toUpperCase() : (sp.textContent ?? "");
@@ -139,6 +141,47 @@ export function Escena() {
     const poster = () => {
       html.dataset.escena = "poster";
     };
+    // LA CARGA (v9.2): la escena arranca cuando el navegador queda libre, no
+    // durante la hidratación: crear el contexto y subir texturas no le roba el
+    // primer scroll a nadie. Mientras tanto se ve el póster con las burbujas de
+    // CSS (BurbujasCss), que se funden con las de verdad cuando la escena está.
+    let limpiar: (() => void) | void;
+    let cancelado = false;
+    const arrancar = () => {
+      if (!cancelado) limpiar = montar(canvas, html, poster);
+    };
+    // después de que la página cargó y pintó un cuadro, en el primer rato libre
+    // (Safari no tiene requestIdleCallback: ahí, un instante después)
+    const conIdle = "requestIdleCallback" in window;
+    let espera = 0;
+    let cuadroId = 0;
+    const libre = () => {
+      cuadroId = requestAnimationFrame(() => {
+        espera = conIdle ? window.requestIdleCallback(arrancar, { timeout: 400 }) : window.setTimeout(arrancar, 30);
+      });
+    };
+    if (document.readyState === "complete") libre();
+    else window.addEventListener("load", libre, { once: true });
+    return () => {
+      cancelado = true;
+      window.removeEventListener("load", libre);
+      cancelAnimationFrame(cuadroId);
+      if (conIdle) window.cancelIdleCallback(espera);
+      else window.clearTimeout(espera);
+      limpiar?.();
+    };
+  }, []);
+
+  return (
+    <>
+      <div className="escena-poster" aria-hidden />
+      <canvas ref={canvasRef} className="escena" aria-hidden />
+    </>
+  );
+}
+
+function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void): (() => void) | void {
+  {
 
     let motor: Motor;
     try {
@@ -163,9 +206,10 @@ export function Escena() {
       for (const p of placas.values()) delete p.el.dataset.placaLista;
       poster();
     };
+    // un equipo que no llega baja la calidad (resolución, pasos, cuadros por
+    // segundo), pero la escena NO se apaga: las burbujas son de todos (v9.2)
     const bajaNivel = alCambiarRendimiento((n) => {
-      if (n === "minimo") apagar();
-      else if (n === "bajo") nivel = "bajo";
+      nivel = n;
       sucio = true;
     });
 
@@ -183,7 +227,7 @@ export function Escena() {
       vw = r.width;
       vh = r.height;
       const dpr = window.devicePixelRatio || 1;
-      escala = nivel === "alto" ? Math.min(dpr, 1.5) : 0.6;
+      escala = nivel === "alto" ? Math.min(dpr, 1.5) : nivel === "bajo" ? 0.6 : 0.42;
       motor.tamaño(Math.max(1, Math.round(vw * escala)), Math.max(1, Math.round(vh * escala)));
       const previos = new Map(vidrios.map((v) => [v.el, v]));
       vidrios = [...document.querySelectorAll<HTMLElement>("[data-vidrio]")].map((el) => {
@@ -352,13 +396,20 @@ export function Escena() {
       const dt = Math.min(100, ahora - ultimo);
       ultimo = ahora;
       if (motor.perdido()) return apagar();
+      // el shader todavía compila (en paralelo): la página sigue viva con el póster
+      try {
+        if (!motor.preparado()) return;
+      } catch {
+        return apagar();
+      }
       if (sucio) medir();
       const quieto = rm.matches;
       // En reposo (4s sin scroll ni puntero) se dibuja a la mitad de cuadros;
       // con movimiento reducido, si no pasó nada en 1s, ni se redibuja.
       const ocioso = ahora - actividad > 4000;
       par = !par;
-      if (!primero && ocioso && par) return;
+      // en reposo, o en un equipo flaco (nivel mínimo), a la mitad de cuadros
+      if (!primero && (ocioso || nivel === "minimo") && par) return;
       if (!primero && quieto && ahora - actividad > 1000) return;
       const t = quieto ? 0 : (ahora - t0) / 1000;
       const angosto = vw < 768;
@@ -616,12 +667,5 @@ export function Escena() {
       motor.liberar();
       delete html.dataset.escena;
     };
-  }, []);
-
-  return (
-    <>
-      <div className="escena-poster" aria-hidden />
-      <canvas ref={canvasRef} className="escena" aria-hidden />
-    </>
-  );
+  }
 }

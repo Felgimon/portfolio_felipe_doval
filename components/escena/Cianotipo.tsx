@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { BurbujasCss } from "./BurbujasCss";
 
 /** Cada cianotipo con su proporción (la del archivo: la escena no lo estira). */
 const MEDIDAS = {
@@ -60,6 +61,8 @@ export function Cianotipo({
       data-burbujas={burbujas}
       className={cn("cianotipo", className)}
       style={{ "--cianotipo": `url(${src})`, aspectRatio: `${w} / ${h}` } as React.CSSProperties}
-    />
+    >
+      <BurbujasCss d={burbujas} />
+    </div>
   );
 }

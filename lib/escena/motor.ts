@@ -42,7 +42,12 @@ const CERO: [number, number, number, number] = [0, 0, 0, 0];
 
 export class Motor {
   private gl: WebGL2RenderingContext;
-  private u: Record<(typeof NOMBRES)[number], WebGLUniformLocation | null>;
+  /** los uniforms: recién cuando el programa terminó de compilar (preparado()) */
+  private u: Record<(typeof NOMBRES)[number], WebGLUniformLocation | null> | null = null;
+  private programa: WebGLProgram;
+  private paralelo: { COMPLETION_STATUS_KHR: number } | null;
+  private granoListo = false;
+  private shaders: WebGLShader[] = [];
   private fotos = new Map<string, { tex: WebGLTexture; lista: boolean }>();
   private vacia: WebGLTexture;
   private texPapel: WebGLTexture | null = null;
@@ -70,8 +75,33 @@ export class Motor {
     gl.attachShader(programa, this.compilar(gl.FRAGMENT_SHADER, FRAGMENT));
     gl.bindAttribLocation(programa, 0, "a");
     gl.linkProgram(programa);
+    this.programa = programa;
+    // LA CARGA (v9.2): el shader es grande y en algunas GPU (ANGLE sobre D3D en
+    // Windows, sobre todo) compilarlo tarda SEGUNDOS. Preguntar si linkeó
+    // bloquea el hilo principal todo ese tiempo: sin scroll, sin nada. Con
+    // KHR_parallel_shader_compile se pregunta sin esperar (preparado()) y la
+    // página sigue viva mientras la GPU compila.
+    this.paralelo = gl.getExtension("KHR_parallel_shader_compile");
+    this.vacia = this.nuevaTextura();
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+    if (!this.paralelo) this.terminar();
+  }
+
+  /** ¿Terminó de compilar? (sin bloquear si el navegador sabe compilar en paralelo) */
+  preparado(): boolean {
+    if (this.u) return true;
+    const gl = this.gl;
+    if (this.paralelo && !gl.getProgramParameter(this.programa, this.paralelo.COMPLETION_STATUS_KHR)) return false;
+    this.terminar();
+    return true;
+  }
+
+  private terminar() {
+    const gl = this.gl;
+    const programa = this.programa;
     if (!gl.getProgramParameter(programa, gl.LINK_STATUS)) {
-      throw new Error(gl.getProgramInfoLog(programa) ?? "link");
+      const log = this.shaders.map((x) => gl.getShaderInfoLog(x)).join("\n");
+      throw new Error(`${gl.getProgramInfoLog(programa) ?? "link"}\n${log}`);
     }
     gl.useProgram(programa);
 
@@ -81,9 +111,8 @@ export class Motor {
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-    const u = {} as Motor["u"];
+    const u = {} as Record<(typeof NOMBRES)[number], WebGLUniformLocation | null>;
     for (const n of NOMBRES) u[n] = gl.getUniformLocation(programa, ARRAYS.has(n) ? `${n}[0]` : n);
-    this.u = u;
     // unidades fijas: placas 0..2, Feli 3..4, cianotipos 5..6, papel 7
     gl.uniform1i(u.uP0, 0);
     gl.uniform1i(u.uP1, 1);
@@ -93,19 +122,18 @@ export class Motor {
     gl.uniform1i(u.uK0, 5);
     gl.uniform1i(u.uK1, 6);
     gl.uniform1i(u.uPapel, 7);
-    gl.uniform1f(u.uGrano, 0);
-
-    this.vacia = this.nuevaTextura();
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+    gl.uniform1f(u.uGrano, this.granoListo ? 1 : 0);
+    this.u = u;
   }
 
+  /** compila sin preguntar cómo salió (preguntar bloquea): eso se ve al linkear */
   private compilar(tipo: number, fuente: string): WebGLShader {
     const gl = this.gl;
     const s = gl.createShader(tipo);
     if (!s) throw new Error("shader");
     gl.shaderSource(s, fuente);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? "compile");
+    this.shaders.push(s);
     return s;
   }
 
@@ -149,7 +177,8 @@ export class Motor {
       gl.activeTexture(gl.TEXTURE7);
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-      gl.uniform1f(this.u.uGrano, 1);
+      this.granoListo = true;
+      if (this.u) gl.uniform1f(this.u.uGrano, 1);
       this.alCargar();
     };
     img.src = src;
@@ -187,6 +216,7 @@ export class Motor {
   dibujar(c: Cuadro) {
     const gl = this.gl;
     const u = this.u;
+    if (!u) return;
     gl.uniform2f(u.uRes, c.vw, c.vh);
     gl.uniform1f(u.uS, c.escala);
     gl.uniform1f(u.uT, c.tiempo);

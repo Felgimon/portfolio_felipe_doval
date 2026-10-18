@@ -98,7 +98,56 @@ try {
     check(r.feli, "sin WebGL → Feli visible como <img>");
     check(r.vidrio === "rgb(15, 35, 127)", `sin WebGL → vidrio sólido (${r.vidrio})`);
     check(r.nombre === "rgb(242, 238, 230)", `sin WebGL → el nombre se ve como texto (${r.nombre})`);
+    // v9.2: las burbujas también están sin WebGL (en CSS), y se juntan en el botón
+    const burbujas = await p.evaluate(() =>
+      [...document.querySelectorAll("#inicio .burbuja-css")].filter((b) => {
+        const r = b.getBoundingClientRect();
+        return r.width > 10 && getComputedStyle(b).visibility !== "hidden" && getComputedStyle(b).opacity !== "0";
+      }).length,
+    );
+    check(burbujas >= 3, `sin WebGL → las burbujas de la portada se ven igual, en CSS (${burbujas})`);
+    const boton = await p.locator("#inicio a.boton-solido").boundingBox();
+    await p.mouse.move(boton.x + boton.width / 2, boton.y + boton.height / 2, { steps: 3 });
+    await p.waitForTimeout(1500);
+    const juntas = await p.evaluate((c) => {
+      const cx = c.x + c.width / 2, cy = c.y + c.height / 2;
+      return [...document.querySelectorAll(".burbuja-css[data-junta]")].filter((b) => {
+        const r = b.getBoundingClientRect();
+        return Math.hypot(r.left + r.width / 2 - cx, r.top + r.height / 2 - cy) < 6;
+      }).length;
+    }, boton);
+    check(juntas >= 2, `sin WebGL → con el mouse sobre un botón, las burbujas se juntan en él (${juntas})`);
     check(errores.length === 0, `sin WebGL → 0 errores de página (${errores.length})`);
+    await ctx.close();
+  }
+
+  // ---- 2b. Un equipo que no llega: la escena baja la calidad pero NO se apaga (v9.2) ----
+  {
+    const ctx = await b.newContext({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/?perf=minimo`, { waitUntil: "load", timeout: 45000 });
+    await p.waitForFunction(() => document.documentElement.dataset.escena, null, { timeout: 30000 }).catch(() => {});
+    await p.waitForTimeout(2500);
+    const estado = await p.evaluate(() => document.documentElement.dataset.escena);
+    check(estado !== "poster", `calidad mínima → la escena sigue, con sus burbujas (${estado})`);
+    await ctx.close();
+  }
+
+  // ---- 2c. El sonido que venía prendido: UN clic en el ícono lo hace sonar (v9.2) ----
+  {
+    const ctx = await b.newContext({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
+    await ctx.addInitScript(() => localStorage.setItem("sonido", "1"));
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/`, { waitUntil: "load", timeout: 45000 });
+    await p.waitForTimeout(1200);
+    const antes = await p.evaluate(() => document.querySelector("header .sonido-icono")?.dataset.estado);
+    await p.click("header .sonido-icono");
+    await p.waitForTimeout(1200);
+    const despues = await p.evaluate(() => document.querySelector("header .sonido-icono")?.dataset.estado);
+    check(
+      antes === "esperando" && despues === "sonando",
+      `sonido recordado: espera el permiso y con un solo clic en el ícono suena (${antes} → ${despues})`,
+    );
     await ctx.close();
   }
 

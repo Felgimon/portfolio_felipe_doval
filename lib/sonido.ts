@@ -62,22 +62,43 @@ function leer() {
   } catch {
     prendido = false;
   }
-  // el navegador sólo deja arrancar el audio después de un gesto: si venía
-  // prendido de otra visita, la canción arranca con el primer clic o tecla
+  // EL PERMISO (v9.2): el navegador sólo deja sonar después de un gesto. Si
+  // venía prendido de otra visita, el sonido queda ESPERANDO y arranca con el
+  // primer gesto que cuente: un clic, una tecla, o soltar el dedo en el celular
+  // (apoyarlo no cuenta, por eso antes en el celular no arrancaba nunca). Los
+  // oyentes se van recién cuando suena de verdad.
   if (prendido) {
-    const despertar = () => {
-      window.removeEventListener("pointerdown", despertar);
-      window.removeEventListener("keydown", despertar);
-      if (prendido) void contexto()?.resume().then(arrancar);
+    for (const ev of GESTOS) window.addEventListener(ev, despertar, { capture: true, passive: true });
+    // y por si el navegador ya lo permite (un sitio que el usuario escucha seguido)
+    const probar = () => {
+      if (!prendido || reloj) return;
+      const c = contexto();
+      if (c?.state === "running") arrancar();
     };
-    window.addEventListener("pointerdown", despertar);
-    window.addEventListener("keydown", despertar);
+    if (document.readyState === "complete") setTimeout(probar, 300);
+    else window.addEventListener("load", () => setTimeout(probar, 300), { once: true });
   }
   document.addEventListener("visibilitychange", () => {
     if (!ctx || !prendido || !reloj) return;
     // suspendido, el reloj del contexto se frena: al volver, sigue la misma corchea
     if (document.hidden) void ctx.suspend();
     else void ctx.resume();
+  });
+}
+
+/** los gestos que habilitan el audio (pointerdown sólo cuenta con el mouse) */
+const GESTOS = ["pointerdown", "pointerup", "touchend", "keydown", "click"] as const;
+
+function despertar() {
+  if (!prendido || reloj) return;
+  const c = contexto();
+  if (!c) return;
+  // la canción espera a que el audio arranque de verdad (las notas de un
+  // contexto suspendido se acumularían y sonarían juntas después)
+  void c.resume().then(() => {
+    if (c.state !== "running") return;
+    arrancar();
+    for (const ev of GESTOS) window.removeEventListener(ev, despertar, { capture: true });
   });
 }
 
@@ -99,22 +120,38 @@ export function estaPrendido() {
   return prendido;
 }
 
+export type EstadoSonido = "apagado" | "esperando" | "sonando";
+
+/** apagado; prendido pero esperando un gesto para poder sonar; o sonando */
+export function estadoSonido(): EstadoSonido {
+  leer();
+  return !prendido ? "apagado" : reloj ? "sonando" : "esperando";
+}
+
+const avisar = () => window.dispatchEvent(new Event(EVENTO));
+
 export function alCambiar(fn: () => void) {
   window.addEventListener(EVENTO, fn);
   return () => window.removeEventListener(EVENTO, fn);
 }
 
-/** Prende o apaga (se llama desde un clic: ahí el audio puede arrancar). */
+/**
+ * El botón (se llama desde un clic: ahí el audio puede arrancar). Si estaba
+ * prendido pero esperando el permiso, este clic ES el permiso: suena, no se
+ * apaga. Si no, prende o apaga.
+ */
 export function alternar() {
   leer();
+  if (prendido && !reloj) {
+    despertar();
+    return;
+  }
   prendido = !prendido;
   try {
     window.localStorage.setItem(CLAVE, prendido ? "1" : "0");
   } catch {}
-  window.dispatchEvent(new Event(EVENTO));
-  // la canción espera a que el audio arranque de verdad (las notas de un
-  // contexto suspendido se acumularían y sonarían juntas después)
-  if (prendido) void contexto()?.resume().then(arrancar);
+  avisar();
+  if (prendido) despertar();
   else parar();
 }
 
@@ -328,6 +365,7 @@ function arrancar() {
   paso = 0;
   programar();
   reloj = setInterval(programar, CADA);
+  avisar();
   // la bienvenida: el arpegio del primer acorde, encima de la canción que entra
   arpegioEn(0).forEach((n, i) => vidrio(c, mz, mz.ui, inicio + 0.25 + i * 0.07, n, 0.035, 1.3));
 }
@@ -338,6 +376,7 @@ function parar() {
   if (!c || !mz) return;
   if (reloj) clearInterval(reloj);
   reloj = null;
+  avisar();
   const t = c.currentTime;
   mz.master.gain.cancelScheduledValues(t);
   mz.master.gain.setValueAtTime(mz.master.gain.value, t);
