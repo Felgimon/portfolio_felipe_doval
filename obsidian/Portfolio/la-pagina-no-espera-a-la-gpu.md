@@ -12,12 +12,13 @@ congelado.
 - **Ahora la GPU compila en paralelo** y la escena arranca recién cuando la
   página ya cargó y está libre. Se puede leer y scrollear desde el primer
   pintado.
-- **Las burbujas están desde el principio**, en CSS, en el mismo lugar que las
-  de verdad. Cuando la escena está lista, se funden con ellas. Por eso no hizo
-  falta una pantalla de carga.
+- **Las burbujas nacen** (v9.3): mientras carga no hay ninguna; cuando la
+  escena está lista se forman de la nada, una tras otra (primero la grande),
+  tiemblan, se acomodan y hacen ¡pup! con un anillo de luz. Las de cada
+  sección nacen cuando llegás. Por eso no hace falta una pantalla de carga.
 - **En cualquier equipo**: si el equipo no llega, la escena baja la calidad
-  pero no se apaga. Si no hay WebGL, quedan las de CSS, que también se juntan
-  en el botón.
+  pero no se apaga. Si no hay WebGL, hay burbujas en CSS, que también nacen
+  y se juntan en el botón.
 - **El sonido a la primera**: si estaba prendido, el ícono late hasta que el
   navegador deja sonar, y tocarlo hace sonar la canción.
 

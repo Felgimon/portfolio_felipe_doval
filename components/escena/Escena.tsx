@@ -5,6 +5,7 @@ import { MAX_PLACAS, Motor, type Cuadro, type PlacaGPU } from "@/lib/escena/moto
 import { MAX_BURBUJAS, MAX_VIDRIOS } from "@/lib/escena/shader";
 import { isSoftwareRenderer } from "@/lib/gpu";
 import { alCambiarRendimiento, nivelRendimiento, vigilarRendimiento } from "@/lib/rendimiento";
+import { nacer } from "@/lib/sonido";
 
 /**
  * LA ESCENA: el estudio cobalto, los títulos impresos en el fondo, Feli y las
@@ -68,6 +69,11 @@ type Burbuja = {
   m: Resorte;
   lista: boolean;
   viva: boolean;
+  /** EL NACIMIENTO (v9.3): cuándo nace (-1: todavía no la vio nadie) y su
+   * tamaño (0 → 1, un resorte que se pasa y vuelve: ¡pup!) */
+  nace: number;
+  tam: Resorte;
+  sono: boolean;
   /** su casa en este cuadro (x, y, radio) y dónde está de verdad */
   cx: number;
   cy: number;
@@ -266,6 +272,9 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
             ox: resorte(), oy: resorte(), r: resorte(), hw: resorte(), hh: resorte(), m: resorte(),
             lista: false,
             viva: false,
+            nace: -1,
+            tam: resorte(),
+            sono: false,
             cx: 0, cy: 0, cr: 0, x: 0, y: 0,
           };
           b.d = d[i] ?? null;
@@ -368,6 +377,7 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
     const vx = new Float32Array(MAX_VIDRIOS * 4);
     const bu = new Float32Array(MAX_BURBUJAS * 4);
     const bf = new Float32Array(MAX_BURBUJAS * 4);
+    const bp = new Float32Array(MAX_BURBUJAS * 2);
     /** el elemento sobre el que están las burbujas (su propio hover de vidrio se apaga) */
     let gotaEn: HTMLElement | null = null;
     /** las burbujas que van al botón, y cuándo sale cada una (de la más cerca a la más lejos) */
@@ -511,7 +521,8 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
         juntadas = new Map();
         if (boton) {
           const lejos = (b: Burbuja) => Math.hypot(b.cx + b.ox.v - tx, b.cy + b.oy.v - ty);
-          const vivas = burbujas.filter((b) => b.viva && b.lista);
+          // sólo las que ya nacieron (las que se están formando no salen volando)
+          const vivas = burbujas.filter((b) => b.viva && b.lista && b.tam.v > 0.6);
           let van = vivas.filter((b) => b.cy + b.cr > 0 && b.cy - b.cr < vh && b.cx + b.cr > 0 && b.cx - b.cr < vw);
           // si en la pantalla no hay ninguna, vienen las dos más cercanas
           if (!van.length) van = vivas.sort((a, b) => lejos(a) - lejos(b)).slice(0, 2);
@@ -523,9 +534,31 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
         gotaEn = boton;
       }
 
+      // EL NACIMIENTO: la primera vez que se ve (al cargar, las de la pantalla;
+      // las demás, cuando llegás a su sección) se forma de la nada y hace ¡pup!:
+      // primero la grande y después las chicas, una tras otra
+      burbujas
+        .filter((b) => b.viva && b.nace < 0 && b.cy + b.cr > 0 && b.cy - b.cr < vh && b.cx + b.cr > 0 && b.cx - b.cr < vw)
+        .sort((a, b) => b.cr - a.cr)
+        .forEach((b, k) => {
+          b.nace = quieto ? ahora : ahora + 160 + 150 * k;
+        });
       let quien: Burbuja | null = null;
       for (const b of burbujas) {
         if (!b.viva) continue;
+        const nacida = b.nace >= 0 && ahora >= b.nace;
+        if (quieto) {
+          b.tam.v = nacida ? 1 : 0;
+          b.tam.vel = 0;
+        } else {
+          empujar(b.tam, nacida ? 1 : 0, 260, 11, dt / 1000);
+          if (b.tam.v < 0) b.tam.v = 0;
+          if (nacida && ahora - b.nace < 1500) actividad = ahora;
+        }
+        if (nacida && !b.sono) {
+          b.sono = true;
+          nacer(burbujas.indexOf(b));
+        }
         const sale = juntadas.get(b);
         const va = boton !== null && sale !== undefined && ahora >= sale;
         let tox = 0, toy = 0, tr = b.cr, tw = b.cr, th = b.cr, tm = 0;
@@ -574,7 +607,7 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
       // a la GPU: las que se ven (primero las que van al botón, después las grandes)
       const dibujadas = burbujas
         .filter((b) => {
-          if (!b.viva || !b.lista) return false;
+          if (!b.viva || !b.lista || b.tam.v < 0.01) return false;
           const e = Math.max(b.r.v * 1.8, b.hw.v * b.m.v * 1.3 + b.r.v * 1.2);
           return b.x + e > 0 && b.x - e < vw && b.y + e > 0 && b.y - e < vh;
         })
@@ -582,8 +615,12 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
         .slice(0, MAX_BURBUJAS);
       arriba = 0;
       dibujadas.forEach((b, i) => {
-        bu.set([b.x, b.y, capasOcultan("gota") ? 0 : b.r.v, b.m.v], i * 4);
-        bf.set([b.hw.v, b.hh.v, b.ox.vel, b.oy.vel], i * 4);
+        const r = b.r.v * b.tam.v;
+        bu.set([b.x, b.y, capasOcultan("gota") ? 0 : r, b.m.v], i * 4);
+        bf.set([b.hw.v * b.tam.v, b.hh.v * b.tam.v, b.ox.vel, b.oy.vel], i * 4);
+        // el ¡pup!: la edad del nacimiento (el shader dibuja el anillo y la ondulación)
+        const edad = (ahora - b.nace) / 1000;
+        bp.set([b.nace >= 0 && edad >= 0 && edad < 1.2 && !quieto ? edad : -1, b.r.v], i * 2);
         arriba = Math.max(arriba, b.m.v);
       });
       if (arriba > 0.5) html.dataset.gotaModo = "boton";
@@ -593,7 +630,7 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
       if (w.__relojEscena !== undefined) {
         const g = quien ?? dibujadas[0];
         w.__gota = g ? [g.x, g.y, g.hw.v, g.hh.v, g.m.v] : [];
-        w.__burbujas = dibujadas.map((b) => [b.x, b.y, b.r.v, b.m.v]);
+        w.__burbujas = dibujadas.map((b) => [b.x, b.y, b.r.v * b.tam.v, b.m.v]);
       }
 
       // 4. Vidrio: hover (mouse o foco de teclado) y presencia, con resorte
@@ -628,6 +665,7 @@ function montar(canvas: HTMLCanvasElement, html: HTMLElement, poster: () => void
         calidad: nivel === "alto" ? 1 : 0,
         burbujas: bu,
         burbujasF: bf,
+        burbujasP: bp,
         nBurbujas: dibujadas.length,
         arriba,
         placas: capasOcultan("placas") ? [] : placasGPU,

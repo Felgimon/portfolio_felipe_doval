@@ -121,6 +121,35 @@ try {
     await ctx.close();
   }
 
+  // ---- 2a. La carga (v9.3): sin burbujas hasta que la escena está; ahí nacen ----
+  {
+    const ctx = await b.newContext({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
+    await ctx.addInitScript(() => {
+      window.__cssAlCargar = -1;
+      document.addEventListener("DOMContentLoaded", () => {
+        window.__cssAlCargar = [...document.querySelectorAll(".burbuja-css")].filter((x) => x.getBoundingClientRect().width > 0).length;
+      });
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/`, { waitUntil: "load", timeout: 45000 });
+    await p.waitForFunction(() => document.documentElement.dataset.escena === "lista", null, { timeout: 30000 }).catch(() => {});
+    await p.evaluate(() => {
+      window.__relojEscena = performance.now();
+      window.__tic = setInterval(() => (window.__relojEscena = performance.now()), 16);
+    });
+    await p
+      .waitForFunction(() => (window.__burbujas ?? []).filter((x) => x[2] > 10).length >= 3, null, { timeout: 40000, polling: 250 })
+      .catch(() => {});
+    const r = await p.evaluate(() => ({
+      css: window.__cssAlCargar,
+      nacidas: (window.__burbujas ?? []).filter((x) => x[2] > 10).length,
+      escena: document.documentElement.dataset.escena,
+    }));
+    check(r.css === 0, `carga: sin burbujas de CSS mientras carga la escena (${r.css})`);
+    check(r.escena !== "lista" || r.nacidas >= 3, `carga: con la escena lista, las burbujas de la portada nacen (${r.nacidas})`);
+    await ctx.close();
+  }
+
   // ---- 2b. Un equipo que no llega: la escena baja la calidad pero NO se apaga (v9.2) ----
   {
     const ctx = await b.newContext({ locale: "es-AR", viewport: { width: 1440, height: 900 } });
@@ -219,7 +248,8 @@ try {
     // él y son una sola (el reloj de la escena a mano expone dónde está cada una)
     {
       await p.evaluate(() => window.scrollTo(0, document.getElementById("proyectos").offsetTop));
-      await p.waitForTimeout(900);
+      // v9.3: las burbujas de la sección nacen al llegar (¡pup!): se espera a que estén
+      await p.waitForTimeout(2500);
       await p.evaluate(() => {
         window.__relojEscena = performance.now();
         window.__tic = setInterval(() => (window.__relojEscena = performance.now()), 16);

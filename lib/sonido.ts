@@ -431,6 +431,19 @@ export function tocar(toque: Toque) {
   sonar(c, mz, t, arpegioEn(t - inicio), toque);
 }
 
+/**
+ * Una burbuja que nace (v9.3): un ¡pup! corto, una octava arriba y bajito,
+ * siempre en el arpegio del acorde que suena. Cada burbuja, otra nota.
+ */
+export function nacer(n: number) {
+  if (!estaPrendido() || !reloj) return;
+  const c = ctx;
+  const mz = mezcla;
+  if (!c || !mz || c.state !== "running") return;
+  const arp = arpegioEn(c.currentTime - inicio);
+  burbuja(c, mz, c.currentTime, arp[(n * 2) % arp.length] + 12, 0.03);
+}
+
 /** Dos notas que suben: algo salió bien (copiar el mail, elegir un tema). */
 export function listo() {
   if (!estaPrendido() || !reloj) return;

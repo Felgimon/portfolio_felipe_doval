@@ -39,6 +39,7 @@ uniform vec4 uPR0, uPR1, uPR2, uFR0, uFR1, uKR0, uKR1;
 uniform vec2 uKF; // cuánto se funden los bordes de cada cianotipo (1 los que van a sangre)
 uniform vec4 uB[${MAX_BURBUJAS}];  // cada burbuja: x, y, radio, cuánto es botón (0..1)
 uniform vec4 uBF[${MAX_BURBUJAS}]; // su forma de botón (medio ancho, medio alto) y su velocidad (px/s)
+uniform vec2 uBP[${MAX_BURBUJAS}]; // su nacimiento: edad en segundos (-1 si ya nació hace rato) y radio
 uniform int uNB;
 uniform float uArriba; // 1 cuando las burbujas son un botón: van encima del vidrio de la UI
 uniform vec4 uV[${MAX_VIDRIOS}];
@@ -132,9 +133,12 @@ float burbuja(vec3 p, int i){
     q.xy -= u * dot(q.xy, u) * (s / (1. + s));
   }
   float t = uT * .4 + float(i) * 1.7;
+  // al nacer (v9.3) tiembla fuerte y rápido, como una gota que se acomoda
+  float nace = uBP[i].x >= 0. ? exp(-uBP[i].x * 4.5) : 0.;
+  t += nace * uBP[i].x * 14.;
   // un huevo que ondula lento (cada una a su ritmo)
   float d = length(q / vec3(1., 1.18, 1.)) - r;
-  d += r * .035 * (1. - .6 * m) * sin(q.x / r * 3.1 + t) * sin(q.y / r * 2.7 - t * .8) * sin(q.z / r * 2.3 + t * .6);
+  d += r * (.035 * (1. - .6 * m) + .16 * nace) * sin(q.x / r * 3.1 + t) * sin(q.y / r * 2.7 - t * .8) * sin(q.z / r * 2.3 + t * .6);
   // hecha botón: una píldora de vidrio de su tamaño
   if (m > .001) {
     float hy = max(F.y, 1.);
@@ -322,6 +326,18 @@ void main(){
     sh = max(sh, (1. - B.w) * smoothstep(B.z * 1.6, B.z * .3, length((p - (B.xy + vec2(B.z * .3, B.z * .25))) * vec2(.7, .9))));
   }
   col *= 1. - .22 * sh;
+  // EL ¡PUP! (v9.3): al nacer, un anillo de luz fino se abre desde el borde de la
+  // burbuja y se apaga, con un eco más ancho y tenue detrás
+  for (int i = 0; i < ${MAX_BURBUJAS}; i++) {
+    if (i >= uNB) break;
+    vec2 P = uBP[i];
+    if (P.x < 0. || P.x > .75) continue;
+    float l = length((p - uB[i].xy) / vec2(1., 1.18));
+    float rr = P.y * (.95 + P.x * 2.4);
+    float a = 1. - P.x / .75;
+    col = mix(col, CREMA, smoothstep(2.4, 0., abs(l - rr)) * a * a * .6);
+    col = mix(col, CREMA, smoothstep(10., 0., abs(l - rr * .8)) * a * a * a * .14);
+  }
 
   // VIDRIO de la UI. Por panel (uVX): x radio, y hover (0..1), z presencia
   // (0..1: las filas se vuelven vidrio al pasar el mouse), w tipo (0 ahumado,

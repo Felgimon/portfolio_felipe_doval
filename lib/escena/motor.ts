@@ -19,6 +19,7 @@ export type Cuadro = {
   calidad: 0 | 1;
   burbujas: Float32Array; // MAX_BURBUJAS * 4: x, y, radio, cuánto es botón
   burbujasF: Float32Array; // MAX_BURBUJAS * 4: medio ancho, medio alto, velocidad x, y
+  burbujasP: Float32Array; // MAX_BURBUJAS * 2: edad del nacimiento (-1 ya nació) y radio
   nBurbujas: number;
   /** 1 cuando las burbujas son un botón (van encima del vidrio) */
   arriba: number;
@@ -33,11 +34,11 @@ export type Cuadro = {
 };
 
 const NOMBRES = [
-  "uRes", "uS", "uT", "uQ", "uB", "uBF", "uNB", "uArriba", "uV", "uVX", "uNV", "uM", "uOnda",
+  "uRes", "uS", "uT", "uQ", "uB", "uBF", "uBP", "uNB", "uArriba", "uV", "uVX", "uNV", "uM", "uOnda",
   "uP0", "uP1", "uP2", "uPR0", "uPR1", "uPR2", "uF0", "uF1", "uFR0", "uFR1",
   "uK0", "uK1", "uKR0", "uKR1", "uPapel", "uGrano", "uKF",
 ] as const;
-const ARRAYS = new Set(["uV", "uVX", "uB", "uBF"]);
+const ARRAYS = new Set(["uV", "uVX", "uB", "uBF", "uBP"]);
 const CERO: [number, number, number, number] = [0, 0, 0, 0];
 
 export class Motor {
@@ -223,6 +224,7 @@ export class Motor {
     gl.uniform1f(u.uQ, c.calidad);
     gl.uniform4fv(u.uB, c.burbujas);
     gl.uniform4fv(u.uBF, c.burbujasF);
+    gl.uniform2fv(u.uBP, c.burbujasP);
     gl.uniform1i(u.uNB, Math.min(c.nBurbujas, MAX_BURBUJAS));
     gl.uniform1f(u.uArriba, c.arriba);
     gl.uniform4fv(u.uV, c.vidrios);

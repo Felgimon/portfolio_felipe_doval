@@ -5,14 +5,11 @@ import { useEffect } from "react";
  * LAS BURBUJAS SIN WEBGL (v9.2). Las mismas burbujas que pinta la escena
  * (data-burbujas="fx fy r; …"), en CSS: un vidrio con canto, brillo y sombra.
  *
- * Para qué:
- *  - LA CARGA: están en el HTML desde el primer pintado. Mientras la GPU
- *    compila el shader (en algunos equipos tarda segundos) la página ya tiene
- *    sus burbujas, y cuando la escena está lista se funden con las de verdad,
- *    que nacen en el mismo lugar. Sin pantalla de carga.
- *  - CUALQUIER EQUIPO: sin WebGL 2 (o si la escena se cae), se quedan. Con el
- *    mouse sobre algo que se toca, también se juntan en el botón y toman su
- *    forma (JuntarBurbujasCss).
+ * Sólo para los equipos sin WebGL 2 (o si la escena se cae): ahí son las
+ * burbujas, nacen con el mismo ¡pup! y con el mouse sobre algo que se toca
+ * también se juntan en el botón y toman su forma (JuntarBurbujasCss). Con
+ * escena (o mientras carga) no se muestran: las burbujas nacen cuando están
+ * las de verdad (v9.3).
  *
  * Van DENTRO de la caja que las declara (un título, un cianotipo), en las
  * mismas fracciones, así que se mueven con ella como las de la escena.
@@ -47,6 +44,7 @@ export function BurbujasCss({ d, m }: { d?: string; m?: string }) {
                 "--xm": b?.[0] ?? 0,
                 "--ym": b?.[1] ?? 0,
                 "--rm": b?.[2] ?? 0,
+                "--i": i,
               } as React.CSSProperties
             }
           />

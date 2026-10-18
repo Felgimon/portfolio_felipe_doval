@@ -10,6 +10,35 @@ dependencias y bugs). Se actualiza en cada fase.
 
 ---
 
+## v9.3 — Las burbujas nacen
+
+### El pedido
+No a las burbujas en CSS mientras carga: que la página cargue sin burbujas y,
+una vez que la escena 3D está lista, que aparezcan con una animación, como una
+burbuja que se forma de la nada y hace ¡pup!
+
+### Cómo
+- **Mientras carga, no hay burbujas.** Las de CSS (v9.2) quedaron sólo para los
+  equipos sin WebGL 2 (si no, ahí no habría ninguna), y también nacen con un
+  ¡pup! (un scale con rebote).
+- **Nacen cuando la escena está lista.** Cada burbuja tiene un momento de
+  nacimiento y un tamaño que es un resorte poco amortiguado (k 260, c 11):
+  crece desde cero, se pasa (~15%) y vuelve. Mientras nace, la superficie tiembla
+  fuerte y rápido y se va calmando, como una gota que se acomoda (la ondulación
+  del shader multiplicada por una exponencial de la edad). Y un anillo de luz
+  fino se abre desde su borde y se apaga, con un eco más ancho detrás: el ¡pup!
+- **Primero la grande, después las chicas**, 150 ms entre una y otra.
+- **Las de las otras secciones nacen cuando llegás**: la primera vez que se ven.
+- **Con el sonido prendido**, cada una hace un ¡pup! en el arpegio del acorde
+  que suena (la voz de burbuja, una octava arriba y bajito).
+- Mientras se forma, una burbuja no sale volando a un botón (el hover espera a
+  que haya nacido).
+- Con movimiento reducido aparecen directo, sin animación.
+- Audit: 64 chequeos (sin burbujas de CSS mientras carga; las de la portada
+  nacen).
+
+---
+
 ## v9.2 — Carga sin congelarse, burbujas en cualquier equipo, el sonido a la primera y la preview
 
 ### El pedido
