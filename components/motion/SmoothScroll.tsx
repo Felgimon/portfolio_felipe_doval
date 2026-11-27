@@ -67,10 +67,6 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     lenisRef.current = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);
-    // la cursiva de los títulos se inclina con la velocidad (ver globals.css)
-    lenis.on("scroll", ({ velocity }) => {
-      document.documentElement.style.setProperty("--inclina", gsap.utils.clamp(-9, 9, velocity * -0.22).toFixed(2));
-    });
 
     const raf = (time: number) => lenis.raf(time * 1000);
     // Con prioridad: Lenis mueve el scroll antes de que ScrollTrigger lea.

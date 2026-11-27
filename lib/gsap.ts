@@ -15,18 +15,31 @@ if (typeof window !== "undefined") {
  * el sitio queda quieto, en el estado final que deja el CSS. */
 export const CON_MOVIMIENTO = "(prefers-reduced-motion: no-preference)";
 
-/** Los títulos `[data-peso]` de un bloque engordan de hairline a negra
- * mientras suben por la pantalla. */
-export function engordar(bloque: Element) {
-  bloque.querySelectorAll("[data-peso]").forEach((el) => {
+/**
+ * Las entradas de un bloque, atadas al scroll (no al tiempo: si el navegador
+ * frena, nada queda a medio aparecer):
+ *  - `[data-sube]`: el texto sube desde atrás de su máscara.
+ *  - `[data-abre]`: la imagen se destapa de abajo hacia arriba y, adentro, se
+ *    desplaza un poco más lento que su marco.
+ */
+export function entradas(bloque: Element) {
+  bloque.querySelectorAll<HTMLElement>("[data-sube]").forEach((el) => {
     gsap.fromTo(
       el,
-      { fontWeight: 100 },
-      {
-        fontWeight: 900,
-        ease: "none",
-        scrollTrigger: { trigger: el, start: "top 96%", end: "top 38%", scrub: true },
-      },
+      { yPercent: 108 },
+      { yPercent: 0, ease: "none", scrollTrigger: { trigger: el.parentElement, start: "top 98%", end: "top 76%", scrub: 0.5 } },
+    );
+  });
+  bloque.querySelectorAll<HTMLElement>("[data-abre]").forEach((el) => {
+    gsap.fromTo(
+      el,
+      { clipPath: "inset(100% 0 0 0)" },
+      { clipPath: "inset(0% 0 0 0)", ease: "none", scrollTrigger: { trigger: el.parentElement, start: "top 96%", end: "top 58%", scrub: 0.5 } },
+    );
+    gsap.fromTo(
+      el.querySelector("img"),
+      { yPercent: -10.5 },
+      { yPercent: 0, ease: "none", scrollTrigger: { trigger: el.parentElement, start: "top bottom", end: "bottom top", scrub: true } },
     );
   });
 }

@@ -1,102 +1,102 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   v10 «Amarillo taxi»
+   v11 «Celeste y blanco»
    ----------------------------------------------------------------------------
-   Una sola letra: Piazzolla (lib/fonts.ts), de la hairline cursiva a la negra.
-   Cuatro colores planos: amarillo, tinta, papel y rojo. Cada sección es un
-   campo entero de uno de ellos. Todo en HEX sólido: ni alpha, ni degradé, ni
-   sombra (regla de Felipe). El movimiento lo maneja el scroll (GSAP); este
-   archivo deja cada cosa en su estado final, que es el que se ve con
+   Dos letras: Mona Sans (ancha, para todo) y Gloock (serif, solo para la
+   palabra que se acentúa en cada título). Cuatro colores planos: blanco,
+   celeste, azul noche y el amarillo del sol, que solo marca dónde estás.
+   Todo en HEX sólido: ni alpha, ni degradé, ni sombra (regla de Felipe).
+   Una escala de tamaños y nada más: nombre, título, subtítulo, lead, texto,
+   etiqueta. El movimiento lo maneja el scroll, siempre hacia abajo (GSAP);
+   este archivo deja cada cosa en su estado final, que es el que se ve con
    "reducir movimiento".
-   Contrastes: tinta sobre amarillo 11,9:1 · papel sobre tinta 16,3:1 ·
-   suave sobre amarillo 5,6:1 · suave sobre tinta 7,2:1 · suave sobre papel 5,2:1.
+   Contrastes: noche sobre blanco 15,0:1 · noche sobre celeste 6,3:1 ·
+   blanco sobre noche 15,0:1 · suave sobre blanco 7,4:1 · suave sobre noche 9,1:1.
    ========================================================================== */
 
 :root {
-  --amarillo: #ffc400;
-  --tinta: #15120e;
-  --papel: #f4f1ea;
-  --rojo: #e8391d;
+  --blanco: #f5f7f9;
+  --celeste: #75aadb;
+  --cielo: #dcebf7;
+  --noche: #0c2340;
+  --sol: #f6b40e;
 
-  --margen: clamp(16px, 3.2vw, 48px);
-  --nav: 64px;
-  --nav-texto: var(--tinta);
-  --nav-fondo: var(--amarillo);
+  --margen: clamp(18px, 4vw, 64px);
+  --cab: 76px;
+  --corte: clamp(20px, 2.6vw, 44px);
+  --salida: cubic-bezier(0.3, 0.7, 0.2, 1);
 }
 
 @theme inline {
-  --color-amarillo: var(--amarillo);
-  --color-tinta: var(--tinta);
-  --color-papel: var(--papel);
-  --color-rojo: var(--rojo);
-  --font-serif: var(--font-piazzolla), Georgia, serif;
+  --color-blanco: var(--blanco);
+  --color-celeste: var(--celeste);
+  --color-cielo: var(--cielo);
+  --color-noche: var(--noche);
+  --color-sol: var(--sol);
+  --font-sans: var(--font-mona), system-ui, sans-serif;
+  --font-serif: var(--font-gloock), Georgia, serif;
 }
 
-/* Cada sección declara su campo; la nav lee el del que tiene debajo. */
-[data-tema="amarillo"] {
-  --fondo: var(--amarillo);
-  --texto: var(--tinta);
-  --suave: #5a4500;
-  --apagado: #d6a200;
-  --linea: var(--tinta);
-  --acento: var(--tinta);
+[data-tema="blanco"] {
+  --fondo: var(--blanco);
+  --texto: var(--noche);
+  --suave: #44556b;
+  --linea: #c6d3e1;
+  --acento: var(--celeste);
 }
-[data-tema="tinta"] {
-  --fondo: var(--tinta);
-  --texto: var(--papel);
-  --suave: #a8a091;
-  --apagado: #4a443b;
-  --linea: #4a443b;
-  --acento: var(--amarillo);
+[data-tema="cielo"] {
+  --fondo: var(--cielo);
+  --texto: var(--noche);
+  --suave: #3b4d64;
+  --linea: #a9c5df;
+  --acento: var(--noche);
 }
-[data-tema="papel"] {
-  --fondo: var(--papel);
-  --texto: var(--tinta);
-  --suave: #6a645a;
-  --apagado: #cfc8b8;
-  --linea: var(--tinta);
-  --acento: var(--rojo);
+[data-tema="celeste"] {
+  --fondo: var(--celeste);
+  --texto: var(--noche);
+  --suave: #12305a;
+  --linea: #4f89bf;
+  --acento: var(--blanco);
+}
+[data-tema="noche"] {
+  --fondo: var(--noche);
+  --texto: var(--blanco);
+  --suave: #b9c7da;
+  --linea: #2a4466;
+  --acento: var(--celeste);
 }
 [data-tema] {
   background: var(--fondo);
   color: var(--texto);
 }
-html[data-nav="tinta"] {
-  --nav-texto: var(--papel);
-  --nav-fondo: var(--tinta);
-}
-html[data-nav="papel"] {
-  --nav-fondo: var(--papel);
-}
 
 /* ============================================================================
-   BASE
+   BASE Y ESCALA
    ========================================================================== */
 
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: auto; /* el scroll suave lo maneja Lenis */
-  background: var(--tinta);
+  background: var(--noche);
   overflow-x: clip;
 }
 
 body {
   overflow-x: clip;
-  font-family: var(--font-serif);
-  font-size: 18px;
-  line-height: 1.4;
-  font-optical-sizing: auto;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: var(--tinta);
-  color: var(--amarillo);
+  background: var(--sol);
+  color: var(--noche);
 }
 
 :focus-visible {
-  outline: 3px solid var(--acento, var(--tinta));
+  outline: 3px solid var(--sol);
   outline-offset: 3px;
 }
 
@@ -106,362 +106,352 @@ img {
   height: auto;
 }
 
-/* La letra grande: negra y cursiva, apretada. */
-.gigante {
-  margin: 0;
-  font-style: italic;
-  font-weight: 900;
-  line-height: 0.84;
-  letter-spacing: -0.035em;
-  white-space: nowrap;
+.cont {
+  width: min(100% - 2 * var(--margen), 1280px);
+  margin-inline: auto;
 }
-
-/* Un título que engorda con el scroll. El molde (invisible, en negra) reserva
-   el lugar; el vivo cambia de peso encima sin mover nada alrededor. */
-.peso {
+.seccion {
   position: relative;
-  display: inline-block;
-}
-.peso-molde {
-  visibility: hidden;
-  font-weight: 900;
-}
-.peso-vivo {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-/* La cursiva se inclina más cuanto más rápido se scrollea (--inclina, en
-   grados, la escribe SmoothScroll). */
-.peso-vivo,
-.cinta span {
-  display: inline-block;
-  transform: skewX(calc(var(--inclina, 0) * 1deg));
-  transform-origin: 0 100%;
-  will-change: transform;
+  padding: clamp(84px, 15svh, 168px) 0;
 }
 
-.titulo {
-  font-size: min(21vw, 40svh);
+/* La escala. El nombre es lo único que pasa de 80 px. */
+.t-nombre {
+  margin: 0;
+  font-size: min(9.6vw, 14.5svh);
+  font-weight: 800;
+  font-stretch: 118%;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
 }
-
-/* Etiqueta chica de dato: Rol, Stack. */
-.dato {
-  font-size: 13px;
+.t-titulo {
+  margin: 0;
+  font-size: clamp(38px, 4.6vw, 72px);
+  font-weight: 750;
+  font-stretch: 114%;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.t-sub {
+  margin: 0;
+  font-size: clamp(25px, 2.5vw, 38px);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  font-stretch: 110%;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+}
+.t-lead {
+  margin: 0;
+  font-size: clamp(19px, 1.55vw, 23px);
+  line-height: 1.42;
+}
+.etiqueta {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  font-stretch: 112%;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--suave);
 }
+/* La palabra acentuada de un título. */
+.serif {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  letter-spacing: -0.015em;
+  color: var(--acento);
+}
 
+/* Un texto que sube desde atrás de su renglón al entrar. */
+.mascara {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em; /* que no se corten las descendentes */
+  margin-bottom: -0.12em;
+}
+.mascara > * {
+  display: block;
+  will-change: transform;
+}
+
+/* La esquina cortada: tarjetas e imágenes. */
+.corte {
+  clip-path: polygon(0 0, calc(100% - var(--corte)) 0, 100% var(--corte), 100% 100%, 0 100%);
+}
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--texto);
+  color: var(--fondo);
+  font-size: 15.5px;
+  font-weight: 650;
+  font-stretch: 108%;
+  transition: background 0.2s, color 0.2s, gap 0.25s var(--salida);
+}
+.boton:hover {
+  background: var(--sol);
+  color: var(--noche);
+  gap: 0.8em;
+}
 .enlace {
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
-  font-weight: 800;
-  font-style: italic;
-  font-size: 20px;
-  border-bottom: 2px solid currentColor;
-  padding-bottom: 2px;
-  transition: color 0.2s, gap 0.2s;
+  font-weight: 650;
+  border-bottom: 2px solid var(--sol);
+  padding-bottom: 1px;
+  transition: gap 0.25s var(--salida);
 }
 .enlace:hover {
-  color: var(--acento);
   gap: 0.7em;
 }
 .flecha {
-  width: 0.7em;
-  height: 0.7em;
+  width: 0.72em;
+  height: 0.72em;
   flex: none;
 }
 
 /* ============================================================================
-   NAV
+   CABECERA: una sola, siempre igual
    ========================================================================== */
 
-.nav {
+.cab {
   position: fixed;
-  inset: 0 0 auto 0;
+  inset: 14px var(--margen) auto;
   z-index: 50;
-  height: var(--nav);
+}
+.cab-barra {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--margen);
-  color: var(--nav-texto);
-  background: var(--nav-fondo);
-  transition: color 0.25s, background 0.25s;
+  gap: 16px;
+  height: 56px;
+  padding: 0 8px 0 22px;
+  border-radius: 999px;
+  background: var(--blanco);
+  color: var(--noche);
+  box-shadow: inset 0 0 0 1.5px var(--noche);
 }
-.nav-marca {
-  font-size: 23px;
-  font-style: italic;
-  font-weight: 900;
+.cab-marca {
+  font-size: 17px;
+  font-weight: 800;
+  font-stretch: 116%;
   letter-spacing: -0.02em;
 }
-.nav-lista {
+.cab-lista {
   display: flex;
-  gap: clamp(14px, 2.2vw, 34px);
-  font-size: clamp(14px, 1.2vw, 17px);
+  gap: clamp(14px, 2vw, 30px);
+  font-size: 15px;
+  font-weight: 550;
 }
-.nav-lista a {
-  font-weight: 500;
-  transition: font-weight 0.25s;
+.cab-lista a {
+  position: relative;
+  padding: 6px 0;
 }
-.nav-lista a:hover,
-.nav-lista a[aria-current="true"] {
-  font-weight: 900;
-  font-style: italic;
+.cab-lista a::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sol);
+  translate: -50% 0;
+  scale: 0;
+  transition: scale 0.3s var(--salida);
 }
-.nav-progreso {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 51;
-  height: 4px;
-  background: var(--nav-texto);
-  transform-origin: left;
-  scale: 0 1;
-  transition: background 0.25s;
+.cab-lista a:hover::before,
+.cab-lista a[aria-current="true"]::before {
+  scale: 1;
+}
+.cab-contacto {
+  min-height: 40px;
+  padding: 0 18px;
+  background: var(--noche);
+  color: var(--blanco);
+}
+.cab-menu {
+  display: none;
+}
+.cab-hoja {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 26px;
+  background: var(--blanco);
+  color: var(--noche);
+  box-shadow: inset 0 0 0 1.5px var(--noche);
+}
+.cab-hoja a {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 18px;
+  font-weight: 650;
 }
 
 /* ============================================================================
-   INICIO: el nombre, la foto, y el peso que pasa de una palabra a la otra
+   INICIO: la bandera. Celeste, blanco y celeste, con el sol atrás del retrato.
+   Al scrollear la franja blanca se abre hasta ocupar la pantalla.
    ========================================================================== */
 
 .inicio {
   position: relative;
-  height: 320svh;
+  height: 250svh;
 }
 .inicio-fija {
-  /* el cuerpo del nombre: la foto se mide con él, así no lo tapa en ninguna
-     proporción de pantalla */
-  --cuerpo: min(25vw, 46svh);
   position: sticky;
   top: 0;
   height: 100svh;
   overflow: hidden;
-}
-.inicio-nombre {
-  position: absolute;
-  inset: 0;
-  font-size: var(--cuerpo);
-}
-.inicio-nombre span {
-  position: absolute;
-  will-change: transform;
-}
-.n1 {
-  left: var(--margen);
-  top: calc(var(--nav) + 2svh);
-}
-.n2 {
-  right: var(--margen);
-  bottom: 12svh;
-  font-weight: 100;
-}
-.inicio-foto {
-  position: absolute;
-  left: calc(var(--margen) + var(--cuerpo) * 1.3);
-  bottom: 0;
-  height: calc(var(--cuerpo) * 1.55);
-  width: auto;
-  max-width: none;
-  translate: -50% 0;
-  transform-origin: 50% 100%;
 }
 .inicio-dato {
   position: absolute;
-  bottom: var(--margen);
-  margin: 0;
-  font-size: clamp(16px, 1.5vw, 22px);
-  font-weight: 700;
-}
-
-/* ============================================================================
-   PROYECTOS: un carril horizontal que avanza con el scroll vertical
-   ========================================================================== */
-
-.proyectos {
-  position: relative;
-  z-index: 2;
-  margin-top: -100svh; /* sube tapando al inicio, que sigue fijo debajo */
-}
-.carril-fijo {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-}
-.pista {
-  display: flex;
-  align-items: center;
-  gap: 9vw;
-  padding: 0 9vw 0 var(--margen);
-  will-change: transform;
-}
-.pista-titulo {
-  flex: none;
-  font-size: min(27vw, 58svh);
-  color: var(--amarillo);
-}
-.pieza {
-  flex: none;
-  display: grid;
-  grid-template-columns: 54vw auto;
-  grid-template-areas: "nombre nombre" "captura datos";
-  gap: 2.4svh 3.4vw;
-  align-items: end;
-}
-.pieza-nombre {
-  grid-area: nombre;
-  margin: 0;
-  font-size: min(9.6vw, 17svh);
-  color: var(--amarillo);
-}
-.pieza-captura {
-  grid-area: captura;
-  display: block;
-  aspect-ratio: 16 / 10;
-  max-height: 56svh;
-  width: 100%;
-  overflow: hidden;
-  background: #000000;
-}
-.pieza-captura img {
-  width: 112%;
-  max-width: none;
-  height: 100%;
-  margin-left: -6%;
-  object-fit: cover;
-  object-position: 50% 0;
-}
-.pieza-info {
-  grid-area: datos;
-  width: 28vw;
-}
-.pieza-linea {
-  margin: 0;
-  font-size: clamp(17px, 1.45vw, 22px);
-  line-height: 1.3;
-}
-.pieza-datos {
-  margin: 1.4em 0 1.6em;
-  display: grid;
-  gap: 0.9em;
-  font-size: 16px;
-  line-height: 1.35;
-}
-.pieza-datos dd {
-  margin: 0.2em 0 0;
-}
-.pieza-enlaces {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 26px;
-}
-.carril-progreso {
-  position: absolute;
   left: var(--margen);
-  right: var(--margen);
-  bottom: 26px;
-  height: 2px;
-  background: var(--apagado);
+  margin: 0;
+  font-size: clamp(15px, 1.25vw, 18px);
+  font-weight: 600;
 }
-.carril-progreso i {
-  display: block;
-  height: 100%;
-  background: var(--amarillo);
-  transform-origin: left;
+.inicio-dato.arriba {
+  bottom: calc(66.67% + 20px);
 }
-
-/* ============================================================================
-   FOTOS: la palabra fija atrás, las fotos pasan por delante a distinta velocidad
-   ========================================================================== */
-
-.fotos {
-  position: relative;
+.inicio-dato.abajo {
+  top: calc(66.67% + 20px);
 }
-.fotos-fija {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+.franja {
+  position: absolute;
+  inset: 0;
+  background: var(--blanco);
+  clip-path: inset(33.34% 0 33.34% 0);
 }
-.fotos-fija .gigante {
-  font-size: min(41vw, 74svh);
-  color: var(--rojo);
+.sol {
+  position: absolute;
+  left: 73%;
+  top: 37%;
+  width: 46svh;
+  height: 46svh;
+  translate: -50% -50%;
+  fill: var(--sol);
 }
-.lienzo {
-  position: relative;
-  margin-top: -55svh;
-  padding: 0 var(--margen) 16svh;
+.inicio-banda {
+  position: absolute;
+  inset: 33.34% 0;
   display: flex;
-  flex-direction: column;
-  gap: 64px;
+  align-items: center;
+  color: var(--noche);
 }
-.foto {
-  margin: 0;
-  width: 76%;
+.inicio-banda .cont {
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
 }
-.foto:nth-child(even) {
-  align-self: flex-end;
+.inicio-nombre .serif {
+  color: var(--celeste);
 }
-.foto-recorte {
-  width: 52%;
+.inicio-desc {
+  max-width: 25ch;
 }
-.foto-marco[data-fondo="amarillo"] {
-  background: var(--amarillo);
+.retrato {
+  position: absolute;
+  right: 3vw;
+  bottom: 0;
+  height: 80svh;
+  aspect-ratio: 1414 / 1404;
+  transform-origin: 50% 100%;
 }
-.foto-marco[data-fondo="tinta"] {
-  background: var(--tinta);
-}
-.foto-marco[data-fondo] {
-  padding-top: 8%;
-}
-.foto figcaption {
-  margin-top: 8px;
-  font-size: 15px;
-  font-weight: 700;
+.retrato img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
 }
 
 /* ============================================================================
-   SOBRE MÍ
+   SOBRE MÍ, STACK Y BUENOS AIRES
    ========================================================================== */
 
-.sobre {
-  position: relative;
-  padding-top: 16svh;
-  overflow: clip; /* clip y no hidden: hidden rompería el fijado de la ciudad */
-}
-.sobre > .gigante,
-.sobre-cuerpo,
-.sobre-bloque {
-  margin-left: var(--margen);
-  margin-right: var(--margen);
-}
-.sobre-cuerpo {
+.sobre-grilla {
   display: grid;
-  gap: 32px;
-  margin-top: 5svh;
-  align-items: end;
-}
-.sobre-bio {
-  margin: 0;
-  font-size: clamp(30px, 4.4vw, 80px);
-  font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+  gap: clamp(32px, 6vw, 96px);
+  align-items: start;
 }
 .sobre-foto {
-  width: min(78%, 420px);
-  justify-self: end;
-  margin-bottom: -1px;
+  background: var(--cielo);
+  padding-top: 8%;
 }
+.sobre-foto img {
+  width: 86%;
+  margin-inline: auto;
+}
+.sobre-texto .t-lead {
+  margin-top: 28px;
+  max-width: 34ch;
+}
+.datos {
+  margin: 40px 0 0;
+}
+.datos div {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 16px;
+  padding: 15px 0;
+  border-top: 1.5px solid var(--linea);
+}
+.datos div:last-child {
+  border-bottom: 1.5px solid var(--linea);
+}
+.datos dt {
+  padding-top: 4px;
+}
+.datos dd {
+  margin: 0;
+}
+
+.stack {
+  margin-top: clamp(64px, 11svh, 120px);
+  overflow: hidden;
+}
+.stack .etiqueta {
+  margin-bottom: 20px;
+}
+.cinta {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  will-change: transform;
+}
+.cinta + .cinta {
+  margin-top: 12px;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px 11px 16px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--linea);
+  font-size: 16.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chip svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
 .ciudad {
-  height: 230svh;
+  height: 220svh;
 }
 .ciudad-fija {
   position: sticky;
@@ -475,227 +465,403 @@ img {
 .ciudad-nombre {
   position: absolute;
   left: var(--margen);
-  top: calc(var(--nav) + 5svh);
-  font-size: min(15.5vw, 32svh);
+  top: calc(var(--cab) + 7svh);
+  margin: 0;
+  font-size: clamp(44px, 7.4vw, 118px);
+  color: var(--noche);
 }
-.cintas {
-  padding: 5svh 0 7svh;
-  overflow: hidden;
-}
-.cintas .dato {
-  margin: 0 var(--margen) 3svh;
-}
-.cinta {
-  display: flex;
-  gap: 0.34em;
-  width: max-content;
-  font-size: min(11vw, 19svh);
-  will-change: transform;
-}
-.cinta span:nth-child(even) {
-  font-weight: 100;
-}
-.cinta + .cinta {
-  margin-top: 0.06em;
-}
-.sobre-bloque {
-  padding-bottom: 12svh;
-}
-.recorrido {
-  margin: 3svh 0 0;
-  padding: 0;
-  list-style: none;
-}
-.recorrido li {
-  display: grid;
-  gap: 4px 24px;
-  align-items: baseline;
-  padding: 0.5em 0 0.7em;
-  border-top: 2px solid var(--tinta);
-}
-.recorrido li:last-child {
-  border-bottom: 2px solid var(--tinta);
-}
-.recorrido-lugar {
-  font-size: clamp(40px, 7vw, 124px);
-  font-style: italic;
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-}
-.recorrido-dato {
-  font-size: clamp(17px, 1.5vw, 22px);
-  font-weight: 600;
+.ciudad-nombre .serif {
+  color: var(--noche);
 }
 
 /* ============================================================================
-   CONTACTO: tres filas enormes que engordan al pasar
+   ENFOQUE: cuatro pasos y el sol que baja por la línea
    ========================================================================== */
 
-.contacto {
+.enfoque-grilla {
+  display: grid;
+  gap: clamp(40px, 6vw, 96px);
+}
+.pasos {
   position: relative;
-  padding: 16svh var(--margen) 0;
+  padding-left: 44px;
 }
-.filas {
-  margin-top: 6svh;
+.pasos ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.fila {
-  display: flex;
+.pasos::before,
+.pasos-avance {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  background: var(--linea);
+}
+.pasos-avance {
+  background: var(--sol);
+  transform-origin: 50% 0;
+}
+.pasos-sol {
+  position: absolute;
+  left: -1px;
+  top: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--sol);
+}
+.paso {
+  padding: 0 0 clamp(36px, 7svh, 72px);
+}
+.paso:last-child {
+  padding-bottom: 0;
+}
+.paso p {
+  margin: 8px 0 0;
+  max-width: 40ch;
+  color: var(--suave);
+}
+
+/* ============================================================================
+   TRABAJO: tres tarjetas que se apilan al scrollear
+   ========================================================================== */
+
+.cabeza {
+  display: grid;
+  gap: 14px;
+  margin-bottom: clamp(36px, 6svh, 64px);
+}
+.cabeza .t-lead {
+  max-width: 44ch;
+  color: var(--suave);
+}
+.tarjeta {
+  position: sticky;
+  top: calc(var(--cab) + 22px + var(--i) * 16px);
+  display: grid;
+  gap: clamp(24px, 3.4vw, 56px);
+  align-items: center;
+  margin-bottom: 9svh;
+  padding: clamp(22px, 3.4vw, 56px);
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+.tarjeta:last-child {
+  margin-bottom: 0;
+}
+.tarjeta-texto {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+.tarjeta-texto p {
+  margin: 0;
+  max-width: 40ch;
+}
+.ficha {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0 8px;
+  font-size: 15.5px;
+}
+.ficha dd {
+  margin: 2px 0 0;
+}
+.captura {
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--noche);
+}
+.captura img {
   width: 100%;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 0.1em 0 0.16em;
-  border-top: 2px solid var(--linea);
-  font-size: min(10.5vw, 19svh);
-  font-style: italic;
-  font-weight: 100;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  height: 112%;
+  object-fit: cover;
+  object-position: 50% 0;
+}
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 22px;
+}
+
+/* ============================================================================
+   PROYECTOS: dos columnas que corren a distinta velocidad
+   ========================================================================== */
+
+.grilla {
+  display: grid;
+  gap: clamp(40px, 5vw, 72px) clamp(24px, 4vw, 64px);
+}
+.columna {
+  display: grid;
+  gap: clamp(40px, 6vw, 80px);
+  align-content: start;
+}
+.pieza {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.pieza .captura {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.pieza .captura img {
+  transition: scale 0.6s var(--salida);
+}
+.pieza:hover .captura img {
+  scale: 1.04;
+}
+.pieza p {
+  margin: 0;
+  max-width: 44ch;
+}
+.pieza .stack-linea {
+  font-size: 15px;
+  color: var(--suave);
+}
+
+/* ============================================================================
+   RECORRIDO: dos filas que se abren
+   ========================================================================== */
+
+.rec {
+  border-top: 1.5px solid var(--linea);
+}
+.rec:last-child {
+  border-bottom: 1.5px solid var(--linea);
+}
+.rec-boton {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 24px;
+  align-items: center;
+  width: 100%;
+  padding: clamp(20px, 3.4svh, 34px) 0;
   text-align: left;
   cursor: pointer;
-  transition: font-weight 0.4s cubic-bezier(0.3, 0.7, 0.4, 1), color 0.2s;
 }
-.fila:hover,
-.fila:focus-visible,
-.fila[data-estado] {
-  font-weight: 900;
-  color: var(--amarillo);
+.rec-boton .etiqueta {
+  grid-column: 1;
 }
-.fila-nota {
+.rec-mas {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--texto);
+  transition: background 0.2s;
+}
+.rec-mas::before,
+.rec-mas::after {
+  content: "";
+  position: absolute;
+  inset: 22px 14px;
+  background: var(--texto);
+}
+.rec-mas::after {
+  rotate: 90deg;
+  transition: rotate 0.4s var(--salida);
+}
+.rec-boton:hover .rec-mas {
+  background: var(--sol);
+}
+.rec-boton[aria-expanded="true"] .rec-mas::after {
+  rotate: 0deg;
+}
+.rec-cuerpo {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.55s var(--salida);
+}
+.rec-boton[aria-expanded="true"] + .rec-cuerpo {
+  grid-template-rows: 1fr;
+}
+.rec-cuerpo > div {
+  overflow: hidden;
+}
+.rec-detalle {
+  display: grid;
+  gap: 24px clamp(32px, 6vw, 96px);
+  padding: 4px 0 clamp(28px, 5svh, 48px);
+}
+.rec-detalle p {
+  margin: 0;
+  max-width: 46ch;
+}
+.rec-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rec-lista li {
+  padding: 12px 0;
+  border-top: 1.5px solid var(--linea);
+  font-weight: 600;
+}
+.rec-lista li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.rec-lista span {
+  display: block;
+  font-weight: 400;
+  font-size: 15.5px;
+  color: var(--suave);
+}
+
+/* ============================================================================
+   CONTACTO Y PIE
+   ========================================================================== */
+
+.contacto-grilla {
+  display: grid;
+  gap: clamp(32px, 6vw, 96px);
+  align-items: end;
+}
+.vias {
+  margin-top: clamp(28px, 5svh, 48px);
+}
+.via {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  padding: 18px 0;
+  border-top: 1.5px solid var(--linea);
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s, padding 0.3s var(--salida);
+}
+.via:last-child {
+  border-bottom: 1.5px solid var(--linea);
+}
+.via:hover,
+.via:focus-visible {
+  color: var(--sol);
+  padding-left: 12px;
+}
+.via .etiqueta {
   flex: none;
-  font-size: clamp(15px, 1.4vw, 20px);
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0;
 }
-.fila .flecha {
-  stroke-width: 0.8;
-  transition: rotate 0.3s, stroke-width 0.3s;
-}
-.fila:hover .flecha,
-.fila:focus-visible .flecha {
-  rotate: 45deg;
-  stroke-width: 2.6;
-}
-.fila-mail {
-  font-size: min(6.2vw, 19svh);
+.contacto-foto {
+  background: var(--celeste);
+  padding-top: 6%;
 }
 .pie {
   display: flex;
   justify-content: space-between;
   padding: 26px var(--margen) 24px;
-  border-top: 2px solid var(--linea);
-  font-size: 15px;
+  border-top: 1.5px solid var(--linea);
+  font-size: 14.5px;
   color: var(--suave);
 }
+
 /* ============================================================================
    CASO (página de un proyecto), 404 y error
    ========================================================================== */
 
 .caso-cabeza {
-  padding: calc(var(--nav) + 9svh) var(--margen) 7svh;
+  padding: calc(var(--cab) + 12svh) 0 7svh;
 }
-.caso-cabeza .gigante {
-  font-size: min(19vw, 36svh);
-  white-space: normal;
+.caso-cabeza .t-lead {
+  margin-top: 22px;
+  max-width: 40ch;
 }
-.caso-linea {
-  margin: 8svh 0 0;
-  max-width: 26ch;
-  font-size: clamp(24px, 3vw, 48px);
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-}
-.caso-cuerpo {
-  padding: 0 var(--margen) 10svh;
-}
-.caso-fila {
-  display: grid;
-  gap: 8px 40px;
-  padding: 26px 0 30px;
-  border-top: 2px solid var(--tinta);
-}
-.caso-fila h2 {
-  margin: 0;
-  font-size: 26px;
-  font-style: italic;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-}
-.caso-fila > div {
-  max-width: 62ch;
+.caso-cabeza .acciones {
+  margin-top: 28px;
 }
 .caso-capturas {
   display: grid;
   gap: var(--margen);
-  padding: var(--margen);
+  padding-bottom: 9svh;
 }
 .caso-capturas img {
   width: 100%;
 }
+.caso-fila {
+  display: grid;
+  gap: 8px 40px;
+  padding: 24px 0 28px;
+  border-top: 1.5px solid var(--linea);
+}
+.caso-fila > div {
+  display: grid;
+  gap: 10px;
+  max-width: 60ch;
+}
+.caso-fila p {
+  margin: 0;
+}
 .caso-siguiente {
   display: block;
-  padding: 10svh var(--margen) 12svh;
+  padding: 9svh 0 11svh;
 }
-.caso-siguiente .gigante {
-  font-size: min(17vw, 34svh);
-  font-weight: 100;
-  white-space: normal;
-  transition: font-weight 0.4s cubic-bezier(0.3, 0.7, 0.4, 1), color 0.2s;
+.caso-siguiente .t-titulo {
+  margin-top: 10px;
+  transition: color 0.2s;
 }
-.caso-siguiente:hover .gigante {
-  font-weight: 900;
-  color: var(--amarillo);
+.caso-siguiente:hover .t-titulo {
+  color: var(--sol);
 }
 
 .aviso {
   display: flex;
   min-height: 100svh;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: calc(var(--nav) + 6svh) var(--margen) 9svh;
-}
-.aviso .gigante {
-  font-size: min(15vw, 30svh);
-  white-space: normal;
-}
-.aviso-salidas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px 32px;
-  margin-top: 5svh;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+  padding: var(--cab) var(--margen) 0;
 }
 
 /* ============================================================================
    ESCRITORIO
    ========================================================================== */
 
-@media (min-width: 768px) {
-  .lienzo {
-    display: block;
-    height: calc(var(--alto) * 1vw);
-    padding: 0;
-  }
-  .foto,
-  .foto-recorte {
-    position: absolute;
-    left: calc(var(--x) * 1vw);
-    top: calc(var(--y) * 1vw);
-    width: calc(var(--w) * 1vw);
-  }
-  .sobre-cuerpo {
-    grid-template-columns: 1fr 27vw;
+@media (min-width: 900px) {
+  .sobre-grilla {
+    grid-template-columns: 5fr 7fr;
   }
   .sobre-foto {
-    width: 100%;
+    position: sticky;
+    top: calc(var(--cab) + 32px);
   }
-  .recorrido li {
-    grid-template-columns: 1fr auto;
+  .enfoque-grilla {
+    grid-template-columns: 5fr 7fr;
+  }
+  .enfoque-grilla > :first-child {
+    position: sticky;
+    top: calc(var(--cab) + 12svh);
+    align-self: start;
+  }
+  .tarjeta {
+    grid-template-columns: 5fr 7fr;
+    min-height: min(70svh, 620px);
+  }
+  .grilla {
+    grid-template-columns: 1fr 1fr;
+  }
+  .columna + .columna {
+    margin-top: 16svh;
+  }
+  .rec-detalle {
+    grid-template-columns: 5fr 7fr;
+  }
+  .contacto-grilla {
+    grid-template-columns: 7fr 4fr;
   }
   .caso-fila {
-    grid-template-columns: 15rem 1fr;
+    grid-template-columns: 14rem 1fr;
   }
 }
 
@@ -703,48 +869,57 @@ img {
    CELULAR
    ========================================================================== */
 
-@media (max-width: 767px) {
-  .n2 {
-    bottom: auto;
-    top: calc(var(--nav) + 2svh + 0.8em);
+@media (max-width: 899px) {
+  .cab-lista,
+  .cab-contacto {
+    display: none;
   }
-  .inicio-foto {
-    left: 50%;
-    height: 56svh;
+  .cab-menu {
+    display: inline-flex;
+    min-height: 40px;
+    padding: 0 18px;
+    background: var(--noche);
+    color: var(--blanco);
   }
-  .inicio-dato {
-    font-size: 15px;
+  .t-nombre {
+    font-size: min(17vw, 12svh);
   }
-  .pista {
-    gap: 12vw;
+  .inicio-desc {
+    display: none;
   }
-  .pieza {
-    width: 84vw;
-    grid-template-columns: 1fr;
-    grid-template-areas: "nombre" "captura" "datos";
-    gap: 16px;
+  .inicio-banda {
+    align-items: flex-start;
+    padding-top: 3svh;
   }
-  .pieza-nombre {
-    font-size: 12vw;
-    white-space: normal;
+  .sol {
+    left: 80%;
+    top: 62%;
+    width: 26svh;
+    height: 26svh;
   }
-  .pieza-captura {
-    max-height: 30svh;
+  .retrato {
+    right: -14vw;
+    height: 42svh;
   }
-  .pieza-info {
-    width: auto;
+  .via .t-sub {
+    font-size: min(4.7vw, 25px);
   }
-  .pieza-datos {
-    margin: 1em 0 1.2em;
-    font-size: 15px;
+  .via .etiqueta {
+    display: none;
   }
-  .fila-mail {
-    font-size: 6.4vw;
+  .tarjeta {
+    top: calc(var(--cab) + 14px + var(--i) * 10px);
+  }
+  .datos div {
+    grid-template-columns: 6rem 1fr;
+  }
+  .contacto-foto {
+    max-width: 280px;
   }
 }
 
 /* ============================================================================
-   REDUCIR MOVIMIENTO: sin fijados ni carril; todo se lee de corrido
+   REDUCIR MOVIMIENTO: sin fijados; todo se lee de corrido
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
@@ -752,19 +927,11 @@ img {
   .ciudad {
     height: 100svh;
   }
-  .proyectos {
-    margin-top: 0;
-  }
-  .carril-fijo {
+  .tarjeta {
     position: static;
-    height: auto;
-    padding: 12svh 0;
-    overflow-x: auto;
   }
-  .carril-progreso {
-    display: none;
-  }
-  .nav-progreso {
+  .pasos-avance,
+  .pasos-sol {
     display: none;
   }
   * {
