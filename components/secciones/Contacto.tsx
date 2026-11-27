@@ -1,63 +1,56 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { CON_MOVIMIENTO, engordar, gsap, useGSAP } from "@/lib/gsap";
-import { armarMail } from "@/lib/mail";
+import { useRef, useSyncExternalStore } from "react";
+import Image from "next/image";
+import { CON_MOVIMIENTO, entradas, gsap, useGSAP } from "@/lib/gsap";
+import { abrirMail, armarMail } from "@/lib/mail";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Flecha, Peso } from "@/components/ui/Peso";
+import { Flecha, Titulo } from "@/components/ui/Titulo";
+
+const sinSuscripcion = () => () => {};
 
 /**
- * Contacto: tres filas enormes. La del mail lo copia: la dirección no está en
- * el HTML ni en el contenido, se arma recién en el clic (lib/mail.ts) y se
- * muestra en la misma fila. Si el portapapeles falla, queda a la vista para
- * copiarla a mano.
+ * Contacto: tres vías del mismo tamaño. El mail no viaja en el HTML: se arma
+ * en el navegador (lib/mail.ts), se muestra recién ahí y al tocarlo abre el
+ * correo.
  */
 export function Contacto() {
   const { t, perfil } = useIdioma();
   const raiz = useRef<HTMLElement>(null);
-  const [estado, setEstado] = useState<"" | "ok" | "error">("");
-  const reloj = useRef(0);
-
-  useEffect(() => () => window.clearTimeout(reloj.current), []);
+  // en el servidor no hay dirección; en el navegador, sí
+  const mail = useSyncExternalStore(sinSuscripcion, armarMail, () => "");
 
   useGSAP(
     () => {
-      gsap.matchMedia().add(CON_MOVIMIENTO, () => engordar(raiz.current!));
+      gsap.matchMedia().add(CON_MOVIMIENTO, () => entradas(raiz.current!));
     },
     { scope: raiz },
   );
 
-  const copiar = async () => {
-    let ok = true;
-    try {
-      await navigator.clipboard.writeText(armarMail());
-    } catch {
-      ok = false;
-    }
-    setEstado(ok ? "ok" : "error");
-    window.clearTimeout(reloj.current);
-    reloj.current = window.setTimeout(() => setEstado(""), ok ? 3000 : 9000);
-  };
-
-  const nota = estado === "ok" ? t.contacto.copiado : estado === "error" ? t.contacto.copialoAMano : t.contacto.copiar;
-
   return (
-    <section ref={raiz} id="contacto" data-tema="tinta" className="contacto">
-      <h2 className="gigante titulo text-amarillo">
-        <Peso>{t.secciones.contacto}</Peso>
-      </h2>
-      <div className="filas">
-        <button type="button" className={estado ? "fila fila-mail" : "fila"} data-estado={estado || undefined} onClick={copiar}>
-          <span>{estado ? armarMail() : t.contacto.mail}</span>
-          <span className="fila-nota" role="status">
-            {nota}
-          </span>
-        </button>
-        <a className="fila" href={perfil.links.github} target="_blank" rel="noreferrer">
-          GitHub <Flecha />
-        </a>
-        <a className="fila" href={perfil.links.linkedin} target="_blank" rel="noreferrer">
-          LinkedIn <Flecha />
-        </a>
+    <section ref={raiz} id="contacto" data-tema="noche" className="seccion">
+      <div className="cont contacto-grilla">
+        <div>
+          <Titulo texto={t.titulos.contacto} />
+          <div className="vias">
+            <button type="button" className="via" onClick={() => abrirMail("", "")}>
+              <span className="t-sub">{mail || t.contacto.mail}</span>
+              <span className="etiqueta">{t.contacto.abrir}</span>
+            </button>
+            <a className="via" href={perfil.links.github} target="_blank" rel="noreferrer">
+              <span className="t-sub">GitHub</span>
+              <Flecha />
+            </a>
+            <a className="via" href={perfil.links.linkedin} target="_blank" rel="noreferrer">
+              <span className="t-sub">LinkedIn</span>
+              <Flecha />
+            </a>
+          </div>
+        </div>
+        <div className="contacto-foto corte">
+          <div data-abre>
+            <Image src="/assets/fotos/cruzado.webp" alt="" width={562} height={1404} sizes="(max-width: 899px) 280px, 26vw" className="mx-auto w-[46%]" />
+          </div>
+        </div>
       </div>
     </section>
   );

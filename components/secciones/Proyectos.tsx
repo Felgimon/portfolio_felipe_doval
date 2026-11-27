@@ -2,123 +2,82 @@
 import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CON_MOVIMIENTO, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { CON_MOVIMIENTO, entradas, gsap, useGSAP } from "@/lib/gsap";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Flecha, Peso } from "@/components/ui/Peso";
+import { Flecha, Titulo } from "@/components/ui/Titulo";
+import type { Proyecto } from "@/content/types";
 
 /**
- * Proyectos: un carril horizontal. La sección queda fija y el scroll vertical
- * mueve la pista hacia la izquierda, un píxel por píxel; el alto del carril se
- * calcula del ancho de la pista. Cada captura se destapa al entrar y se
- * desplaza un poco más lento que su marco.
+ * Proyectos: dos columnas desfasadas. Con el scroll la derecha sube más rápido
+ * que la izquierda, y cada captura se destapa al entrar.
  */
 export function Proyectos() {
   const { t, proyectos } = useIdioma();
   const raiz = useRef<HTMLElement>(null);
+  const lista = proyectos.filter((p) => p.grupo === "proyecto");
+  const columnas = [lista.filter((_, i) => i % 2 === 0), lista.filter((_, i) => i % 2 === 1)];
 
   useGSAP(
     () => {
-      gsap.matchMedia().add(CON_MOVIMIENTO, () => {
-        const carril = raiz.current!.querySelector<HTMLElement>(".carril")!;
-        const pista = raiz.current!.querySelector<HTMLElement>(".pista")!;
-        const recorrido = () => pista.scrollWidth - window.innerWidth;
-        const medir = () => gsap.set(carril, { height: window.innerHeight + recorrido() });
-        medir();
-        ScrollTrigger.addEventListener("refreshInit", medir);
-
-        const tramo = { trigger: carril, start: "top top", end: "bottom bottom", scrub: true };
-        const avance = gsap.to(pista, {
-          x: () => -recorrido(),
-          ease: "none",
-          scrollTrigger: { ...tramo, invalidateOnRefresh: true },
-        });
-        gsap.fromTo(".carril-progreso i", { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: tramo });
-
-        // el título engorda mientras la sección sube sobre el inicio
+      const mm = gsap.matchMedia();
+      mm.add(CON_MOVIMIENTO, () => entradas(raiz.current!));
+      mm.add(`${CON_MOVIMIENTO} and (min-width: 900px)`, () => {
         gsap.fromTo(
-          ".pista-titulo [data-peso]",
-          { fontWeight: 100 },
-          { fontWeight: 900, ease: "none", scrollTrigger: { trigger: raiz.current, start: "top bottom", end: "top top", scrub: true } },
+          ".columna + .columna",
+          { y: 70 },
+          { y: -90, ease: "none", scrollTrigger: { trigger: ".grilla", start: "top bottom", end: "bottom top", scrub: true } },
         );
-
-        gsap.utils.toArray<HTMLElement>(".pieza").forEach((pieza) => {
-          const enPista = { trigger: pieza, containerAnimation: avance, scrub: true };
-          gsap.fromTo(
-            pieza.querySelector(".pieza-captura"),
-            { clipPath: "inset(0 0 0 100%)" },
-            { clipPath: "inset(0 0 0 0%)", ease: "none", scrollTrigger: { ...enPista, start: "left 98%", end: "left 45%" } },
-          );
-          gsap.fromTo(
-            pieza.querySelector("img"),
-            { xPercent: -5 },
-            { xPercent: 5, ease: "none", scrollTrigger: { ...enPista, start: "left right", end: "right left" } },
-          );
-        });
-
-        return () => ScrollTrigger.removeEventListener("refreshInit", medir);
       });
     },
-    { scope: raiz, dependencies: [proyectos], revertOnUpdate: true },
+    { scope: raiz },
   );
 
+  const pieza = (p: Proyecto) => {
+    const destino = p.caso ? `/proyectos/${p.slug}` : p.repo!;
+    const foto = (
+      <span data-abre className="block h-full">
+        <Image src={p.capturas[0].src} alt={p.capturas[0].alt} width={p.capturas[0].w} height={p.capturas[0].h} sizes="(max-width: 899px) 90vw, 44vw" />
+      </span>
+    );
+    return (
+      <article key={p.slug} className="pieza">
+        {p.caso ? (
+          <Link href={destino} className="captura corte" aria-label={`${p.nombre}, ${t.proyectos.verCaso}`}>
+            {foto}
+          </Link>
+        ) : (
+          <a href={destino} target="_blank" rel="noreferrer" className="captura corte" aria-label={`${p.nombre}, GitHub`}>
+            {foto}
+          </a>
+        )}
+        <h3 className="t-sub">{p.nombre}</h3>
+        <p>{p.unaLinea}</p>
+        <p className="stack-linea">{p.stack.join(", ")}</p>
+        {p.caso ? (
+          <Link href={destino} className="enlace">
+            {t.proyectos.verCaso}
+          </Link>
+        ) : (
+          <a href={destino} target="_blank" rel="noreferrer" className="enlace">
+            GitHub <Flecha />
+          </a>
+        )}
+      </article>
+    );
+  };
+
   return (
-    <section ref={raiz} id="proyectos" data-tema="tinta" className="proyectos">
-      <div className="carril">
-        <div className="carril-fijo">
-          <div className="pista">
-            <h2 className="pista-titulo gigante">
-              <Peso>{t.secciones.proyectos}</Peso>
-            </h2>
-            {proyectos.map((p) => {
-              const caso = p.categoria === "destacado";
-              const captura = p.capturas[0];
-              const foto = (
-                <Image src={captura.src} alt={captura.alt} width={1600} height={1000} sizes="(max-width: 767px) 95vw, 60vw" />
-              );
-              return (
-                <article key={p.slug} className="pieza">
-                  <h3 className="pieza-nombre gigante">{p.nombre}</h3>
-                  {caso ? (
-                    <Link href={`/proyectos/${p.slug}`} className="pieza-captura" aria-label={`${p.nombre}, ${t.proyectos.verCaso}`}>
-                      {foto}
-                    </Link>
-                  ) : (
-                    <div className="pieza-captura">{foto}</div>
-                  )}
-                  <div className="pieza-info">
-                    <p className="pieza-linea">{p.unaLinea}</p>
-                    <dl className="pieza-datos">
-                      <div>
-                        <dt className="dato">{t.proyectos.rol}</dt>
-                        <dd>{p.rol}</dd>
-                      </div>
-                      {p.stack.length > 0 && (
-                        <div>
-                          <dt className="dato">{t.proyectos.stack}</dt>
-                          <dd>{p.stack.join(", ")}</dd>
-                        </div>
-                      )}
-                    </dl>
-                    <p className="pieza-enlaces">
-                      {caso && (
-                        <Link href={`/proyectos/${p.slug}`} className="enlace">
-                          {t.proyectos.verCaso}
-                        </Link>
-                      )}
-                      {p.enlaces.map((e) => (
-                        <a key={e.url} href={e.url} target="_blank" rel="noreferrer" className="enlace">
-                          GitHub <Flecha />
-                        </a>
-                      ))}
-                    </p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-          <div className="carril-progreso" aria-hidden>
-            <i />
-          </div>
+    <section ref={raiz} id="proyectos" data-tema="cielo" className="seccion">
+      <div className="cont">
+        <div className="cabeza">
+          <Titulo texto={t.titulos.proyectos} />
+        </div>
+        <div className="grilla">
+          {columnas.map((columna, i) => (
+            <div key={i} className="columna">
+              {columna.map(pieza)}
+            </div>
+          ))}
         </div>
       </div>
     </section>
