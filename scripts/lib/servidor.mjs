@@ -1,5 +1,5 @@
 /**
- * Helpers compartidos por los scripts de Playwright (smoke, audit, gen-og...).
+ * Helpers de Playwright para scripts/gen-marca.mjs.
  *
  *  - levantar(port): `next start` del build ya hecho, y espera a que responda.
  *    Lo corta bien en cualquier sistema: en Windows con taskkill (antes era lo
