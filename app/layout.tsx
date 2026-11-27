@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { piazzolla } from "@/lib/fonts";
+import { fuentes } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
 import { siteUrl } from "@/lib/site";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
@@ -98,7 +98,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-AR" className={piazzolla.variable}>
+    <html lang="es-AR" className={fuentes}>
       <body className="min-h-dvh antialiased">
         <script
           type="application/ld+json"

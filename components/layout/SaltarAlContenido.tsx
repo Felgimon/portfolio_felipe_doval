@@ -7,7 +7,7 @@ export function SaltarAlContenido() {
   return (
     <a
       href="#contenido"
-      className="sr-only bg-tinta px-4 py-2 font-bold text-amarillo focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
+      className="sr-only bg-noche px-4 py-2 font-bold text-blanco focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100]"
     >
       {t.saltar}
     </a>

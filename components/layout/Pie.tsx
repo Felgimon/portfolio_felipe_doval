@@ -8,7 +8,7 @@ import { useIdioma } from "@/components/idioma/IdiomaProvider";
 export function Pie() {
   const { perfil } = useIdioma();
   return (
-    <footer data-tema="tinta" className="pie">
+    <footer data-tema="noche" className="pie">
       <span>
         © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {perfil.nombre}
       </span>
