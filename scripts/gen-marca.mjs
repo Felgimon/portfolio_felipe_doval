@@ -1,7 +1,7 @@
 /**
  * Genera la imagen para compartir (Open Graph / Twitter) y los favicons desde
  * el sitio ya compilado, con la letra real: la preview es una captura del
- * inicio y el ícono es la F negra cursiva sobre amarillo.
+ * inicio y el ícono es la F azul noche sobre celeste.
  *
  *   npm run build && node scripts/gen-marca.mjs
  */
@@ -28,7 +28,7 @@ try {
       const d = document.createElement("div");
       d.id = "icono";
       d.textContent = "F";
-      d.style.cssText = `position:fixed;left:0;top:0;z-index:999;width:${lado}px;height:${lado}px;display:grid;place-items:center;border-radius:${redondo ? 20 : 0}%;background:#ffc400;color:#15120e;font:italic 900 ${lado * 0.86}px/1 var(--font-piazzolla)`;
+      d.style.cssText = `position:fixed;left:0;top:0;z-index:999;width:${lado}px;height:${lado}px;display:grid;place-items:center;border-radius:${redondo ? 20 : 0}%;background:#75aadb;color:#0c2340;font:800 ${lado * 0.78}px/1 var(--font-mona);font-stretch:118%`;
       document.body.append(d);
     }, [lado, redondo]);
     return p.locator("#icono").screenshot({ type: "png", omitBackground: true });

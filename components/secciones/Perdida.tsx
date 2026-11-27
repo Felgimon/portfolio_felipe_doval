@@ -6,14 +6,14 @@ import { useIdioma } from "@/components/idioma/IdiomaProvider";
 export function Perdida() {
   const { t } = useIdioma();
   return (
-    <main id="contenido" data-tema="amarillo" className="aviso">
-      <p className="dato">404</p>
-      <h1 className="gigante mt-4">{t.perdida.titulo}</h1>
-      <p className="aviso-salidas">
-        <Link href="/" className="enlace">
-          {t.perdida.volver}
-        </Link>
-      </p>
+    <main id="contenido" data-tema="blanco" className="aviso">
+      <p className="etiqueta">404</p>
+      <h1 className="t-titulo">
+        {t.perdida.titulo[0]} <span className="serif">{t.perdida.titulo[1]}</span>
+      </h1>
+      <Link href="/" className="boton">
+        {t.perdida.volver}
+      </Link>
     </main>
   );
 }

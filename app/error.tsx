@@ -23,15 +23,17 @@ export default function Error({
   }, [error]);
 
   return (
-    <main id="contenido" data-tema="amarillo" className="aviso">
-      <p className="dato">Error{error.digest && ` ${error.digest}`}</p>
-      <h1 className="gigante mt-4">Algo se rompió</h1>
-      <p className="aviso-salidas">
-        <button type="button" onClick={reset} className="enlace cursor-pointer">
+    <main id="contenido" data-tema="blanco" className="aviso">
+      <p className="etiqueta">Error{error.digest && ` ${error.digest}`}</p>
+      <h1 className="t-titulo">
+        Algo se <span className="serif">rompió</span>
+      </h1>
+      <p className="acciones">
+        <button type="button" onClick={reset} className="boton cursor-pointer">
           Reintentar
         </button>
         <Link href="/" className="enlace">
-          Inicio
+          Ir al inicio
         </Link>
       </p>
     </main>

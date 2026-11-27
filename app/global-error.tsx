@@ -30,15 +30,15 @@ export default function GlobalError({
           gap: "1rem",
           padding: "1.5rem",
           textAlign: "center",
-          background: "#ffc400",
-          color: "#15120e",
-          fontFamily: "Georgia, serif",
+          background: "#f5f7f9",
+          color: "#0c2340",
+          fontFamily: "system-ui, sans-serif",
         }}
       >
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0 }}>
           Felipe Doval
         </h1>
-        <p style={{ margin: 0, color: "#15120e", maxWidth: "28rem" }}>
+        <p style={{ margin: 0, color: "#0c2340", maxWidth: "28rem" }}>
           El sitio no pudo cargar. Probá recargar la página.
         </p>
         <button
@@ -47,9 +47,10 @@ export default function GlobalError({
           style={{
             marginTop: "0.5rem",
             padding: "0.6rem 1.25rem",
-            border: "2px solid #15120e",
-            background: "#15120e",
-            color: "#ffc400",
+            border: "2px solid #0c2340",
+            borderRadius: "999px",
+            background: "#0c2340",
+            color: "#f5f7f9",
             font: "inherit",
             cursor: "pointer",
           }}
@@ -57,7 +58,7 @@ export default function GlobalError({
           Reintentar
         </button>
         {error.digest && (
-          <p style={{ margin: 0, fontSize: "0.75rem", color: "#15120e" }}>
+          <p style={{ margin: 0, fontSize: "0.75rem", color: "#0c2340" }}>
             referencia: {error.digest}
           </p>
         )}

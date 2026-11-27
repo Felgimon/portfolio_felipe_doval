@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { proyectosDestacados, getProyecto } from "@/content/proyectos";
+import { casos, getProyecto } from "@/content/proyectos";
 import { ProyectoDetalle } from "@/components/secciones/ProyectoDetalle";
 
 /**
@@ -15,7 +15,7 @@ import { ProyectoDetalle } from "@/components/secciones/ProyectoDetalle";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return proyectosDestacados.map((p) => ({ slug: p.slug }));
+  return casos.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -44,6 +44,6 @@ export default async function Pagina({
 }) {
   const { slug } = await params;
   const p = getProyecto(slug);
-  if (!p || p.categoria !== "destacado") notFound();
+  if (!p?.caso) notFound();
   return <ProyectoDetalle slug={slug} />;
 }
