@@ -1,24 +1,17 @@
 import { Inicio } from "@/components/secciones/Inicio";
-import { Perfil } from "@/components/secciones/Perfil";
-import { Enfoque } from "@/components/secciones/Enfoque";
-import { Trabajo } from "@/components/secciones/Trabajo";
 import { Proyectos } from "@/components/secciones/Proyectos";
-import { Recorrido } from "@/components/secciones/Recorrido";
+import { Fotos } from "@/components/secciones/Fotos";
+import { SobreMi } from "@/components/secciones/SobreMi";
 import { Contacto } from "@/components/secciones/Contacto";
 
-/**
- * La home: siete secciones en orden, cada una con su título directo. La gota
- * de vidrio va de título en título; Feli acompaña en fotos.
- */
+/** La home es un recorrido: cinco secciones en orden, y el scroll las mueve. */
 export default function Home() {
   return (
-    <main id="contenido" className="capa">
+    <main id="contenido">
       <Inicio />
-      <Perfil />
-      <Enfoque />
-      <Trabajo />
       <Proyectos />
-      <Recorrido />
+      <Fotos />
+      <SobreMi />
       <Contacto />
     </main>
   );

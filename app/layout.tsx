@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { JuntarBurbujasCss } from "@/components/escena/BurbujasCss";
-import { fontClassNames } from "@/lib/fonts";
+import { piazzolla } from "@/lib/fonts";
 import { perfil } from "@/content/perfil";
 import { siteUrl } from "@/lib/site";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { IdiomaProvider } from "@/components/idioma/IdiomaProvider";
-import { KonamiEasterEgg } from "@/components/motion/KonamiEasterEgg";
-import { DevOverlay } from "@/components/motion/DevOverlay";
-import { Reflejos } from "@/components/motion/Reflejos";
-import { Burbuja } from "@/components/motion/Burbuja";
-import { Escena } from "@/components/escena/Escena";
 import { Nav } from "@/components/layout/Nav";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { Pie } from "@/components/layout/Pie";
 import { SaltarAlContenido } from "@/components/layout/SaltarAlContenido";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
@@ -45,7 +39,6 @@ const jsonLd = {
         "Python",
         "Machine Learning",
         "FastAPI",
-        "WebGL",
       ],
     },
     {
@@ -105,7 +98,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-AR" className={fontClassNames}>
+    <html lang="es-AR" className={piazzolla.variable}>
       <body className="min-h-dvh antialiased">
         <script
           type="application/ld+json"
@@ -120,19 +113,12 @@ export default function RootLayout({
         />
         <IdiomaProvider>
           <SaltarAlContenido />
-          {/* El estudio, los títulos, Feli y la gota: un canvas fijo detrás de todo. */}
-          <Escena />
           <SmoothScroll>
             <Nav />
             {children}
-            <SiteFooter />
+            <Pie />
           </SmoothScroll>
         </IdiomaProvider>
-        <Reflejos />
-        <Burbuja />
-        <JuntarBurbujasCss />
-        <KonamiEasterEgg />
-        <DevOverlay />
         {/* Vercel Web Analytics. Va ÚLTIMO y fuera de los providers a propósito:
             no envuelve a nadie, así que si su script no carga (bloqueador,
             adblock, red caída) no se lleva puesto nada del sitio.

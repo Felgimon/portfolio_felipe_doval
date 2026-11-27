@@ -1,70 +1,62 @@
 "use client";
+import { useRef } from "react";
+import Image from "next/image";
+import { CON_MOVIMIENTO, gsap, useGSAP } from "@/lib/gsap";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { BurbujasCss } from "@/components/escena/BurbujasCss";
-import { useSmoothScroll } from "@/components/motion/SmoothScroll";
-import { Feli } from "@/components/guia/Feli";
-import { Cianotipo } from "@/components/escena/Cianotipo";
-import { CopiarMail } from "@/components/ui/CopiarMail";
 
 /**
- * INICIO. En 10 segundos: quién es (el nombre, enorme), qué hace (rol y
- * bajada) y cómo escribirle. Es la única sección con una foto de Felipe (v8.1).
- * Tres burbujas: la grande entre la O y la V de "Doval" (sigue al mouse de
- * lejos) y dos más chicas en el aire de la portada.
+ * El inicio: el nombre a pantalla entera y la foto delante. Queda fijo mientras
+ * se scrollea: "Felipe" se va a la izquierda y adelgaza, "Doval" se va a la
+ * derecha y engorda (el peso pasa de una palabra a la otra), y después
+ * Proyectos sube y lo tapa.
  */
 export function Inicio() {
-  const { perfil, t } = useIdioma();
-  const { scrollTo } = useSmoothScroll();
+  const { perfil } = useIdioma();
+  const raiz = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      gsap.matchMedia().add(CON_MOVIMIENTO, () => {
+        // entrada sin opacidad: si el navegador frena la animación, igual se ve todo
+        gsap.from(".inicio-nombre span", { yPercent: 35, duration: 0.9, ease: "power3.out", stagger: 0.1 });
+        gsap.from(".inicio-foto", { yPercent: 10, duration: 1, ease: "power3.out" });
+
+        gsap
+          .timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: { trigger: raiz.current, start: "top top", end: "bottom bottom", scrub: true },
+          })
+          .to(".n1", { xPercent: -42, fontWeight: 100 }, 0)
+          .to(".n2", { xPercent: 42, fontWeight: 900 }, 0)
+          .to(".inicio-foto", { scale: 1.22 }, 0)
+          .to(".inicio-dato", { opacity: 0, duration: 0.15 }, 0);
+      });
+    },
+    { scope: raiz },
+  );
 
   return (
-    <section
-      id="inicio"
-      aria-labelledby="inicio-titulo"
-      className="relative flex flex-col px-4 pt-[104px] md:block md:h-[100svh] md:max-h-[1000px] md:min-h-[640px] md:p-0"
-      data-burbujas="0.66 0.12 0.045; 0.465 0.87 0.026"
-      data-burbujas-m="0.84 0.3 0.04"
-    >
-      {/* la música: el piano de cola en el hueco entre el nombre y la foto */}
-      <BurbujasCss d="0.66 0.12 0.045; 0.465 0.87 0.026" m="0.84 0.3 0.04" />
-      <Cianotipo nombre="musica-grande" className="max-md:hidden" />
-      <Cianotipo nombre="musica-m" className="top-[56px] w-full md:hidden" />
-      <h1
-        id="inicio-titulo"
-        data-placa
-        data-burbujas="0.41 0.7 0.115 0.12"
-        data-burbujas-m="0.4 0.66 0.085 0"
-        aria-label={perfil.nombre}
-        className="placa nombre-hero outline-none md:absolute md:top-[17vh] md:left-[var(--margen)]"
-      >
-        <span aria-hidden>Felipe</span>
-        <span aria-hidden>Doval</span>
-        <BurbujasCss d="0.41 0.7 0.115 0.12" m="0.4 0.66 0.085 0" />
-      </h1>
-
-      <Feli
-        pose="inicio"
-        prioridad
-        sizes="(max-width: 760px) 92vw, 60vw"
-        className="order-2 mt-2 w-[92%] self-end md:absolute md:right-[1vw] md:bottom-0 md:mt-0 md:h-[78vh] md:w-auto"
-      />
-
-      <div className="order-1 mt-7 md:absolute md:bottom-14 md:left-[var(--margen)] md:mt-0 md:max-w-[560px]">
-        <p className="etiqueta">{perfil.hero.kicker}</p>
-        <p className="lead mt-3.5">{perfil.hero.lead}</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a
-            href="#trabajo"
-            onClick={(e) => {
-              e.preventDefault();
-              const destino = document.getElementById("trabajo");
-              if (destino) scrollTo(destino);
-            }}
-            className="boton boton-solido"
-          >
-            {t.hero.verTrabajo} <span aria-hidden className="flecha flecha-abajo">↓</span>
-          </a>
-          <CopiarMail ficha="derecha" />
-        </div>
+    <section ref={raiz} id="inicio" data-tema="amarillo" className="inicio">
+      <div className="inicio-fija">
+        <h1 className="inicio-nombre gigante" aria-label={perfil.nombre}>
+          <span className="n1" aria-hidden>
+            Felipe
+          </span>
+          <span className="n2" aria-hidden>
+            Doval
+          </span>
+        </h1>
+        <Image
+          className="inicio-foto"
+          src="/assets/fotos/apoyado.webp"
+          alt="Felipe Doval, de brazos cruzados"
+          width={1414}
+          height={1404}
+          sizes="(max-width: 767px) 120vw, 70vh"
+          priority
+        />
+        <p className="inicio-dato left-[var(--margen)]">{perfil.rol}</p>
+        <p className="inicio-dato right-[var(--margen)]">{perfil.ubicacion}</p>
       </div>
     </section>
   );
