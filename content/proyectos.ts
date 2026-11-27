@@ -1,12 +1,8 @@
 import type { Proyecto } from "./types";
 
 /**
- * Los 7 proyectos, tal como vienen de contenido/proyectos/*.
- * - `capturas` con falta:true → la UI muestra un placeholder punteado honesto.
- * - `incompleto:true` → muestra el pill "en progreso" en la card. Ya no lo usa
- *   ninguno: los secundarios son proyectos TERMINADOS (les faltaban datos, no
- *   estaban en curso), y el único en progreso de verdad es Superlum, que ya lo
- *   dice en su texto. El flag queda por si algún proyecto futuro lo necesita.
+ * Los 7 proyectos. Los destacados tienen página de caso; del resto se muestra
+ * la primera captura y el enlace al repo. Solo datos: qué es, rol, stack.
  */
 export const proyectos: Proyecto[] = [
   // ==========================================================================
@@ -18,8 +14,6 @@ export const proyectos: Proyecto[] = [
     categoria: "destacado",
     unaLinea:
       "Workspace operativo a medida para una empresa real, en desarrollo con ella.",
-    resumen:
-      "El case study fuerte: cliente real y trabajo en curso. Un workspace propio para Taquion, con permisos finos por cliente y flujos hechos a la medida de cómo trabajan de verdad. Hoy es un prototipo que avanza con ellos.",
     problema:
       "Taquion maneja toda su operación en un workspace genérico: flexible, pero de nadie. Falta estructura propia, permisos finos por cliente y flujos pensados para cómo trabaja la empresa de verdad. Después de mi pasantía ahí (automatización con n8n y workflows sobre su workspace), la propuesta fue construirles su propia herramienta.",
     solucion:
@@ -41,12 +35,6 @@ export const proyectos: Proyecto[] = [
       "Cliente referente: Sergio Doval, CEO de Taquion. Prototipo que avanza con ellos.",
       "Presentado en TIC Experience y con entrevista en TN sobre el proyecto.",
     ],
-    aprendizajes: [
-      "Diseñar la seguridad desde el modelo de datos (default-deny) sale mucho más barato que agregarla después.",
-      "Reemplazar una herramienta genérica que la gente ya usa obliga a entender el flujo real, no el ideal.",
-    ],
-    // La identidad 'aurora' es la marca de Superlum (no la del portfolio):
-    // se cita solo acá dentro.
     enlaces: [],
     capturas: [
       {
@@ -62,9 +50,6 @@ export const proyectos: Proyecto[] = [
         alt: "Panel de administración del workspace: el registro de actividad con cada cambio y su autor, junto a las pestañas de miembros y perfiles de acceso",
       },
     ],
-    acento: "#6D5BFF", // violeta aurora — marca de Superlum, citada dentro del caso
-    anguloSitio:
-      "Cliente real + desarrollo en curso. Problema → decisión de arquitectura (row-level default-deny) → un prototipo que itera con el cliente.",
   },
   {
     slug: "futbolvision",
@@ -72,8 +57,6 @@ export const proyectos: Proyecto[] = [
     categoria: "destacado",
     unaLinea:
       "Predice el resultado de partidos de fútbol con un modelo de machine learning.",
-    resumen:
-      "Un proyecto anterior donde me tocó el lado de machine learning: un XGBoost Regressor que predice el marcador y las probabilidades de un partido. Ya no lo sigo, pero muestra bien cómo encaro un problema de datos de punta a punta.",
     problema:
       "Predecir cómo termina un partido con lo que se sabe antes de que empiece: los antecedentes entre los dos equipos, la forma de cada uno, las lesiones y el contexto de la liga.",
     solucion:
@@ -93,13 +76,8 @@ export const proyectos: Proyecto[] = [
       "Las predicciones se guardan y se siguen, en vivo o pre-match.",
       "Plan de marketing completo: análisis de audiencia, competitivo y Cinco Fuerzas de Porter.",
     ],
-    aprendizajes: [
-      "Elegir bien las features importa tanto como el modelo: un XGBoost solo es tan bueno como lo que se le da de comer.",
-      "Separar frontend (Next.js) y servicio de ML (FastAPI) mantiene el modelo independiente de la UI.",
-    ],
     enlaces: [
       {
-        tipo: "repo",
         label: "Repo en GitHub",
         url: "https://github.com/Felgimon/FutbolVision",
       },
@@ -114,9 +92,6 @@ export const proyectos: Proyecto[] = [
         alt: "Las predicciones guardadas, filtrables entre en vivo y pre-match: cada una con su marcador estimado, las tres probabilidades y el modelo que la generó",
       },
     ],
-    acento: "#47a88c",
-    anguloSitio:
-      "Evidencia del lado ML: feature engineering y un servicio de modelo separado de la UI. Proyecto anterior.",
   },
 
   // ==========================================================================
@@ -127,8 +102,6 @@ export const proyectos: Proyecto[] = [
     nombre: "CourtSide NBA Tracker",
     categoria: "secundario",
     unaLinea: "Tracker de NBA en tiempo real con búsqueda inteligente de jugadores.",
-    resumen:
-      "La otra mitad deportiva (básquet) y un buen ejemplo de resolver problemas reales de integración de APIs: proxy para esquivar CORS y rate limits, y búsqueda con scoring de relevancia.",
     queHace:
       "Sigue partidos y estadísticas de la NBA consumiendo endpoints de NBA.com a través de un proxy propio (para esquivar CORS y rate limits). Tiene animación temática de básquet, dark/light mode y búsqueda de jugadores con scoring de relevancia: pondera coincidencias para ordenar primero los resultados útiles, no un simple 'contiene el texto'.",
     rol: "Desarrollo completo, en solitario.",
@@ -140,7 +113,6 @@ export const proyectos: Proyecto[] = [
     ],
     enlaces: [
       {
-        tipo: "repo",
         label: "Repo en GitHub",
         url: "https://github.com/Felgimon/TP1_Front",
       },
@@ -152,17 +124,12 @@ export const proyectos: Proyecto[] = [
         alt: "La home de CourtSide: los partidos del día y el jugador destacado, con sus promedios de la temporada",
       },
     ],
-    acento: "#e7a06a",
-    anguloSitio:
-      "La otra mitad deportiva (básquet) y resolución de problemas reales de integración de APIs.",
   },
   {
     slug: "buscaminas",
     nombre: "Buscaminas",
     categoria: "secundario",
     unaLinea: "El clásico Buscaminas, hecho desde cero en C++ para jugarse en la terminal.",
-    resumen:
-      "Las bases sin frameworks en el medio: estructuras de datos, recursión y punteros. Un buen contrapeso 'de fundamentos' frente a los proyectos web.",
     queHace:
       "Tablero renderizado en terminal con colores ANSI y símbolos Unicode, lógica de revelado recursivo (flood fill) para destapar zonas vacías, y cálculo de indicadores de minas adyacentes. Incluyó debuggear a mano bugs de indicadores y de recursión, de los que enseñan de verdad.",
     rol: "Desarrollo completo, en solitario.",
@@ -174,7 +141,6 @@ export const proyectos: Proyecto[] = [
     ],
     enlaces: [
       {
-        tipo: "repo",
         label: "Repo en GitHub",
         url: "https://github.com/Felgimon/Buscaminas",
       },
@@ -189,9 +155,6 @@ export const proyectos: Proyecto[] = [
         alt: "El tablero en la terminal al terminar la partida: los indicadores de minas adyacentes con su color ANSI, las banderas puestas y la mina que la terminó",
       },
     ],
-    acento: "#7fd1a3",
-    anguloSitio:
-      "Las bases: estructuras de datos, recursión y punteros sin frameworks en el medio.",
   },
   {
     slug: "lost",
@@ -199,13 +162,10 @@ export const proyectos: Proyecto[] = [
     categoria: "secundario",
     unaLinea:
       "Plataforma de tracking de objetos, entregada con un equipo chico en menos de 6 meses.",
-    resumen:
-      "Demuestra que sé entregar en equipo con un deadline real. (Faltan detalles del producto.)",
     rol: "Equipo chico, entrega en menos de 6 meses.",
     stack: [],
     enlaces: [
       {
-        tipo: "repo",
         label: "Repo en GitHub",
         // El repo se llama con el punto final (proyecto-3-L.O.S.T.); sin él,
         // GitHub devuelve 404 — verificado. Con el enlace, la card entera pasa a
@@ -219,21 +179,16 @@ export const proyectos: Proyecto[] = [
         alt: "La pantalla de inicio de LOST: la marca en la barra superior y las dos acciones grandes, 'Perdí algo' y 'Encontré algo', sobre un fondo de íconos de objetos.",
       },
     ],
-    acento: "#8fe3c6",
-    anguloSitio: "Entrega en equipo con deadline real.",
   },
   {
     slug: "nindo",
     nombre: "Nindo",
     categoria: "secundario",
     unaLinea: "Videojuego desarrollado con un equipo chico en menos de 6 meses.",
-    resumen:
-      "El proyecto más lúdico del portfolio; muestra rango más allá de las webs. (Faltan detalles de género, engine y rol.)",
     rol: "Equipo chico, entrega en menos de 6 meses.",
     stack: [],
     enlaces: [
       {
-        tipo: "repo",
         label: "Repo en GitHub",
         url: "https://github.com/Mateo-Drault/Nindo-VideoJuego-Mateo-Drault-Felipe-Doval-Teo-Gonzalez-Pedro-Henriquez",
       },
@@ -244,21 +199,16 @@ export const proyectos: Proyecto[] = [
         alt: "El menú principal de Nindo: la barra con PLAY, QUIT y OPTIONS sobre la máscara del ninja en negro y amarillo.",
       },
     ],
-    acento: "#c77dff",
-    anguloSitio: "El proyecto más lúdico; rango más allá de las webs.",
   },
   {
     slug: "pcbuilder",
     nombre: "PC Builder",
     categoria: "secundario",
     unaLinea: "Armador / configurador de PCs por componentes.",
-    resumen:
-      "Configurador de PCs por componentes. (Faltan descripción, features y stack; pendiente de completar.)",
     rol: "En solitario.",
     stack: [],
     enlaces: [
       {
-        tipo: "repo",
         label: "Repo en GitHub",
         url: "https://github.com/Felgimon/TP2-ivo",
       },
@@ -270,18 +220,12 @@ export const proyectos: Proyecto[] = [
         alt: "El armador en uso: el catálogo de componentes a la izquierda, la PC en 3D en el medio y el resumen del build con el total a la derecha",
       },
     ],
-    acento: "#8fe3c6",
-    anguloSitio: "Configurador por componentes.",
   },
 ];
 
 export const proyectosDestacados = proyectos.filter(
   (p) => p.categoria === "destacado",
 );
-export const proyectosSecundarios = proyectos.filter(
-  (p) => p.categoria === "secundario",
-);
-
 export function getProyecto(slug: string): Proyecto | undefined {
   return proyectos.find((p) => p.slug === slug);
 }

@@ -16,8 +16,6 @@ export const proyectosEN: Proyecto[] = [
     ...es.superlum,
     unaLinea:
       "Custom operations workspace for a real company, built in development with them.",
-    resumen:
-      "The strong case study: a real client and work in progress. A custom workspace for Taquion, with fine-grained per-client permissions and flows shaped by how they actually work. Today it's a prototype moving forward with them.",
     problema:
       "Taquion runs its whole operation on a generic workspace: flexible, but nobody's. It lacks its own structure, fine-grained per-client permissions and flows designed around how the company actually works. After my internship there (automation with n8n and workflows on their workspace), the proposal was to build them their own tool.",
     solucion:
@@ -30,10 +28,6 @@ export const proyectosEN: Proyecto[] = [
       "Agent system to validate features and keep design consistency.",
       "Reference client: Sergio Doval, CEO of Taquion. A prototype moving forward with them.",
       "Presented at TIC Experience, with a TV interview (TN) about the project.",
-    ],
-    aprendizajes: [
-      "Designing security from the data model (default-deny) is far cheaper than adding it later.",
-      "Replacing a generic tool people already use forces you to understand the real flow, not the ideal one.",
     ],
     capturas: [
       { ...es.superlum.capturas[0], alt: "Screenshot of the Superlum interface" },
@@ -51,8 +45,6 @@ export const proyectosEN: Proyecto[] = [
     ...es.futbolvision,
     unaLinea:
       "Predicts football match results with a machine learning model.",
-    resumen:
-      "An earlier project where I owned the machine learning side: an XGBoost Regressor that predicts a match's score and probabilities. I no longer maintain it, but it shows how I approach a data problem end to end.",
     problema:
       "Predicting how a match ends with what's known before it starts: head-to-head history, each team's form, injuries and the league context.",
     solucion:
@@ -71,10 +63,6 @@ export const proyectosEN: Proyecto[] = [
       "Predictions are saved and tracked, live or pre-match.",
       "Full marketing plan: audience analysis, competitive analysis and Porter's Five Forces.",
     ],
-    aprendizajes: [
-      "Choosing the features matters as much as the model: an XGBoost is only as good as what you feed it.",
-      "Separating the frontend (Next.js) from the ML service (FastAPI) keeps the model independent from the UI.",
-    ],
     capturas: [
       {
         ...es.futbolvision.capturas[0],
@@ -89,8 +77,6 @@ export const proyectosEN: Proyecto[] = [
   {
     ...es.courtside,
     unaLinea: "Real-time NBA tracker with smart player search.",
-    resumen:
-      "The other sporting half (basketball) and a good example of solving real API-integration problems: a proxy to dodge CORS and rate limits, and search with relevance scoring.",
     queHace:
       "Tracks NBA games and stats by consuming NBA.com endpoints through its own proxy (to dodge CORS and rate limits). It has a basketball-themed animation, dark/light mode and player search with relevance scoring: it weighs matches to rank useful results first, not a plain 'contains the text'.",
     rol: "Full development, solo.",
@@ -111,8 +97,6 @@ export const proyectosEN: Proyecto[] = [
     nombre: "Minesweeper",
     unaLinea:
       "The classic Minesweeper, built from scratch in C++ to be played in the terminal.",
-    resumen:
-      "The fundamentals with no frameworks in between: data structures, recursion and pointers. A good 'foundations' counterweight to the web projects.",
     queHace:
       "A board rendered in the terminal with ANSI colors and Unicode symbols, recursive reveal logic (flood fill) to open empty areas, and adjacent-mine indicators. It involved hand-debugging indicator and recursion bugs, the kind that actually teach you.",
     rol: "Full development, solo.",
@@ -133,8 +117,6 @@ export const proyectosEN: Proyecto[] = [
     ...es.lost,
     unaLinea:
       "Object-tracking platform, delivered with a small team in under 6 months.",
-    resumen:
-      "Shows I can deliver with a team against a real deadline. (Product details pending.)",
     rol: "Small team, delivered in under 6 months.",
     capturas: [
       {
@@ -146,8 +128,6 @@ export const proyectosEN: Proyecto[] = [
   {
     ...es.nindo,
     unaLinea: "Video game built with a small team in under 6 months.",
-    resumen:
-      "The most playful project in the portfolio; shows range beyond the web. (Genre, engine and role details pending.)",
     rol: "Small team, delivered in under 6 months.",
     capturas: [
       {
@@ -159,8 +139,6 @@ export const proyectosEN: Proyecto[] = [
   {
     ...es.pcbuilder,
     unaLinea: "Component-by-component PC builder/configurator.",
-    resumen:
-      "A PC configurator by components. (Description, features and stack pending.)",
     rol: "Solo.",
     capturas: [
       {

@@ -1,16 +1,10 @@
 /**
- * Tipos del contenido del portfolio.
- * content/ es la ÚNICA fuente de verdad: las secciones y las páginas de
- * detalle leen desde acá. Todo lo que falte se marca con `falta`/`incompleto`
- * para que la UI muestre un placeholder honesto (nunca datos inventados).
+ * Tipos del contenido. content/ es la única fuente de verdad: las secciones y
+ * las páginas de caso leen desde acá. Nada inventado: si un dato falta, el
+ * campo no está y la interfaz no lo muestra.
  */
 
-export type CategoriaProyecto = "destacado" | "secundario";
-
-export type TipoEnlace = "repo" | "demo" | "caso" | "nota" | "figma";
-
 export interface EnlaceProyecto {
-  tipo: TipoEnlace;
   label: string;
   url: string;
 }
@@ -18,8 +12,6 @@ export interface EnlaceProyecto {
 export interface Captura {
   src: string;
   alt: string;
-  /** true → todavía no hay captura real; la UI muestra un placeholder punteado */
-  falta?: boolean;
 }
 
 export interface MiembroEquipo {
@@ -30,100 +22,50 @@ export interface MiembroEquipo {
 export interface Proyecto {
   slug: string;
   nombre: string;
-  categoria: CategoriaProyecto;
-  /** título de una línea; si falta, se marca incompleto */
+  /** destacado → tiene página de caso en /proyectos/<slug> */
+  categoria: "destacado" | "secundario";
   unaLinea: string;
-  tagline?: string;
-  /** resumen breve para la card (1–2 frases) */
-  resumen: string;
   problema?: string;
   solucion?: string;
   queHace?: string;
   rol: string;
   equipo?: MiembroEquipo[];
   stack: string[];
-  /** hitos, decisiones técnicas, features destacadas */
   destacados?: string[];
-  aprendizajes?: string[];
   enlaces: EnlaceProyecto[];
   capturas: Captura[];
-  /** color de acento del case study (hex) */
-  acento: string;
-  anguloSitio?: string;
-  año?: string;
-  /** true → faltan datos reales (PC Builder / Nindo / LOST) */
-  incompleto?: boolean;
 }
 
-export type CategoriaStack =
-  | "Frontend"
-  | "Backend"
-  | "ML / Datos"
-  | "Lenguajes"
-  | "3D / Motion"
-  | "Automatización";
-
-export interface ItemStack {
-  nombre: string;
-  categoria: CategoriaStack;
-}
-
-/** Un principio del "Enfoque": cómo trabaja Felipe. Se renderiza numerado
- * (01/02/03), sin viñetas. */
-export interface PrincipioEnfoque {
-  titulo: string;
-  texto: string;
-}
-
-export interface Enfoque {
-  resumen: string;
-  principios: PrincipioEnfoque[];
-}
-
-/** Copy de la PORTADA. Regla de Felipe: acá no entran guiones ni viñetas (ni
- * separadores decorativos): al lado del nombre mandan el nombre y una frase. */
-export interface Hero {
-  /** línea de oficio, arriba del nombre */
-  kicker: string;
-  /** la frase que explica qué hace, debajo del nombre */
-  lead: string;
-}
-
-export type TipoTimeline = "trabajo" | "educacion" | "competencia";
-
-export interface ItemTimeline {
-  orden: number;
-  titulo: string;
+export interface ItemRecorrido {
   lugar: string;
-  periodo?: string;
-  descripcion: string;
-  tipo: TipoTimeline;
+  titulo: string;
+  detalle: string;
+}
+
+export interface Foto {
+  src: string;
+  alt: string;
+  pie: string;
+  /** tamaño real del archivo, para que la página no salte al cargar */
+  w: number;
+  h: number;
+  /** recorte sin fondo: va sobre un bloque de color */
+  fondo?: "amarillo" | "tinta";
+  /** lugar en el lienzo de escritorio, en vw: columna, fila y ancho */
+  x: number;
+  y: number;
+  ancho: number;
+  /** cuánto se adelanta al scroll (parallax) */
+  vel: number;
 }
 
 export interface Perfil {
   nombre: string;
-  apodo: string;
   rol: string;
   ubicacion: string;
-  hero: Hero;
-  bioCorta: string;
-  bioLarga: string[];
-  enfoque: Enfoque;
+  bio: string;
   metaDescripcion: string;
-  links: {
-    github: string;
-    linkedin: string;
-    cv?: string;
-  };
-  stack: ItemStack[];
-  timeline: ItemTimeline[];
-  /** Así soy: cómo es, en sus palabras (Perfil, debajo del stack) */
-  rasgos: Rasgo[];
-}
-
-export interface Rasgo {
-  titulo: string;
-  texto: string;
-  /** un control al final de la frase (hoy: prender el sonido) */
-  accion?: "sonido";
+  links: { github: string; linkedin: string };
+  stack: string[];
+  recorrido: ItemRecorrido[];
 }

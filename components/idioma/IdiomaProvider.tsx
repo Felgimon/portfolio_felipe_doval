@@ -13,7 +13,8 @@ import { perfil as perfilES } from "@/content/perfil";
 import { perfilEN } from "@/content/perfil.en";
 import { proyectos as proyectosES } from "@/content/proyectos";
 import { proyectosEN } from "@/content/proyectos.en";
-import type { Perfil, Proyecto } from "@/content/types";
+import { fotos } from "@/content/fotos";
+import type { Foto, Perfil, Proyecto } from "@/content/types";
 
 /**
  * El idioma del sitio, resuelto una vez por visita. SSR y primer paint son
@@ -32,6 +33,7 @@ type Paquete = {
   t: TextosUI;
   perfil: Perfil;
   proyectos: Proyecto[];
+  fotos: Foto[];
   getProyecto: (slug: string) => Proyecto | undefined;
 };
 
@@ -42,6 +44,7 @@ function armar(idioma: Idioma): Paquete {
     t: textosUI[idioma],
     perfil: idioma === "es" ? perfilES : perfilEN,
     proyectos,
+    fotos: fotos(idioma),
     getProyecto: (slug) => proyectos.find((p) => p.slug === slug),
   };
 }
