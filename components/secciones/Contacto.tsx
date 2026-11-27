@@ -1,81 +1,63 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
+import { CON_MOVIMIENTO, engordar, gsap, useGSAP } from "@/lib/gsap";
+import { armarMail } from "@/lib/mail";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Cianotipo } from "@/components/escena/Cianotipo";
-import { CopiarMail } from "@/components/ui/CopiarMail";
-import { abrirMail } from "@/lib/mail";
-import { listo } from "@/lib/sonido";
-import { TituloSeccion } from "./comun";
+import { Flecha, Peso } from "@/components/ui/Peso";
 
 /**
- * CONTACTO. Sin formulario falso: copiar el mail (se arma recién al tocar),
- * GitHub y LinkedIn. Y, porque a Felipe le gusta charlar (v8), "¿De qué
- * charlamos?": un tema abre el mail con el asunto y el saludo listos.
+ * Contacto: tres filas enormes. La del mail lo copia: la dirección no está en
+ * el HTML ni en el contenido, se arma recién en el clic (lib/mail.ts) y se
+ * muestra en la misma fila. Si el portapapeles falla, queda a la vista para
+ * copiarla a mano.
  */
 export function Contacto() {
-  const { perfil, t } = useIdioma();
+  const { t, perfil } = useIdioma();
+  const raiz = useRef<HTMLElement>(null);
+  const [estado, setEstado] = useState<"" | "ok" | "error">("");
+  const reloj = useRef(0);
+
+  useEffect(() => () => window.clearTimeout(reloj.current), []);
+
+  useGSAP(
+    () => {
+      gsap.matchMedia().add(CON_MOVIMIENTO, () => engordar(raiz.current!));
+    },
+    { scope: raiz },
+  );
+
+  const copiar = async () => {
+    let ok = true;
+    try {
+      await navigator.clipboard.writeText(armarMail());
+    } catch {
+      ok = false;
+    }
+    setEstado(ok ? "ok" : "error");
+    window.clearTimeout(reloj.current);
+    reloj.current = window.setTimeout(() => setEstado(""), ok ? 3000 : 9000);
+  };
+
+  const nota = estado === "ok" ? t.contacto.copiado : estado === "error" ? t.contacto.copialoAMano : t.contacto.copiar;
 
   return (
-    <section
-      id="contacto"
-      aria-labelledby="contacto-titulo"
-      className="parada !pb-10 max-md:pt-[150px]"
-    >
-      <div className="contenedor relative">
-        <Cianotipo nombre="contacto-m" className="top-[-130px] w-full md:hidden" burbujas="0.82 0.48 0.035" />
-        {/* las dos tazas, grandes: el centro en el hueco de la derecha y los bordes
-            que rozan el final del título y los botones */}
-        <Cianotipo
-          nombre="contacto-grande"
-          className="top-[60px] right-[-3%] w-[58%] max-w-[880px] max-md:hidden"
-          burbujas="0.58 0.62 0.055; 0.86 0.36 0.026"
-        />
-        <div className="md:max-w-[58%]">
-          <TituloSeccion id="contacto-titulo" burbujas="0.9 0.5 0.09" burbujasM="0.9 0.5 0.09">{t.paradas.contacto}</TituloSeccion>
-          <p className="lead mt-10 max-w-[34ch]">{t.contacto.lead}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <CopiarMail variante="solido" />
-            <a
-              href={perfil.links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-vidrio
-              className="boton vidrio vidrio-pildora boton-vidrio"
-            >
-              GitHub <span aria-hidden className="flecha flecha-diag">↗</span>
-            </a>
-            <a
-              href={perfil.links.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-vidrio
-              className="boton vidrio vidrio-pildora boton-vidrio"
-            >
-              LinkedIn <span aria-hidden className="flecha flecha-diag">↗</span>
-            </a>
-          </div>
-          <div role="group" aria-labelledby="temas-titulo" className="mt-9">
-            <p id="temas-titulo" className="etiqueta">
-              {t.contacto.temasTitulo}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2.5">
-              {t.contacto.temas.map((tema) => (
-                <button
-                  key={tema.etiqueta}
-                  type="button"
-                  data-vidrio
-                  onClick={() => {
-                    listo();
-                    abrirMail(tema.asunto, `${t.contacto.saludo}\n\n`);
-                  }}
-                  className="boton vidrio vidrio-pildora boton-vidrio tema min-h-[44px] px-[18px] text-[15px]"
-                >
-                  {tema.etiqueta}
-                </button>
-              ))}
-            </div>
-            <p className="mt-3 text-[14px] text-crema-2">{t.contacto.temasAyuda}</p>
-          </div>
-        </div>
+    <section ref={raiz} id="contacto" data-tema="tinta" className="contacto">
+      <h2 className="gigante titulo text-amarillo">
+        <Peso>{t.secciones.contacto}</Peso>
+      </h2>
+      <div className="filas">
+        <button type="button" className={estado ? "fila fila-mail" : "fila"} data-estado={estado || undefined} onClick={copiar}>
+          <span>{estado ? armarMail() : t.contacto.mail}</span>
+          <span className="fila-nota" role="status">
+            {nota}
+          </span>
+        </button>
+        <a className="fila" href={perfil.links.github} target="_blank" rel="noreferrer">
+          GitHub <Flecha />
+        </a>
+        <a className="fila" href={perfil.links.linkedin} target="_blank" rel="noreferrer">
+          LinkedIn <Flecha />
+        </a>
       </div>
     </section>
   );
