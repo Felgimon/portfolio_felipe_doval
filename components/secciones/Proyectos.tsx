@@ -1,66 +1,125 @@
 "use client";
+import { useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { CON_MOVIMIENTO, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { useIdioma } from "@/components/idioma/IdiomaProvider";
-import { Pieza } from "./Pieza";
-import { TituloSeccion } from "./comun";
+import { Flecha, Peso } from "@/components/ui/Peso";
 
 /**
- * PROYECTOS. FutbolVision en grande (el caso con más para contar) y abajo el
- * resto como una lista que se lee de un vistazo: nombre, qué es, con qué está
- * hecho y el link al repo.
+ * Proyectos: un carril horizontal. La sección queda fija y el scroll vertical
+ * mueve la pista hacia la izquierda, un píxel por píxel; el alto del carril se
+ * calcula del ancho de la pista. Cada captura se destapa al entrar y se
+ * desplaza un poco más lento que su marco.
  */
 export function Proyectos() {
-  const { proyectos, t } = useIdioma();
-  const destacados = proyectos.filter((p) => p.categoria === "destacado" && p.slug !== "superlum");
-  const secundarios = proyectos.filter((p) => p.categoria === "secundario");
+  const { t, proyectos } = useIdioma();
+  const raiz = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      gsap.matchMedia().add(CON_MOVIMIENTO, () => {
+        const carril = raiz.current!.querySelector<HTMLElement>(".carril")!;
+        const pista = raiz.current!.querySelector<HTMLElement>(".pista")!;
+        const recorrido = () => pista.scrollWidth - window.innerWidth;
+        const medir = () => gsap.set(carril, { height: window.innerHeight + recorrido() });
+        medir();
+        ScrollTrigger.addEventListener("refreshInit", medir);
+
+        const tramo = { trigger: carril, start: "top top", end: "bottom bottom", scrub: true };
+        const avance = gsap.to(pista, {
+          x: () => -recorrido(),
+          ease: "none",
+          scrollTrigger: { ...tramo, invalidateOnRefresh: true },
+        });
+        gsap.fromTo(".carril-progreso i", { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: tramo });
+
+        // el título engorda mientras la sección sube sobre el inicio
+        gsap.fromTo(
+          ".pista-titulo [data-peso]",
+          { fontWeight: 100 },
+          { fontWeight: 900, ease: "none", scrollTrigger: { trigger: raiz.current, start: "top bottom", end: "top top", scrub: true } },
+        );
+
+        gsap.utils.toArray<HTMLElement>(".pieza").forEach((pieza) => {
+          const enPista = { trigger: pieza, containerAnimation: avance, scrub: true };
+          gsap.fromTo(
+            pieza.querySelector(".pieza-captura"),
+            { clipPath: "inset(0 0 0 100%)" },
+            { clipPath: "inset(0 0 0 0%)", ease: "none", scrollTrigger: { ...enPista, start: "left 98%", end: "left 45%" } },
+          );
+          gsap.fromTo(
+            pieza.querySelector("img"),
+            { xPercent: -5 },
+            { xPercent: 5, ease: "none", scrollTrigger: { ...enPista, start: "left right", end: "right left" } },
+          );
+        });
+
+        return () => ScrollTrigger.removeEventListener("refreshInit", medir);
+      });
+    },
+    { scope: raiz, dependencies: [proyectos], revertOnUpdate: true },
+  );
 
   return (
-    <section
-      id="proyectos"
-      aria-labelledby="proyectos-titulo"
-      className="parada"
-    >
-      <div className="contenedor">
-        <TituloSeccion
-          id="proyectos-titulo"
-          burbujas="0.92 0.5 0.085; 0.36 2.3 0.04; 1.12 0.1 0.024"
-          burbujasM="0.94 0.5 0.085; 0.2 1.6 0.03"
-        >{t.paradas.proyectos}</TituloSeccion>
-        {destacados.map((p) => (
-          <Pieza key={p.slug} p={p} etiqueta={t.trabajo.anterior} invertida />
-        ))}
-        <ul className="mt-16 border-t border-linea md:mt-22">
-          {secundarios.map((p) => {
-            const link = p.enlaces.find((e) => e.tipo === "repo" || e.tipo === "demo");
-            const fila = (
-              <>
-                <span className="fila-nombre h3 text-[20px] md:text-[22px]">{p.nombre}</span>
-                <span className="hidden text-[16px] text-crema-2 md:block">{p.unaLinea}</span>
-                <span className="hidden text-[14px] text-crema-2 md:block">{p.stack.slice(0, 2).join(", ")}</span>
-                <span aria-hidden className="text-right text-[18px]">
-                  {link && <span className="flecha flecha-diag">↗</span>}
-                </span>
-              </>
-            );
-            return (
-              <li key={p.slug} className="border-b border-linea">
-                {link ? (
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${p.nombre}: ${t.trabajo.ariaAbrirRepo} ${link.label}`}
-                    data-vidrio="hover"
-                    className="fila vidrio-hover"
-                  >
-                    {fila}
-                  </a>
-                ) : (
-                  <div className="fila">{fila}</div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+    <section ref={raiz} id="proyectos" data-tema="tinta" className="proyectos">
+      <div className="carril">
+        <div className="carril-fijo">
+          <div className="pista">
+            <h2 className="pista-titulo gigante">
+              <Peso>{t.secciones.proyectos}</Peso>
+            </h2>
+            {proyectos.map((p) => {
+              const caso = p.categoria === "destacado";
+              const captura = p.capturas[0];
+              const foto = (
+                <Image src={captura.src} alt={captura.alt} width={1600} height={1000} sizes="(max-width: 767px) 95vw, 60vw" />
+              );
+              return (
+                <article key={p.slug} className="pieza">
+                  <h3 className="pieza-nombre gigante">{p.nombre}</h3>
+                  {caso ? (
+                    <Link href={`/proyectos/${p.slug}`} className="pieza-captura" aria-label={`${p.nombre}, ${t.proyectos.verCaso}`}>
+                      {foto}
+                    </Link>
+                  ) : (
+                    <div className="pieza-captura">{foto}</div>
+                  )}
+                  <div className="pieza-info">
+                    <p className="pieza-linea">{p.unaLinea}</p>
+                    <dl className="pieza-datos">
+                      <div>
+                        <dt className="dato">{t.proyectos.rol}</dt>
+                        <dd>{p.rol}</dd>
+                      </div>
+                      {p.stack.length > 0 && (
+                        <div>
+                          <dt className="dato">{t.proyectos.stack}</dt>
+                          <dd>{p.stack.join(", ")}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    <p className="pieza-enlaces">
+                      {caso && (
+                        <Link href={`/proyectos/${p.slug}`} className="enlace">
+                          {t.proyectos.verCaso}
+                        </Link>
+                      )}
+                      {p.enlaces.map((e) => (
+                        <a key={e.url} href={e.url} target="_blank" rel="noreferrer" className="enlace">
+                          GitHub <Flecha />
+                        </a>
+                      ))}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="carril-progreso" aria-hidden>
+            <i />
+          </div>
+        </div>
       </div>
     </section>
   );
