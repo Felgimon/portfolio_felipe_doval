@@ -1,6 +1,6 @@
 ---
 tipo: proyecto
-estado: v7 en producción, faltan las fotos nuevas
+estado: v10 en producción, faltan fotos propias
 repo: https://github.com/Felgimon/portfolio_felipe_doval
 sitio: https://felipedoval.com
 ---
@@ -8,7 +8,13 @@ sitio: https://felipedoval.com
 
 Mi sitio personal: **felipedoval.com**. Next.js 16 estático en Vercel.
 
-## v7 «Vidrio y cobalto» (octubre 2026)
+## v10 «Amarillo taxi» (noviembre 2026)
+
+Sin burbujas, sin vidrio y sin música. Un recorrido que mueve el scroll: cinco
+secciones con nombre directo, campos enteros de color plano y una sola letra,
+Piazzolla. Ver [[el-peso-lo-mueve-el-scroll]].
+
+## v7 a v9 «Vidrio y cobalto» (historia)
 
 La v6 [[la-v6-parecia-plasticola|parecía plasticola]]. La v7: un estudio
 cobalto, los títulos impresos en el fondo y una **gota de vidrio** que va de

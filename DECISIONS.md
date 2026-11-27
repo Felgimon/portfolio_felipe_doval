@@ -3,10 +3,55 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> Las secciones **v9.x**, **v8** y **v7.x** son las vigentes (rediseño «Vidrio y cobalto», lo que lo hace más de Felipe y su canción).
-> Debajo queda toda la historia: v6 (la visita guiada en líquido verde), v5.x
-> (el sol en el estudio blanco), v4, v3, v2 y v1. Las notas también están en
-> `obsidian/Portfolio/`.
+> La sección **v10** es la vigente (rediseño «Amarillo taxi»). Debajo queda
+> toda la historia: v9 a v7 (vidrio y cobalto), v6, v5.x, v4, v3, v2 y v1. Las
+> notas también están en `obsidian/Portfolio/`.
+
+---
+
+## v10 — Amarillo taxi
+
+### El pedido
+Estética nueva, que no parezca IA. Texto directo: que diga «Proyectos»,
+«Fotos», no lo que pienso. Sin burbujas y sin música; código más simple. El
+traslado, manejado por el scroll, como un recorrido (referencias: los sitios de
+Lando Norris y LeBron James). Letra que no sea grotesca y que diga cómo soy.
+Colores distintos. Más imágenes.
+
+### Lo que se sacó
+La escena WebGL (gota, vidrio, burbujas, cianotipos de fondo), la canción y los
+sonidos, el huevo de pascua, el overlay de FPS, los niveles de rendimiento, la
+sección Enfoque y los rasgos (eran opinión, no dato), y los scripts de prueba
+atados a ese sitio. Se van cuatro dependencias (lucide-react, clsx,
+tailwind-merge, iconify).
+
+### La letra: Piazzolla
+Una sola familia, en sus dos puntas (hairline cursiva y negra cursiva). Por
+qué: es de Buenos Aires (Huerta Tipográfica) y lleva el nombre de un músico.
+Las curvas se quiebran en ángulos y el paso de grueso a fino es corto y
+abrupto: rápida y directa. Los remates son cuñas cortadas, sin adorno. La
+cursiva negra va inclinada hacia adelante. Se compararon en pantalla Besley,
+Alegreya, Labrada, Grenze, Saira, Hepta Slab, Sansita y Young Serif con el
+nombre y los títulos reales; Piazzolla fue la que tenía tensión en las dos
+puntas del peso.
+
+### El color
+Amarillo taxi `#FFC400`, tinta `#15120E`, papel `#F4F1EA` y rojo `#E8391D`.
+Planos, en HEX sólido, sin alpha ni degradé. Cada sección es un campo entero de
+uno. El rojo aparece una sola vez a lo grande (la palabra «Fotos»). Se evitó a
+propósito el combo crema + serif fina + terracota, que hoy es la cara de la IA.
+
+### El movimiento
+Todo sale del scroll (GSAP ScrollTrigger con Lenis). Los fijados son
+`position: sticky`, no pin de GSAP: menos código y sin saltos. El motivo que se
+repite es el peso: los títulos engordan de 100 a 900 al subir, y en el inicio
+el peso pasa de una palabra a la otra. Para que nada se mueva alrededor
+mientras un título engorda, un molde invisible en negra reserva el lugar
+(`components/ui/Peso.tsx`). La cursiva se inclina con la velocidad del scroll.
+
+### Verificación
+`npm run gate` (typecheck, lint, build) y revisión visual en escritorio (1440)
+y celular (375) de cada sección y de la página de caso.
 
 ---
 
