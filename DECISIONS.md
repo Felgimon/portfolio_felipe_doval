@@ -3,9 +3,54 @@
 Registro de las decisiones no triviales del proyecto (diseño, arquitectura,
 dependencias y bugs). Se actualiza en cada fase.
 
-> La sección **v10** es la vigente (rediseño «Amarillo taxi»). Debajo queda
-> toda la historia: v9 a v7 (vidrio y cobalto), v6, v5.x, v4, v3, v2 y v1. Las
-> notas también están en `obsidian/Portfolio/`.
+> La sección **v11** es la vigente (rediseño «Celeste y blanco»). Debajo queda
+> toda la historia: v10 (amarillo taxi), v9 a v7 (vidrio y cobalto), v6, v5.x,
+> v4, v3, v2 y v1. Las notas también están en `obsidian/Portfolio/`.
+
+---
+
+## v11 — Celeste y blanco
+
+### Lo que dijo Felipe de la v10
+La fuente no. El carril horizontal no: todo hacia abajo, y la referencia es
+Lando Norris, no LeBron. Los tamaños estaban exagerados y los títulos se leían
+pegados. El párrafo enorme no se leía. El amarillo no; Buenos Aires tiene que
+ser más azul, más argentino. El stack, con logos y más chico. El recorrido,
+clickeable, con el detalle de cada lugar. Contacto, de tamaño normal y sin
+«copiar». La cabecera, una sola y siempre igual. Sin sección Fotos: las mismas
+secciones del portfolio anterior, y las fotos, con sentido. El peso de la
+letra, fijo. Innovar, pero que siga pareciendo un portfolio.
+
+### Lo que eligió
+Esta vez la fuente y el color los eligió él, sobre una lámina con cuatro
+fuentes y tres paletas: **Mona Sans con una serif para los acentos** y
+**celeste y blanco**. Enfoque vuelve, corto.
+
+### Qué cambió
+- **Secciones:** Inicio, Sobre mí, Enfoque, Trabajo, Proyectos, Recorrido,
+  Contacto. Sin Fotos.
+- **Una escala de tamaños:** nombre, título, subtítulo, lead, texto, etiqueta.
+  El nombre es lo único que pasa de 80 px.
+- **El inicio es la bandera:** celeste, blanco, celeste, con el nombre en la
+  franja y el sol atrás del retrato. Al scrollear la franja se abre y es el
+  fondo de la sección siguiente.
+- **El sol es el marcador:** en la cabecera marca la sección, en Enfoque baja
+  por la línea. Es el único uso del amarillo.
+- **Todo vertical:** tarjetas que se apilan (Trabajo), columnas a distinta
+  velocidad (Proyectos), entradas atadas al scroll.
+- **Trabajo es Taquion,** con datos verificados en los repos: Superlum está en
+  producción (ya no «prototipo»), se suman taquion.com.ar y Tableros de
+  clientes.
+- **Datos corregidos:** Nindo es Unity y equipo de cuatro; LOST es de 2024 y
+  equipo de cinco; PC Builder es de a dos. Se sacaron los hitos sin respaldo
+  (TIC Experience, TN) y el nombre de la API de FutbolVision, que estaba en
+  duda.
+- **Capturas:** las de taquion.com.ar, Tableros y Nindo salen de los repos de
+  cada proyecto. La de Tableros usa datos de demostración.
+
+### Verificación
+`npm run gate` y revisión visual en escritorio (1440) y celular (375) de cada
+sección y de una página de caso.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 tipo: proyecto
-estado: v10 en producción, faltan fotos propias
+estado: v11 en producción, falta la sesión de fotos
 repo: https://github.com/Felgimon/portfolio_felipe_doval
 sitio: https://felipedoval.com
 ---
@@ -8,11 +8,16 @@ sitio: https://felipedoval.com
 
 Mi sitio personal: **felipedoval.com**. Next.js 16 estático en Vercel.
 
-## v10 «Amarillo taxi» (noviembre 2026)
+## v11 «Celeste y blanco» (noviembre 2026)
 
-Sin burbujas, sin vidrio y sin música. Un recorrido que mueve el scroll: cinco
-secciones con nombre directo, campos enteros de color plano y una sola letra,
-Piazzolla. Ver [[el-peso-lo-mueve-el-scroll]].
+Las secciones de siempre, todo hacia abajo. El inicio es la bandera y el sol
+marca dónde estás. Mona Sans con una serif para los acentos; celeste, blanco y
+azul noche. Esta vez la fuente y el color los elegí yo sobre una lámina. Ver
+[[la-v10-no-parecia-un-portfolio]].
+
+## v10 «Amarillo taxi» (historia, duró un día)
+
+Piazzolla, amarillo y un carril horizontal. Ver [[el-peso-lo-mueve-el-scroll]].
 
 ## v7 a v9 «Vidrio y cobalto» (historia)
 

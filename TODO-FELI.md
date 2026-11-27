@@ -6,50 +6,56 @@ pasar de "muy bueno" a "tuyo de verdad".
 
 Formato: `[ ]` pendiente · `[x]` hecho.
 
-## 🔴 Fotos tuyas (lo más importante)
+## 🔴 Las 6 fotos que necesito
 
-La sección **Fotos** hoy tiene cuatro fotos tuyas (tres recortes con el mismo
-buzo y la del espejo) y cinco dibujos de objetos del sitio anterior, que son
-ilustrativos. Con fotos de verdad pasa a ser tuya.
+Cada foto va en una sección y tiene que ver con lo que dice esa sección. Nada
+de fotos sueltas.
 
-- [ ] Mandame entre 8 y 12 fotos: vos, tus lugares, lo que hacés (jugando al
-  básquet, en ORT, con amigos, viajes, tu escritorio). Verticales y
-  horizontales mezcladas.
-- Para sumarlas vos: el archivo en `public/assets/fotos/` y una entrada en
-  `content/fotos.ts` (ahí se explica cada campo).
-- [ ] La foto del inicio (`apoyado`) es un recorte interino. Si hacés una
-  mejor, de frente y con buena luz, reemplaza a esa.
+**Para todas:** cámara trasera del celular en 2x, a la altura de tus ojos, a 2
+o 3 metros. De día, con luz de ventana de frente o de costado, sin flash. Sin
+modo retrato y sin filtros. Ropa lisa y sin logos, en negro, gris o blanco (no
+verde ni celeste, que son colores del sitio). Mandame los originales, sin
+recortar.
 
-## 🔴 Contenido faltante (genera placeholders visibles)
+1. **Inicio, de frente (la principal).** Pared lisa y clara detrás. Del pecho
+   para arriba, hombros de frente a la cámara, brazos sueltos al costado,
+   mirando a cámara, boca cerrada con media sonrisa. Vertical. Sacá cinco
+   iguales y elijo la mejor.
+2. **Inicio, de perfil.** Misma ropa, mismo lugar y misma distancia que la 1,
+   sin mover el celular. Girás 90 grados y mirás hacia tu derecha, con el
+   mentón derecho. Vertical. El scroll pasa de la de frente a esta.
+3. **Sobre mí, en tu escritorio.** Sentado con la compu, tomada desde el
+   costado, mirando la pantalla y con las manos en el teclado. Horizontal, que
+   se vea el escritorio.
+4. **Recorrido, ORT.** En la entrada o en un aula o laboratorio de ORT, de la
+   cintura para arriba, mirando a cámara. Horizontal.
+5. **Recorrido, Taquion.** En la oficina, o trabajando con un tablero o
+   Superlum en pantalla, tomada desde atrás o de costado para que se vea la
+   pantalla. Horizontal.
+6. **Contacto.** Pared lisa, de tres cuartos, brazos cruzados, sonriendo. Como
+   la que hay hoy, pero con buena luz. Vertical.
 
-- [ ] **PC Builder:** falta descripción, qué hace, stack y features
-  (`content/proyectos.ts`, slug `pcbuilder`). Repo: `github.com/Felgimon/TP2-ivo`.
-- [ ] **Nindo:** falta género, engine, de qué va, tu rol y el stack
-  (`content/proyectos.ts`, slug `nindo`).
-- [ ] **LOST:** falta qué hace exactamente, stack, tu rol y el equipo
-  (`content/proyectos.ts`, slug `lost`).
+Dejalas en `contenido/assets/foto/` con el número adelante (`1-frente.jpg`,
+`2-perfil.jpg`, etc.) y avisame: las recorto y las pongo.
 
-## 🟡 Capturas de proyectos
+## 🟡 Para confirmar
 
-En `public/assets/proyectos/<slug>/` y la ruta en `content/proyectos.ts`
-(`capturas`).
-
-- [x] Superlum, FutbolVision, CourtSide, Buscaminas, PC Builder, LOST, Nindo
-  (una cada uno).
-- [ ] Nindo: 2–3 de gameplay (o un GIF/video corto).
-- [ ] Revisá las capturas de Superlum: `superlum-clientes.png` muestra marcas
-  de clientes reales y `superlum-admin-actividad.png` tiene datos de prueba con
-  nombres de empresas. ¿Las dejamos?
-
-## 🟡 Confirmaciones
-
-- [ ] **API de FutbolVision:** el sitio dice **Sportmonks**. Una nota vieja
-  mencionaba API-Football. ¿Cuál es?
-- [ ] **Recorrido:** faltan las fechas. Pasame
-  fechas reales (ORT: ¿año de egreso?; Taquion: ¿de cuándo a cuándo?).
-  `content/perfil.ts` → `recorrido`.
-- [ ] **Hitos de Superlum:** "presentado en TIC Experience" y la "entrevista en
-  TN". ¿Tenés link o foto? Si no se puede respaldar, lo saco.
+- [ ] **Fechas:** año de ingreso a ORT y desde cuándo estás en Taquion
+  (`content/perfil.ts` → `recorrido`). Hoy no se muestran años.
+- [ ] **n8n:** el sitio dice «Automatizaciones con n8n, flujos sobre el
+  workspace de la empresa». Si querés nombrar alguna, decime cuál.
+- [ ] **Tableros:** la captura usa datos de demostración (cliente ficticio). El
+  texto nombra a Nicolás Piantanida como quien lo inició. ¿Lo dejamos?
+- [ ] **Superlum:** siguen las tres capturas de antes. `superlum-clientes.png`
+  muestra marcas de clientes reales. ¿La dejamos?
+- [ ] **FutbolVision:** saqué el nombre de la API porque había dos versiones
+  (Sportmonks y API-Football). Decime cuál es y lo pongo.
+- [ ] **PC Builder:** el deploy público ya no existe (da 404), así que el
+  enlace va al repo. Si lo volvés a publicar, lo enlazo.
+- [ ] **Nindo:** las capturas del repo son de 960 px. Si querés, saco nuevas
+  del juego corriendo.
+- [ ] **CourtSide:** no está en esta compu y no encontré el deploy; quedó la
+  captura anterior.
 
 ## 🟡 La palabra que no se nombra, en el historial de git
 
