@@ -67,12 +67,13 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     lenisRef.current = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);
+    // la cursiva de los títulos se inclina con la velocidad (ver globals.css)
+    lenis.on("scroll", ({ velocity }) => {
+      document.documentElement.style.setProperty("--inclina", gsap.utils.clamp(-9, 9, velocity * -0.22).toFixed(2));
+    });
 
     const raf = (time: number) => lenis.raf(time * 1000);
-    // Con PRIORIDAD: Lenis mueve el scroll antes que cualquier otro oyente del
-    // ticker. La escena (Escena.tsx) dibuja después y lee los rects ya
-    // scrolleados: si no, el vidrio del shader iba un cuadro atrasado respecto
-    // del borde del DOM mientras scrolleabas.
+    // Con prioridad: Lenis mueve el scroll antes de que ScrollTrigger lea.
     gsap.ticker.add(raf, false, true);
     gsap.ticker.lagSmoothing(0);
 
