@@ -308,6 +308,11 @@ img {
   height: 250svh;
 }
 .inicio-fija {
+  /* el ancho del retrato: la franja le reserva ese lugar, así el texto no
+     queda tapado en ninguna proporción de pantalla */
+  --retrato: min(80svh, 44vw, 600px);
+  /* alineado con el borde derecho del contenido, no de la pantalla */
+  --retrato-der: max(var(--margen) * 0.5, (100vw - 1280px) / 2 - 24px);
   position: sticky;
   top: 0;
   height: 100svh;
@@ -333,12 +338,13 @@ img {
   clip-path: inset(33.34% 0 33.34% 0);
 }
 .sol {
+  /* centrado en la cabeza del retrato */
   position: absolute;
-  left: 73%;
-  top: 37%;
-  width: 46svh;
-  height: 46svh;
-  translate: -50% -50%;
+  right: calc(var(--retrato-der) + var(--retrato) * 0.5);
+  bottom: calc(var(--retrato) * 0.76);
+  width: calc(var(--retrato) * 0.6);
+  height: calc(var(--retrato) * 0.6);
+  translate: 50% 50%;
   fill: var(--sol);
 }
 .inicio-banda {
@@ -352,18 +358,21 @@ img {
   display: flex;
   align-items: center;
   gap: clamp(24px, 4vw, 64px);
+  padding-right: calc(var(--retrato) * 0.8);
 }
 .inicio-nombre .serif {
   color: var(--celeste);
 }
 .inicio-desc {
+  flex: 1 1 0;
+  min-width: 0;
   max-width: 25ch;
 }
 .retrato {
   position: absolute;
-  right: 3vw;
+  right: var(--retrato-der);
   bottom: 0;
-  height: 80svh;
+  height: var(--retrato);
   aspect-ratio: 1414 / 1404;
   transform-origin: 50% 100%;
 }
@@ -828,6 +837,12 @@ img {
    ESCRITORIO
    ========================================================================== */
 
+@media (min-width: 900px) and (max-width: 1139px) {
+  .inicio-desc {
+    display: none;
+  }
+}
+
 @media (min-width: 900px) {
   .sobre-grilla {
     grid-template-columns: 5fr 7fr;
@@ -891,11 +906,17 @@ img {
     align-items: flex-start;
     padding-top: 3svh;
   }
+  .inicio-banda .cont {
+    padding-right: 0;
+  }
   .sol {
     left: 80%;
     top: 62%;
+    right: auto;
+    bottom: auto;
     width: 26svh;
     height: 26svh;
+    translate: -50% -50%;
   }
   .retrato {
     right: -14vw;
