@@ -4,68 +4,59 @@
  * campo no está y la interfaz no lo muestra.
  */
 
-export interface EnlaceProyecto {
-  label: string;
-  url: string;
-}
-
 export interface Captura {
   src: string;
   alt: string;
-}
-
-export interface MiembroEquipo {
-  nombre: string;
-  rol: string;
+  w: number;
+  h: number;
 }
 
 export interface Proyecto {
   slug: string;
   nombre: string;
-  /** destacado → tiene página de caso en /proyectos/<slug> */
-  categoria: "destacado" | "secundario";
+  /** trabajo → lo hecho en Taquion; proyecto → el resto */
+  grupo: "trabajo" | "proyecto";
+  /** tiene página propia en /proyectos/<slug> */
+  caso?: boolean;
+  /** En producción, En línea */
+  estado?: string;
   unaLinea: string;
+  rol: string;
+  stack: string[];
   problema?: string;
   solucion?: string;
   queHace?: string;
-  rol: string;
-  equipo?: MiembroEquipo[];
-  stack: string[];
-  destacados?: string[];
-  enlaces: EnlaceProyecto[];
+  detalles?: string[];
+  /** sitio público o repo */
+  sitio?: string;
+  repo?: string;
   capturas: Captura[];
+}
+
+export interface Paso {
+  palabra: string;
+  linea: string;
 }
 
 export interface ItemRecorrido {
   lugar: string;
   titulo: string;
+  estado: string;
   detalle: string;
-}
-
-export interface Foto {
-  src: string;
-  alt: string;
-  pie: string;
-  /** tamaño real del archivo, para que la página no salte al cargar */
-  w: number;
-  h: number;
-  /** recorte sin fondo: va sobre un bloque de color */
-  fondo?: "amarillo" | "tinta";
-  /** lugar en el lienzo de escritorio, en vw: columna, fila y ancho */
-  x: number;
-  y: number;
-  ancho: number;
-  /** cuánto se adelanta al scroll (parallax) */
-  vel: number;
+  /** lo hecho ahí; `caso` enlaza a su página, `ancla` a una sección */
+  hecho: { texto: string; nota?: string; caso?: string; ancla?: string }[];
 }
 
 export interface Perfil {
   nombre: string;
   rol: string;
   ubicacion: string;
+  /** dos líneas para el inicio */
+  presentacion: string;
   bio: string;
+  datos: [etiqueta: string, texto: string][];
+  enfoque: Paso[];
+  recorrido: ItemRecorrido[];
   metaDescripcion: string;
   links: { github: string; linkedin: string };
-  stack: string[];
-  recorrido: ItemRecorrido[];
 }

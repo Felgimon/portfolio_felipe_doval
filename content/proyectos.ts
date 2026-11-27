@@ -1,231 +1,255 @@
 import type { Proyecto } from "./types";
 
 /**
- * Los 7 proyectos. Los destacados tienen página de caso; del resto se muestra
- * la primera captura y el enlace al repo. Solo datos: qué es, rol, stack.
+ * Trabajo (lo hecho en Taquion) y proyectos. Solo datos: qué es, rol, stack.
+ * Los que tienen `caso` tienen página propia.
  */
 export const proyectos: Proyecto[] = [
   // ==========================================================================
-  // DESTACADOS
+  // TRABAJO
   // ==========================================================================
   {
     slug: "superlum",
     nombre: "Superlum",
-    categoria: "destacado",
+    grupo: "trabajo",
+    caso: true,
+    estado: "En producción",
     unaLinea:
-      "Workspace operativo a medida para una empresa real, en desarrollo con ella.",
+      "El workspace operativo de Taquion: clientes, ventas, comunidades y tareas en un solo lugar.",
+    rol: "Diseño y desarrollo full-stack: arquitectura, modelo de datos e interfaz.",
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Prisma", "Supabase", "PostgreSQL"],
     problema:
-      "Taquion maneja toda su operación en un workspace genérico: flexible, pero de nadie. Falta estructura propia, permisos finos por cliente y flujos pensados para cómo trabaja la empresa de verdad. Después de mi pasantía ahí (automatización con n8n y workflows sobre su workspace), la propuesta fue construirles su propia herramienta.",
+      "Taquion manejaba toda su operación en un workspace genérico: flexible, pero sin estructura propia, sin permisos finos por cliente y sin flujos pensados para cómo trabaja la empresa.",
     solucion:
-      "Estoy centralizando la operación de Taquion en un workspace propio: gestión de clientes y proyectos con un modelo de acceso por cliente y scoping a nivel de fila (default-deny: nadie ve nada que no le corresponda), más un sistema de agentes para validación de features y consistencia de diseño.",
+      "Un workspace propio. Reúne clientes, oportunidades de venta, contactos, comunidades, tareas y documentos, con un modelo de acceso por fila: nadie ve lo que no le corresponde.",
     queHace:
-      "Centraliza la operación: clientes, proyectos y accesos, con la estructura y los permisos que la empresa necesita. Es un prototipo en desarrollo, y esa es la parte interesante: cada iteración sale de los problemas concretos que traen del workspace que usan hoy y de lo que van necesitando.",
-    rol: "Diseño y desarrollo full-stack de punta a punta: arquitectura, modelado de datos, UX y marketing del producto.",
-    stack: [
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Prisma",
-      "SQLite (dev)",
-      "Supabase / PostgreSQL (prod)",
+      "Lo usa el equipo de Taquion en su operación diaria. Cada puesto entra a su propia pantalla de inicio: Dirección, Comercial y las demás áreas.",
+    detalles: [
+      "Permisos a nivel de fila, cerrados por defecto.",
+      "Una pantalla de inicio por puesto.",
+      "Más de 2.700 tests automáticos.",
     ],
-    destacados: [
-      "Modelo de acceso por cliente con scoping a nivel de fila (default-deny): la seguridad es la arquitectura, no un parche encima.",
-      "Sistema de agentes para validar features y mantener la consistencia de diseño.",
-      "Cliente referente: Sergio Doval, CEO de Taquion. Prototipo que avanza con ellos.",
-      "Presentado en TIC Experience y con entrevista en TN sobre el proyecto.",
-    ],
-    enlaces: [],
     capturas: [
       {
         src: "/assets/proyectos/superlum/superlum-screenshot.png",
-        alt: "Captura de la interfaz de Superlum",
+        alt: "La pantalla de inicio de Superlum con los números del workspace de Taquion",
+        w: 1905,
+        h: 896,
       },
       {
         src: "/assets/proyectos/superlum/superlum-clientes.png",
-        alt: "La base de Clientes de Taquion en vista galería, con sus vistas guardadas (tabla, por estado, stack) y las categorías de cada cliente",
+        alt: "La base de Clientes en vista galería, con sus vistas guardadas",
+        w: 1600,
+        h: 1000,
       },
       {
         src: "/assets/proyectos/superlum/superlum-admin-actividad.png",
-        alt: "Panel de administración del workspace: el registro de actividad con cada cambio y su autor, junto a las pestañas de miembros y perfiles de acceso",
+        alt: "El panel de administración con el registro de actividad",
+        w: 1600,
+        h: 1000,
       },
     ],
   },
   {
-    slug: "futbolvision",
-    nombre: "FutbolVision",
-    categoria: "destacado",
+    slug: "taquion",
+    nombre: "taquion.com.ar",
+    grupo: "trabajo",
+    caso: true,
+    estado: "En línea",
     unaLinea:
-      "Predice el resultado de partidos de fútbol con un modelo de machine learning.",
-    problema:
-      "Predecir cómo termina un partido con lo que se sabe antes de que empiece: los antecedentes entre los dos equipos, la forma de cada uno, las lesiones y el contexto de la liga.",
-    solucion:
-      "Un XGBoost Regressor de ~60 features, alimentado por la API de Sportmonks (plan Growth), que devuelve el marcador estimado y la probabilidad de cada resultado. Cada predicción se abre y muestra los parámetros que la sostienen.",
+      "El sitio de Taquion: una sola página que se recorre con el scroll, sobre un sistema de partículas en 3D.",
+    rol: "Diseño y desarrollo completo.",
+    stack: ["Next.js", "React", "Three.js", "GSAP", "Tailwind CSS"],
     queHace:
-      "Predice el marcador de un partido y la probabilidad de local, empate y visitante, y desglosa el análisis por parámetro: H2H, forma de cada equipo, lesiones, contexto de liga y xG.",
-    rol: "IA/ML y arquitectura.",
-    equipo: [
-      { nombre: "Felipe Doval", rol: "IA/ML + arquitectura" },
-      { nombre: "Nicolás Fuksman", rol: "UX/UI" },
-      { nombre: "Pedro Henríquez", rol: "Frontend" },
+      "Presenta Comunidades, el producto de Taquion. Un único sistema de partículas en Three.js acompaña todo el recorrido, y una demo arma con IA la comunidad de la marca que escribas.",
+    detalles: [
+      "Un solo sistema de partículas para todas las escenas.",
+      "Recorrido manejado por el scroll.",
+      "Demo con IA y formulario de contacto.",
     ],
-    stack: ["Next.js", "FastAPI", "XGBoost", "Sportmonks API", "Python"],
-    destacados: [
-      "XGBoost Regressor con ~60 features sobre datos de Sportmonks.",
-      "Cada predicción se abre y muestra por qué: H2H, forma, lesiones, contexto y xG.",
-      "Las predicciones se guardan y se siguen, en vivo o pre-match.",
-      "Plan de marketing completo: análisis de audiencia, competitivo y Cinco Fuerzas de Porter.",
-    ],
-    enlaces: [
+    sitio: "https://taquion.com.ar",
+    capturas: [
       {
-        label: "Repo en GitHub",
-        url: "https://github.com/Felgimon/FutbolVision",
+        src: "/assets/proyectos/taquion/taquion-comunidades.webp",
+        alt: "Una escena de taquion.com.ar: comunidades dibujadas como grupos de partículas de colores sobre negro",
+        w: 1512,
+        h: 945,
       },
+      {
+        src: "/assets/proyectos/taquion/taquion-islas.webp",
+        alt: "taquion.com.ar: un dato en primer plano y las comunidades alrededor, cada una con su nombre",
+        w: 1512,
+        h: 945,
+      },
+      {
+        src: "/assets/proyectos/taquion/taquion-inicio.webp",
+        alt: "El inicio de taquion.com.ar: «Construimos comunidades» junto a un mapa de comunidades",
+        w: 1512,
+        h: 945,
+      },
+    ],
+  },
+  {
+    slug: "tableros",
+    nombre: "Tableros de clientes",
+    grupo: "trabajo",
+    caso: true,
+    estado: "En producción",
+    unaLinea:
+      "La plataforma donde cada cliente de Taquion ve cómo avanza su comunidad: metas, métricas y entregables.",
+    rol: "A cargo del desarrollo desde noviembre de 2026. Lo inició Nicolás Piantanida.",
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "PostgreSQL", "Supabase"],
+    queHace:
+      "Cada comunidad tiene su tablero. Taquion carga los datos por semana o por mes, una parte en forma automática, y el cliente entra y ve el avance contra lo acordado.",
+    detalles: [
+      "Un tablero por comunidad, con acceso por cliente.",
+      "Cada responsable de cuenta configura su comunidad sin pasar por Tecnología.",
+      "Permisos a nivel de fila en la base de datos.",
     ],
     capturas: [
       {
-        src: "/assets/proyectos/futbolvision/futbolvision-prediccion.png",
-        alt: "Predicción de Arsenal vs Sporting CP: marcador estimado, las tres probabilidades del modelo y el análisis por parámetro que las respalda (H2H, forma, lesiones, contexto y xG)",
+        src: "/assets/proyectos/tableros/tableros-resumen.webp",
+        alt: "El resumen ejecutivo de un tablero con datos de demostración: la lectura del período, la meta de miembros y el estado de cada meta",
+        w: 1440,
+        h: 900,
       },
       {
-        src: "/assets/proyectos/futbolvision/futbolvision-predicciones.png",
-        alt: "Las predicciones guardadas, filtrables entre en vivo y pre-match: cada una con su marcador estimado, las tres probabilidades y el modelo que la generó",
+        src: "/assets/proyectos/tableros/tableros-resumen-completo.webp",
+        alt: "El tablero completo con datos de demostración: cronograma de la temporada y gráficos de crecimiento",
+        w: 1440,
+        h: 1578,
       },
     ],
   },
 
   // ==========================================================================
-  // SECUNDARIOS
+  // PROYECTOS
   // ==========================================================================
   {
-    slug: "courtside",
-    nombre: "CourtSide NBA Tracker",
-    categoria: "secundario",
-    unaLinea: "Tracker de NBA en tiempo real con búsqueda inteligente de jugadores.",
+    slug: "futbolvision",
+    nombre: "FutbolVision",
+    grupo: "proyecto",
+    caso: true,
+    unaLinea: "Predice el resultado de partidos de fútbol con un modelo de machine learning.",
+    rol: "Machine learning y arquitectura, en equipo de tres.",
+    stack: ["Next.js", "FastAPI", "XGBoost", "Python"],
+    problema:
+      "Predecir cómo termina un partido con lo que se sabe antes de que empiece: los antecedentes entre los dos equipos, la forma de cada uno, las lesiones y el contexto de la liga.",
+    solucion:
+      "Un XGBoost Regressor de unas 60 variables que devuelve el marcador estimado y la probabilidad de cada resultado. Cada predicción se abre y muestra los parámetros que la sostienen.",
     queHace:
-      "Sigue partidos y estadísticas de la NBA consumiendo endpoints de NBA.com a través de un proxy propio (para esquivar CORS y rate limits). Tiene animación temática de básquet, dark/light mode y búsqueda de jugadores con scoring de relevancia: pondera coincidencias para ordenar primero los resultados útiles, no un simple 'contiene el texto'.",
-    rol: "Desarrollo completo, en solitario.",
-    stack: ["Astro", "JavaScript / TypeScript", "Vercel"],
-    destacados: [
-      "Proxy propio a endpoints de NBA.com para sortear CORS y rate limits.",
-      "Búsqueda de jugadores con scoring de relevancia.",
-      "Dark / light mode y animación temática de básquet.",
+      "Predice el marcador y la probabilidad de local, empate y visitante, y desglosa el análisis: historial entre equipos, forma, lesiones, contexto de liga y goles esperados.",
+    detalles: [
+      "El modelo corre en un servicio aparte (FastAPI), separado de la interfaz.",
+      "Las predicciones se guardan y se siguen, en vivo o antes del partido.",
+      "Equipo: Felipe Doval, Nicolás Fuksman (UX/UI) y Pedro Henríquez (frontend).",
     ],
-    enlaces: [
-      {
-        label: "Repo en GitHub",
-        url: "https://github.com/Felgimon/TP1_Front",
-      },
-    ],
-    // Los secundarios no tienen página de detalle: su card muestra la primera.
+    repo: "https://github.com/Felgimon/FutbolVision",
     capturas: [
       {
-        src: "/assets/proyectos/courtside/courtside-home.png",
-        alt: "La home de CourtSide: los partidos del día y el jugador destacado, con sus promedios de la temporada",
+        src: "/assets/proyectos/futbolvision/futbolvision-prediccion.png",
+        alt: "Una predicción de FutbolVision: marcador estimado, las tres probabilidades y el análisis por parámetro",
+        w: 1401,
+        h: 876,
       },
-    ],
-  },
-  {
-    slug: "buscaminas",
-    nombre: "Buscaminas",
-    categoria: "secundario",
-    unaLinea: "El clásico Buscaminas, hecho desde cero en C++ para jugarse en la terminal.",
-    queHace:
-      "Tablero renderizado en terminal con colores ANSI y símbolos Unicode, lógica de revelado recursivo (flood fill) para destapar zonas vacías, y cálculo de indicadores de minas adyacentes. Incluyó debuggear a mano bugs de indicadores y de recursión, de los que enseñan de verdad.",
-    rol: "Desarrollo completo, en solitario.",
-    stack: ["C++ puro (sin librerías externas)"],
-    destacados: [
-      "Revelado recursivo (flood fill) para destapar zonas vacías.",
-      "Render en terminal con colores ANSI y símbolos Unicode.",
-      "Cálculo de indicadores de minas adyacentes.",
-    ],
-    enlaces: [
       {
-        label: "Repo en GitHub",
-        url: "https://github.com/Felgimon/Buscaminas",
-      },
-    ],
-    // Los proyectos secundarios no tienen página de detalle (solo los
-    // destacados): su card muestra la PRIMERA captura y nada más. Por eso acá va
-    // una sola, y es la del tablero entero destapado: es la que muestra de un
-    // vistazo lo que dice el texto (los colores ANSI, los indicadores y la mina).
-    capturas: [
-      {
-        src: "/assets/proyectos/buscaminas/buscaminas-perdida.png",
-        alt: "El tablero en la terminal al terminar la partida: los indicadores de minas adyacentes con su color ANSI, las banderas puestas y la mina que la terminó",
-      },
-    ],
-  },
-  {
-    slug: "lost",
-    nombre: "LOST",
-    categoria: "secundario",
-    unaLinea:
-      "Plataforma de tracking de objetos, entregada con un equipo chico en menos de 6 meses.",
-    rol: "Equipo chico, entrega en menos de 6 meses.",
-    stack: [],
-    enlaces: [
-      {
-        label: "Repo en GitHub",
-        // El repo se llama con el punto final (proyecto-3-L.O.S.T.); sin él,
-        // GitHub devuelve 404 — verificado. Con el enlace, la card entera pasa a
-        // ser clickeable al repo (antes no lo era: enlaces vacío = informativa).
-        url: "https://github.com/3-TIC-ORT/proyecto-3-L.O.S.T.",
-      },
-    ],
-    capturas: [
-      {
-        src: "/assets/proyectos/lost/lost-home.png",
-        alt: "La pantalla de inicio de LOST: la marca en la barra superior y las dos acciones grandes, 'Perdí algo' y 'Encontré algo', sobre un fondo de íconos de objetos.",
-      },
-    ],
-  },
-  {
-    slug: "nindo",
-    nombre: "Nindo",
-    categoria: "secundario",
-    unaLinea: "Videojuego desarrollado con un equipo chico en menos de 6 meses.",
-    rol: "Equipo chico, entrega en menos de 6 meses.",
-    stack: [],
-    enlaces: [
-      {
-        label: "Repo en GitHub",
-        url: "https://github.com/Mateo-Drault/Nindo-VideoJuego-Mateo-Drault-Felipe-Doval-Teo-Gonzalez-Pedro-Henriquez",
-      },
-    ],
-    capturas: [
-      {
-        src: "/assets/proyectos/nindo/nindo-menu.png",
-        alt: "El menú principal de Nindo: la barra con PLAY, QUIT y OPTIONS sobre la máscara del ninja en negro y amarillo.",
+        src: "/assets/proyectos/futbolvision/futbolvision-predicciones.png",
+        alt: "Las predicciones guardadas, filtrables entre en vivo y antes del partido",
+        w: 1600,
+        h: 1000,
       },
     ],
   },
   {
     slug: "pcbuilder",
     nombre: "PC Builder",
-    categoria: "secundario",
-    unaLinea: "Armador / configurador de PCs por componentes.",
-    rol: "En solitario.",
-    stack: [],
-    enlaces: [
-      {
-        label: "Repo en GitHub",
-        url: "https://github.com/Felgimon/TP2-ivo",
-      },
-    ],
-    // Los secundarios no tienen página de detalle: su card muestra la primera.
+    grupo: "proyecto",
+    unaLinea: "Armador de PC pieza por pieza, con vista 3D en vivo y el total al momento.",
+    rol: "Desarrollo, en equipo de dos.",
+    stack: ["Next.js", "React", "Three.js", "Zustand", "Supabase"],
+    repo: "https://github.com/Felgimon/TP2-ivo",
     capturas: [
       {
         src: "/assets/proyectos/pcbuilder/pcbuilder-armado.png",
-        alt: "El armador en uso: el catálogo de componentes a la izquierda, la PC en 3D en el medio y el resumen del build con el total a la derecha",
+        alt: "El armador en uso: el catálogo de componentes, la PC en 3D y el resumen con el total",
+        w: 1600,
+        h: 1000,
+      },
+    ],
+  },
+  {
+    slug: "nindo",
+    nombre: "Nindo",
+    grupo: "proyecto",
+    unaLinea: "Juego de acción de ninjas en low-poly, con cámara elevada.",
+    rol: "Desarrollo, en equipo de cuatro.",
+    stack: ["Unity", "C#", "Blender"],
+    repo: "https://github.com/Mateo-Drault/Nindo-VideoJuego-Mateo-Drault-Felipe-Doval-Teo-Gonzalez-Pedro-Henriquez",
+    capturas: [
+      {
+        src: "/assets/proyectos/nindo/nindo-dojo.webp",
+        alt: "Nindo: la entrada del dojo, con su portal rojo al final de una escalera",
+        w: 960,
+        h: 540,
+      },
+    ],
+  },
+  {
+    slug: "lost",
+    nombre: "LOST",
+    grupo: "proyecto",
+    unaLinea: "Plataforma de objetos perdidos: publicás lo que perdiste o lo que encontraste.",
+    rol: "Desarrollo, en equipo de cinco. Proyecto de tercer año en ORT, 2024.",
+    stack: ["Node.js", "JavaScript", "HTML", "CSS"],
+    // El repo se llama con el punto final (proyecto-3-L.O.S.T.); sin él da 404.
+    repo: "https://github.com/3-TIC-ORT/proyecto-3-L.O.S.T.",
+    capturas: [
+      {
+        src: "/assets/proyectos/lost/lost-home.png",
+        alt: "El inicio de LOST con sus dos acciones: «Perdí algo» y «Encontré algo»",
+        w: 1918,
+        h: 1199,
+      },
+    ],
+  },
+  {
+    slug: "courtside",
+    nombre: "CourtSide",
+    grupo: "proyecto",
+    unaLinea: "Tracker de NBA con los partidos del día y búsqueda de jugadores por relevancia.",
+    rol: "Desarrollo completo.",
+    stack: ["Astro", "TypeScript", "Vercel"],
+    repo: "https://github.com/Felgimon/TP1_Front",
+    capturas: [
+      {
+        src: "/assets/proyectos/courtside/courtside-home.png",
+        alt: "El inicio de CourtSide: los partidos del día y el jugador destacado con sus promedios",
+        w: 1600,
+        h: 1000,
+      },
+    ],
+  },
+  {
+    slug: "buscaminas",
+    nombre: "Buscaminas",
+    grupo: "proyecto",
+    unaLinea: "El Buscaminas, hecho desde cero en C++ para jugar en la terminal.",
+    rol: "Desarrollo completo.",
+    stack: ["C++"],
+    repo: "https://github.com/Felgimon/Buscaminas",
+    capturas: [
+      {
+        src: "/assets/proyectos/buscaminas/buscaminas-perdida.png",
+        alt: "El tablero en la terminal al terminar una partida, con los números en color",
+        w: 1083,
+        h: 677,
       },
     ],
   },
 ];
 
-export const proyectosDestacados = proyectos.filter(
-  (p) => p.categoria === "destacado",
-);
+export const casos = proyectos.filter((p) => p.caso);
+
 export function getProyecto(slug: string): Proyecto | undefined {
   return proyectos.find((p) => p.slug === slug);
 }

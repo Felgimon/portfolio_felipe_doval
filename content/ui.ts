@@ -2,38 +2,57 @@ import type { Idioma } from "@/lib/idioma";
 
 /**
  * Los textos de interfaz en los dos idiomas. Todo texto visible que no viva en
- * `perfil`, `proyectos` o `fotos` sale de acá. Directos: el nombre de la cosa.
+ * `perfil` o `proyectos` sale de acá. Directos: el nombre de la cosa.
+ * Cada título es [texto, palabra acentuada]: la segunda va en la serif.
  * La metadata y el JSON-LD no se traducen (el HTML servido es siempre español).
  */
 
-export const secciones = ["inicio", "proyectos", "fotos", "sobre-mi", "contacto"] as const;
+export const secciones = ["inicio", "sobre-mi", "enfoque", "trabajo", "proyectos", "recorrido", "contacto"] as const;
 export type IdSeccion = (typeof secciones)[number];
+type Titulo = [texto: string, acento: string];
 
 export type TextosUI = {
   secciones: Record<IdSeccion, string>;
-  nav: { aria: string; inicio: string };
+  titulos: Record<Exclude<IdSeccion, "inicio">, Titulo>;
+  nav: { aria: string; inicio: string; menu: string; cerrar: string };
   saltar: string;
-  proyectos: { verCaso: string; rol: string; equipo: string; stack: string };
-  sobre: { stack: string; recorrido: string };
-  contacto: { mail: string; copiar: string; copiado: string; copialoAMano: string };
+  inicio: { verTrabajo: string };
+  sobre: { stack: string };
+  trabajo: { bajada: string };
+  proyectos: { verCaso: string; verSitio: string; rol: string; stack: string };
+  recorrido: { hecho: string };
+  contacto: { mail: string; abrir: string };
   caso: { problema: string; solucion: string; queHace: string; detalles: string; siguiente: string };
-  perdida: { titulo: string; volver: string };
+  perdida: { titulo: Titulo; volver: string };
 };
 
 export const textosUI: Record<Idioma, TextosUI> = {
   es: {
     secciones: {
       inicio: "Inicio",
-      proyectos: "Proyectos",
-      fotos: "Fotos",
       "sobre-mi": "Sobre mí",
+      enfoque: "Enfoque",
+      trabajo: "Trabajo",
+      proyectos: "Proyectos",
+      recorrido: "Recorrido",
       contacto: "Contacto",
     },
-    nav: { aria: "Secciones", inicio: "Felipe Doval, inicio" },
+    titulos: {
+      "sobre-mi": ["Sobre", "mí"],
+      enfoque: ["Cómo", "trabajo"],
+      trabajo: ["Trabajo en", "Taquion"],
+      proyectos: ["Otros", "proyectos"],
+      recorrido: ["Mi", "recorrido"],
+      contacto: ["", "Contacto"],
+    },
+    nav: { aria: "Secciones", inicio: "Felipe Doval, inicio", menu: "Menú", cerrar: "Cerrar" },
     saltar: "Saltar al contenido",
-    proyectos: { verCaso: "Ver caso", rol: "Rol", equipo: "Equipo", stack: "Stack" },
-    sobre: { stack: "Stack", recorrido: "Recorrido" },
-    contacto: { mail: "Mail", copiar: "Copiar", copiado: "Copiado", copialoAMano: "Copialo a mano" },
+    inicio: { verTrabajo: "Ver trabajo" },
+    sobre: { stack: "Stack" },
+    trabajo: { bajada: "Tres productos en uso, hechos para la empresa." },
+    proyectos: { verCaso: "Ver caso", verSitio: "Ver sitio", rol: "Rol", stack: "Stack" },
+    recorrido: { hecho: "Lo que hice ahí" },
+    contacto: { mail: "Mail", abrir: "Abre tu correo" },
     caso: {
       problema: "Problema",
       solucion: "Solución",
@@ -41,21 +60,34 @@ export const textosUI: Record<Idioma, TextosUI> = {
       detalles: "Detalles",
       siguiente: "Siguiente",
     },
-    perdida: { titulo: "Página no encontrada", volver: "Inicio" },
+    perdida: { titulo: ["Página no", "encontrada"], volver: "Ir al inicio" },
   },
   en: {
     secciones: {
       inicio: "Home",
-      proyectos: "Projects",
-      fotos: "Photos",
       "sobre-mi": "About",
+      enfoque: "Approach",
+      trabajo: "Work",
+      proyectos: "Projects",
+      recorrido: "Background",
       contacto: "Contact",
     },
-    nav: { aria: "Sections", inicio: "Felipe Doval, home" },
+    titulos: {
+      "sobre-mi": ["About", "me"],
+      enfoque: ["How I", "work"],
+      trabajo: ["Work at", "Taquion"],
+      proyectos: ["Other", "projects"],
+      recorrido: ["My", "background"],
+      contacto: ["", "Contact"],
+    },
+    nav: { aria: "Sections", inicio: "Felipe Doval, home", menu: "Menu", cerrar: "Close" },
     saltar: "Skip to content",
-    proyectos: { verCaso: "View case", rol: "Role", equipo: "Team", stack: "Stack" },
-    sobre: { stack: "Stack", recorrido: "Background" },
-    contacto: { mail: "Email", copiar: "Copy", copiado: "Copied", copialoAMano: "Copy it by hand" },
+    inicio: { verTrabajo: "See work" },
+    sobre: { stack: "Stack" },
+    trabajo: { bajada: "Three products in use, built for the company." },
+    proyectos: { verCaso: "View case", verSitio: "Visit site", rol: "Role", stack: "Stack" },
+    recorrido: { hecho: "What I did there" },
+    contacto: { mail: "Email", abrir: "Opens your mail app" },
     caso: {
       problema: "Problem",
       solucion: "Solution",
@@ -63,6 +95,6 @@ export const textosUI: Record<Idioma, TextosUI> = {
       detalles: "Details",
       siguiente: "Next",
     },
-    perdida: { titulo: "Page not found", volver: "Home" },
+    perdida: { titulo: ["Page not", "found"], volver: "Go home" },
   },
 };
